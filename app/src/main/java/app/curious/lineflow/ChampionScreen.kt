@@ -256,7 +256,7 @@ fun ChampionScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "All 25 levels completed",
+                    text = "All 35 levels completed",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = Success

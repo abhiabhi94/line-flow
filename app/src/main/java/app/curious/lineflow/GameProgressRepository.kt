@@ -64,7 +64,7 @@ class GameProgressRepository(context: Context) {
     }
 
     fun isMusicEnabled(): Boolean {
-        return prefs.getBoolean(KEY_MUSIC_ENABLED, true)
+        return prefs.getBoolean(KEY_MUSIC_ENABLED, false)
     }
 
     fun setMusicEnabled(enabled: Boolean) {

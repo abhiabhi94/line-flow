@@ -922,6 +922,534 @@ object LevelManager {
                     HintStep(text = "Start at the top-right corner and go left.", showValidStarts = true, showFirstEdge = true)
                 )
             )
+        ),
+
+        // Level 26: The Diamond — 9 nodes, 16 edges
+        // Diamond-shaped layout (rotated square orientation)
+        // Nodes 3,5 have degree 3 (odd) -> Path
+        Level(
+            id = 26,
+            name = "The Diamond",
+            nodes = listOf(
+                // Top point
+                Node(0, Offset(0.5f, 0.1f)),
+                // Second row (2 nodes)
+                Node(1, Offset(0.3f, 0.3f)),
+                Node(2, Offset(0.7f, 0.3f)),
+                // Middle row (3 nodes) - widest
+                Node(3, Offset(0.1f, 0.5f)),
+                Node(4, Offset(0.5f, 0.5f)),
+                Node(5, Offset(0.9f, 0.5f)),
+                // Fourth row (2 nodes)
+                Node(6, Offset(0.3f, 0.7f)),
+                Node(7, Offset(0.7f, 0.7f)),
+                // Bottom point
+                Node(8, Offset(0.5f, 0.9f))
+            ),
+            edges = listOf(
+                // Outer diamond outline (8 edges)
+                Edge(0, 1), Edge(0, 2),
+                Edge(1, 3), Edge(2, 5),
+                Edge(3, 6), Edge(5, 7),
+                Edge(6, 8), Edge(7, 8),
+                // Horizontal connections (2 edges)
+                Edge(3, 4), Edge(4, 5),
+                // Internal diamond connections (6 edges)
+                Edge(1, 4), Edge(2, 4),
+                Edge(4, 6), Edge(4, 7),
+                Edge(1, 2), Edge(6, 7)
+            ),
+            hints = LevelHints(
+                validStartNodeIds = listOf(3, 5),
+                firstEdge = Pair(3, 1),
+                steps = listOf(
+                    HintStep(text = "A diamond rotated 45 degrees from a square."),
+                    HintStep(text = "The left and right corners have odd degree.", showValidStarts = true),
+                    HintStep(text = "Start from the left corner.", showValidStarts = true, showFirstEdge = true)
+                )
+            )
+        ),
+
+        // Level 27: The Hexagon Star — 12 nodes, 24 edges
+        // Six-pointed star with outer and inner hexagon - CIRCUIT (all even)
+        // All nodes have degree 4 -> 0 odd -> Circuit
+        Level(
+            id = 27,
+            name = "The Hexagon Star",
+            nodes = listOf(
+                // Outer hexagon (6 nodes)
+                Node(0, Offset(0.5f, 0.08f)),     // top
+                Node(1, Offset(0.85f, 0.29f)),   // top-right
+                Node(2, Offset(0.85f, 0.71f)),   // bottom-right
+                Node(3, Offset(0.5f, 0.92f)),    // bottom
+                Node(4, Offset(0.15f, 0.71f)),   // bottom-left
+                Node(5, Offset(0.15f, 0.29f)),   // top-left
+                // Inner hexagon (6 nodes)
+                Node(6, Offset(0.5f, 0.25f)),    // inner top
+                Node(7, Offset(0.68f, 0.35f)),   // inner top-right
+                Node(8, Offset(0.68f, 0.65f)),   // inner bottom-right
+                Node(9, Offset(0.5f, 0.75f)),    // inner bottom
+                Node(10, Offset(0.32f, 0.65f)),  // inner bottom-left
+                Node(11, Offset(0.32f, 0.35f))   // inner top-left
+            ),
+            edges = listOf(
+                // Outer hexagon
+                Edge(0, 1), Edge(1, 2), Edge(2, 3),
+                Edge(3, 4), Edge(4, 5), Edge(5, 0),
+                // Inner hexagon
+                Edge(6, 7), Edge(7, 8), Edge(8, 9),
+                Edge(9, 10), Edge(10, 11), Edge(11, 6),
+                // Radial spokes (outer to inner)
+                Edge(0, 6), Edge(1, 7), Edge(2, 8),
+                Edge(3, 9), Edge(4, 10), Edge(5, 11),
+                // Star points (skip connections)
+                Edge(0, 7), Edge(1, 8), Edge(2, 9),
+                Edge(3, 10), Edge(4, 11), Edge(5, 6)
+            ),
+            hints = LevelHints(
+                validStartNodeIds = listOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11),
+                firstEdge = Pair(0, 1),
+                steps = listOf(
+                    HintStep(text = "A circuit - you can start anywhere and return!"),
+                    HintStep(text = "All nodes have even degree. Pick any start.", showValidStarts = true),
+                    HintStep(text = "Try starting from the top and going clockwise.", showValidStarts = true, showFirstEdge = true)
+                )
+            )
+        ),
+
+        // Level 28: The Pinwheel — 13 nodes, 24 edges
+        // A pinwheel shape: center hub with 4 blades extending outward
+        // Each blade has an inner and outer node, with diagonal connections
+        // Degrees: 0=8, 1-4=4, 5-8=3, 9-12=3 -> 8 odd nodes initially
+        // Adjusted for PATH: Center connects to 4 cardinals, cardinals connect to corners
+        // Degrees: 0=4, 1=3, 2=3, 3=4, 4=4, 5=4, 6=4, 7=4, 8=4, 9=4, 10=4, 11=4, 12=4
+        // Odd: 1,2 -> PATH
+        Level(
+            id = 28,
+            name = "The Pinwheel",
+            nodes = listOf(
+                // Center
+                Node(0, Offset(0.5f, 0.5f)),
+                // Cardinal points
+                Node(1, Offset(0.5f, 0.12f)),    // top
+                Node(2, Offset(0.88f, 0.5f)),    // right
+                Node(3, Offset(0.5f, 0.88f)),    // bottom
+                Node(4, Offset(0.12f, 0.5f)),    // left
+                // Inner corners
+                Node(5, Offset(0.68f, 0.32f)),   // top-right inner
+                Node(6, Offset(0.68f, 0.68f)),   // bottom-right inner
+                Node(7, Offset(0.32f, 0.68f)),   // bottom-left inner
+                Node(8, Offset(0.32f, 0.32f)),   // top-left inner
+                // Outer corners
+                Node(9, Offset(0.82f, 0.18f)),   // top-right outer
+                Node(10, Offset(0.82f, 0.82f)),  // bottom-right outer
+                Node(11, Offset(0.18f, 0.82f)),  // bottom-left outer
+                Node(12, Offset(0.18f, 0.18f))   // top-left outer
+            ),
+            edges = listOf(
+                // Center to cardinals
+                Edge(0, 1), Edge(0, 2), Edge(0, 3), Edge(0, 4),
+                // Center to inner corners
+                Edge(0, 5), Edge(0, 6), Edge(0, 7), Edge(0, 8),
+                // Cardinal to adjacent inner corners (clockwise blades)
+                Edge(1, 5), Edge(2, 6), Edge(3, 7), Edge(4, 8),
+                // Inner corners to outer corners
+                Edge(5, 9), Edge(6, 10), Edge(7, 11), Edge(8, 12),
+                // Outer ring segments
+                Edge(9, 2), Edge(10, 3), Edge(11, 4), Edge(12, 1),
+                // Inner to outer across (creating pinwheel spin)
+                Edge(5, 2), Edge(6, 3), Edge(7, 4), Edge(8, 1)
+            ),
+            hints = LevelHints(
+                validStartNodeIds = listOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12),
+                firstEdge = Pair(0, 1),
+                steps = listOf(
+                    HintStep(text = "A spinning pinwheel with four blades."),
+                    HintStep(text = "All nodes have even degree - this is a circuit.", showValidStarts = true),
+                    HintStep(text = "Start from the center and go up.", showValidStarts = true, showFirstEdge = true)
+                )
+            )
+        ),
+
+        // Level 29: The Pyramid — 10 nodes, 18 edges
+        // Triangular grid forming a pyramid shape (4 rows: 1,2,3,4 nodes)
+        // Different visual than rectangular grids - PATH
+        // Row 0: node 0
+        // Row 1: nodes 1,2
+        // Row 2: nodes 3,4,5
+        // Row 3: nodes 6,7,8,9
+        // Vertical + diagonal edges create Eulerian path
+        // Degrees: 0=2, 1=4, 2=4, 3=4, 4=6, 5=4, 6=2, 7=4, 8=4, 9=2 -> 0 odd = circuit
+        Level(
+            id = 29,
+            name = "The Pyramid",
+            nodes = listOf(
+                // Row 0 (top - 1 node)
+                Node(0, Offset(0.5f, 0.1f)),
+                // Row 1 (2 nodes)
+                Node(1, Offset(0.35f, 0.33f)),
+                Node(2, Offset(0.65f, 0.33f)),
+                // Row 2 (3 nodes)
+                Node(3, Offset(0.2f, 0.56f)),
+                Node(4, Offset(0.5f, 0.56f)),
+                Node(5, Offset(0.8f, 0.56f)),
+                // Row 3 (4 nodes)
+                Node(6, Offset(0.08f, 0.85f)),
+                Node(7, Offset(0.36f, 0.85f)),
+                Node(8, Offset(0.64f, 0.85f)),
+                Node(9, Offset(0.92f, 0.85f))
+            ),
+            edges = listOf(
+                // Horizontal edges within rows
+                Edge(1, 2),             // Row 1
+                Edge(3, 4), Edge(4, 5), // Row 2
+                Edge(6, 7), Edge(7, 8), Edge(8, 9), // Row 3
+                // Left diagonal edges (NE direction going down)
+                Edge(0, 1), Edge(1, 3), Edge(3, 6),
+                Edge(1, 4), Edge(4, 7),
+                // Right diagonal edges (NW direction going down)
+                Edge(0, 2), Edge(2, 5), Edge(5, 9),
+                Edge(2, 4), Edge(4, 8),
+                // Additional cross diagonals for complexity
+                Edge(3, 7), Edge(5, 8)
+            ),
+            hints = LevelHints(
+                validStartNodeIds = listOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9),
+                firstEdge = Pair(0, 1),
+                steps = listOf(
+                    HintStep(text = "A pyramid with interlocking triangular sections."),
+                    HintStep(text = "All nodes have even degree - this is a circuit.", showValidStarts = true),
+                    HintStep(text = "Start from the apex and work down.", showValidStarts = true, showFirstEdge = true)
+                )
+            )
+        ),
+
+        // Level 30: The Bastion — 16 nodes, 32 edges
+        // Dual concentric octagons with radial spokes and star skip connections - CIRCUIT
+        // All nodes have degree 4 (2 ring + 1 spoke + 1 skip) = 0 odd nodes = circuit
+        Level(
+            id = 30,
+            name = "The Bastion",
+            nodes = listOf(
+                // Outer octagon (8 nodes)
+                Node(0, Offset(0.50f, 0.06f)),   // top
+                Node(1, Offset(0.81f, 0.19f)),   // top-right
+                Node(2, Offset(0.94f, 0.50f)),   // right
+                Node(3, Offset(0.81f, 0.81f)),   // bottom-right
+                Node(4, Offset(0.50f, 0.94f)),   // bottom
+                Node(5, Offset(0.19f, 0.81f)),   // bottom-left
+                Node(6, Offset(0.06f, 0.50f)),   // left
+                Node(7, Offset(0.19f, 0.19f)),   // top-left
+                // Inner octagon (8 nodes)
+                Node(8, Offset(0.50f, 0.25f)),   // inner top
+                Node(9, Offset(0.68f, 0.32f)),   // inner top-right
+                Node(10, Offset(0.75f, 0.50f)),  // inner right
+                Node(11, Offset(0.68f, 0.68f)),  // inner bottom-right
+                Node(12, Offset(0.50f, 0.75f)),  // inner bottom
+                Node(13, Offset(0.32f, 0.68f)),  // inner bottom-left
+                Node(14, Offset(0.25f, 0.50f)),  // inner left
+                Node(15, Offset(0.32f, 0.32f))   // inner top-left
+            ),
+            edges = listOf(
+                // Outer octagon ring (8)
+                Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4),
+                Edge(4, 5), Edge(5, 6), Edge(6, 7), Edge(7, 0),
+                // Inner octagon ring (8)
+                Edge(8, 9), Edge(9, 10), Edge(10, 11), Edge(11, 12),
+                Edge(12, 13), Edge(13, 14), Edge(14, 15), Edge(15, 8),
+                // Radial spokes - outer to inner (8)
+                Edge(0, 8), Edge(1, 9), Edge(2, 10), Edge(3, 11),
+                Edge(4, 12), Edge(5, 13), Edge(6, 14), Edge(7, 15),
+                // Star skip connections - outer to adjacent inner (8)
+                Edge(0, 9), Edge(1, 10), Edge(2, 11), Edge(3, 12),
+                Edge(4, 13), Edge(5, 14), Edge(6, 15), Edge(7, 8)
+            ),
+            hints = LevelHints(
+                validStartNodeIds = listOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15),
+                firstEdge = Pair(0, 1),
+                steps = listOf(
+                    HintStep(text = "Two concentric octagons connected by spokes and star points."),
+                    HintStep(text = "All nodes have even degree - this is a circuit.", showValidStarts = true),
+                    HintStep(text = "Start from any node - try the top.", showValidStarts = true, showFirstEdge = true)
+                )
+            )
+        ),
+
+        // Level 31: The Core — 17 nodes, 34 edges
+        // The Bastion with a center hub connecting to inner top and inner bottom - PATH
+        // Extends Level 30 by revealing the "core" of the structure
+        // Odd nodes: 8, 12 (inner top and inner bottom)
+        Level(
+            id = 31,
+            name = "The Core",
+            nodes = listOf(
+                // Outer octagon (8 nodes) - same as Bastion
+                Node(0, Offset(0.50f, 0.06f)),   // top
+                Node(1, Offset(0.81f, 0.19f)),   // top-right
+                Node(2, Offset(0.94f, 0.50f)),   // right
+                Node(3, Offset(0.81f, 0.81f)),   // bottom-right
+                Node(4, Offset(0.50f, 0.94f)),   // bottom
+                Node(5, Offset(0.19f, 0.81f)),   // bottom-left
+                Node(6, Offset(0.06f, 0.50f)),   // left
+                Node(7, Offset(0.19f, 0.19f)),   // top-left
+                // Inner octagon (8 nodes) - same as Bastion
+                Node(8, Offset(0.50f, 0.25f)),   // inner top
+                Node(9, Offset(0.68f, 0.32f)),   // inner top-right
+                Node(10, Offset(0.75f, 0.50f)),  // inner right
+                Node(11, Offset(0.68f, 0.68f)),  // inner bottom-right
+                Node(12, Offset(0.50f, 0.75f)),  // inner bottom
+                Node(13, Offset(0.32f, 0.68f)),  // inner bottom-left
+                Node(14, Offset(0.25f, 0.50f)),  // inner left
+                Node(15, Offset(0.32f, 0.32f)),  // inner top-left
+                // Center hub (1 node)
+                Node(16, Offset(0.50f, 0.50f))   // center
+            ),
+            edges = listOf(
+                // Outer octagon ring (8)
+                Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4),
+                Edge(4, 5), Edge(5, 6), Edge(6, 7), Edge(7, 0),
+                // Inner octagon ring (8)
+                Edge(8, 9), Edge(9, 10), Edge(10, 11), Edge(11, 12),
+                Edge(12, 13), Edge(13, 14), Edge(14, 15), Edge(15, 8),
+                // Radial spokes - outer to inner (8)
+                Edge(0, 8), Edge(1, 9), Edge(2, 10), Edge(3, 11),
+                Edge(4, 12), Edge(5, 13), Edge(6, 14), Edge(7, 15),
+                // Star skip connections - outer to adjacent inner (8)
+                Edge(0, 9), Edge(1, 10), Edge(2, 11), Edge(3, 12),
+                Edge(4, 13), Edge(5, 14), Edge(6, 15), Edge(7, 8),
+                // Center connections (2) - creates PATH with 2 odd nodes
+                Edge(16, 8), Edge(16, 12)
+            ),
+            hints = LevelHints(
+                validStartNodeIds = listOf(8, 12),
+                firstEdge = Pair(8, 0),
+                steps = listOf(
+                    HintStep(text = "The Bastion's core revealed - a center hub connects two key points."),
+                    HintStep(text = "The inner top and inner bottom have odd connections.", showValidStarts = true),
+                    HintStep(text = "Start from the inner top and head to the outer ring.", showValidStarts = true, showFirstEdge = true)
+                )
+            )
+        ),
+
+        // Level 32: The Rampart — 16 nodes, 32 edges
+        // Same structure as The Bastion but with OPPOSITE skip direction - CIRCUIT
+        // Creates a mirror pattern that plays differently
+        // All nodes have degree 4 = 0 odd nodes = circuit
+        Level(
+            id = 32,
+            name = "The Rampart",
+            nodes = listOf(
+                // Outer octagon (8 nodes) - same as Bastion
+                Node(0, Offset(0.50f, 0.06f)),   // top
+                Node(1, Offset(0.81f, 0.19f)),   // top-right
+                Node(2, Offset(0.94f, 0.50f)),   // right
+                Node(3, Offset(0.81f, 0.81f)),   // bottom-right
+                Node(4, Offset(0.50f, 0.94f)),   // bottom
+                Node(5, Offset(0.19f, 0.81f)),   // bottom-left
+                Node(6, Offset(0.06f, 0.50f)),   // left
+                Node(7, Offset(0.19f, 0.19f)),   // top-left
+                // Inner octagon (8 nodes) - same as Bastion
+                Node(8, Offset(0.50f, 0.25f)),   // inner top
+                Node(9, Offset(0.68f, 0.32f)),   // inner top-right
+                Node(10, Offset(0.75f, 0.50f)),  // inner right
+                Node(11, Offset(0.68f, 0.68f)),  // inner bottom-right
+                Node(12, Offset(0.50f, 0.75f)),  // inner bottom
+                Node(13, Offset(0.32f, 0.68f)),  // inner bottom-left
+                Node(14, Offset(0.25f, 0.50f)),  // inner left
+                Node(15, Offset(0.32f, 0.32f))   // inner top-left
+            ),
+            edges = listOf(
+                // Outer octagon ring (8 edges)
+                Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4),
+                Edge(4, 5), Edge(5, 6), Edge(6, 7), Edge(7, 0),
+                // Inner octagon ring (8 edges)
+                Edge(8, 9), Edge(9, 10), Edge(10, 11), Edge(11, 12),
+                Edge(12, 13), Edge(13, 14), Edge(14, 15), Edge(15, 8),
+                // Radial spokes - outer to inner (8 edges)
+                Edge(0, 8), Edge(1, 9), Edge(2, 10), Edge(3, 11),
+                Edge(4, 12), Edge(5, 13), Edge(6, 14), Edge(7, 15),
+                // Star skip connections - COUNTER-CLOCKWISE (opposite of Bastion)
+                Edge(0, 15), Edge(1, 8), Edge(2, 9), Edge(3, 10),
+                Edge(4, 11), Edge(5, 12), Edge(6, 13), Edge(7, 14)
+            ),
+            hints = LevelHints(
+                validStartNodeIds = (0..15).toList(),
+                firstEdge = Pair(0, 1),
+                steps = listOf(
+                    HintStep(text = "The Rampart - the Bastion's mirror."),
+                    HintStep(text = "All nodes have even degree - this is a circuit.", showValidStarts = true),
+                    HintStep(text = "The skip connections go counter-clockwise.", showValidStarts = true, showFirstEdge = true)
+                )
+            )
+        ),
+
+        // Level 33: The Citadel — 17 nodes, 34 edges
+        // Bastion structure with center hub connecting top and bottom inner nodes - PATH
+        // Creates a vertical axis through the center
+        // Odd nodes: 8, 12 (inner top and inner bottom)
+        Level(
+            id = 33,
+            name = "The Citadel",
+            nodes = listOf(
+                // Outer octagon (8 nodes) - same as Bastion
+                Node(0, Offset(0.50f, 0.06f)),   // top
+                Node(1, Offset(0.81f, 0.19f)),   // top-right
+                Node(2, Offset(0.94f, 0.50f)),   // right
+                Node(3, Offset(0.81f, 0.81f)),   // bottom-right
+                Node(4, Offset(0.50f, 0.94f)),   // bottom
+                Node(5, Offset(0.19f, 0.81f)),   // bottom-left
+                Node(6, Offset(0.06f, 0.50f)),   // left
+                Node(7, Offset(0.19f, 0.19f)),   // top-left
+                // Inner octagon (8 nodes) - same as Bastion
+                Node(8, Offset(0.50f, 0.25f)),   // inner top
+                Node(9, Offset(0.68f, 0.32f)),   // inner top-right
+                Node(10, Offset(0.75f, 0.50f)),  // inner right
+                Node(11, Offset(0.68f, 0.68f)),  // inner bottom-right
+                Node(12, Offset(0.50f, 0.75f)),  // inner bottom
+                Node(13, Offset(0.32f, 0.68f)),  // inner bottom-left
+                Node(14, Offset(0.25f, 0.50f)),  // inner left
+                Node(15, Offset(0.32f, 0.32f)),  // inner top-left
+                // Center hub (1 node)
+                Node(16, Offset(0.50f, 0.50f))   // center
+            ),
+            edges = listOf(
+                // Outer octagon ring (8 edges)
+                Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4),
+                Edge(4, 5), Edge(5, 6), Edge(6, 7), Edge(7, 0),
+                // Inner octagon ring (8 edges)
+                Edge(8, 9), Edge(9, 10), Edge(10, 11), Edge(11, 12),
+                Edge(12, 13), Edge(13, 14), Edge(14, 15), Edge(15, 8),
+                // Radial spokes - outer to inner (8 edges)
+                Edge(0, 8), Edge(1, 9), Edge(2, 10), Edge(3, 11),
+                Edge(4, 12), Edge(5, 13), Edge(6, 14), Edge(7, 15),
+                // Star skip connections - clockwise (8 edges)
+                Edge(0, 9), Edge(1, 10), Edge(2, 11), Edge(3, 12),
+                Edge(4, 13), Edge(5, 14), Edge(6, 15), Edge(7, 8),
+                // Center to top and bottom inner nodes only (2 edges) - creates PATH
+                Edge(16, 8), Edge(16, 12)
+            ),
+            hints = LevelHints(
+                validStartNodeIds = listOf(8, 12),
+                firstEdge = Pair(8, 0),
+                steps = listOf(
+                    HintStep(text = "The Citadel - the Bastion with a central axis."),
+                    HintStep(text = "Start from inner top or inner bottom.", showValidStarts = true),
+                    HintStep(text = "The center connects only top and bottom.", showValidStarts = true, showFirstEdge = true)
+                )
+            )
+        ),
+
+        // Level 34: The Nexus — 17 nodes, 34 edges
+        // Bastion structure with center hub connecting left and right inner nodes - PATH
+        // Creates a horizontal axis through the center (different from Citadel's vertical)
+        // Odd nodes: 10, 14 (inner right and inner left)
+        Level(
+            id = 34,
+            name = "The Nexus",
+            nodes = listOf(
+                // Outer octagon (8 nodes) - same as Bastion
+                Node(0, Offset(0.50f, 0.06f)),   // top
+                Node(1, Offset(0.81f, 0.19f)),   // top-right
+                Node(2, Offset(0.94f, 0.50f)),   // right
+                Node(3, Offset(0.81f, 0.81f)),   // bottom-right
+                Node(4, Offset(0.50f, 0.94f)),   // bottom
+                Node(5, Offset(0.19f, 0.81f)),   // bottom-left
+                Node(6, Offset(0.06f, 0.50f)),   // left
+                Node(7, Offset(0.19f, 0.19f)),   // top-left
+                // Inner octagon (8 nodes) - same as Bastion
+                Node(8, Offset(0.50f, 0.25f)),   // inner top
+                Node(9, Offset(0.68f, 0.32f)),   // inner top-right
+                Node(10, Offset(0.75f, 0.50f)),  // inner right
+                Node(11, Offset(0.68f, 0.68f)),  // inner bottom-right
+                Node(12, Offset(0.50f, 0.75f)),  // inner bottom
+                Node(13, Offset(0.32f, 0.68f)),  // inner bottom-left
+                Node(14, Offset(0.25f, 0.50f)),  // inner left
+                Node(15, Offset(0.32f, 0.32f)),  // inner top-left
+                // Center hub (1 node)
+                Node(16, Offset(0.50f, 0.50f))   // center
+            ),
+            edges = listOf(
+                // Outer octagon ring (8 edges)
+                Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4),
+                Edge(4, 5), Edge(5, 6), Edge(6, 7), Edge(7, 0),
+                // Inner octagon ring (8 edges)
+                Edge(8, 9), Edge(9, 10), Edge(10, 11), Edge(11, 12),
+                Edge(12, 13), Edge(13, 14), Edge(14, 15), Edge(15, 8),
+                // Radial spokes - outer to inner (8 edges)
+                Edge(0, 8), Edge(1, 9), Edge(2, 10), Edge(3, 11),
+                Edge(4, 12), Edge(5, 13), Edge(6, 14), Edge(7, 15),
+                // Star skip connections - clockwise (8 edges)
+                Edge(0, 9), Edge(1, 10), Edge(2, 11), Edge(3, 12),
+                Edge(4, 13), Edge(5, 14), Edge(6, 15), Edge(7, 8),
+                // Center to left and right inner nodes only (2 edges) - creates PATH
+                Edge(16, 10), Edge(16, 14)
+            ),
+            hints = LevelHints(
+                validStartNodeIds = listOf(10, 14),
+                firstEdge = Pair(10, 2),
+                steps = listOf(
+                    HintStep(text = "The Nexus - a horizontal core axis."),
+                    HintStep(text = "Start from inner right or inner left.", showValidStarts = true),
+                    HintStep(text = "The center creates a bridge between sides.", showValidStarts = true, showFirstEdge = true)
+                )
+            )
+        ),
+
+        // Level 35: The Apex — 17 nodes, 34 edges
+        // Bastion structure with center connecting to diagonal inner nodes - PATH
+        // Center connects to inner top-right (9) and inner bottom-left (13)
+        // Creates a diagonal axis - different from Citadel (vertical) and Nexus (horizontal)
+        // Odd nodes: 9, 13 (inner diagonal pair)
+        Level(
+            id = 35,
+            name = "The Apex",
+            nodes = listOf(
+                // Outer octagon (8 nodes) - same as Bastion
+                Node(0, Offset(0.50f, 0.06f)),   // top
+                Node(1, Offset(0.81f, 0.19f)),   // top-right
+                Node(2, Offset(0.94f, 0.50f)),   // right
+                Node(3, Offset(0.81f, 0.81f)),   // bottom-right
+                Node(4, Offset(0.50f, 0.94f)),   // bottom
+                Node(5, Offset(0.19f, 0.81f)),   // bottom-left
+                Node(6, Offset(0.06f, 0.50f)),   // left
+                Node(7, Offset(0.19f, 0.19f)),   // top-left
+                // Inner octagon (8 nodes) - same as Bastion
+                Node(8, Offset(0.50f, 0.25f)),   // inner top
+                Node(9, Offset(0.68f, 0.32f)),   // inner top-right
+                Node(10, Offset(0.75f, 0.50f)),  // inner right
+                Node(11, Offset(0.68f, 0.68f)),  // inner bottom-right
+                Node(12, Offset(0.50f, 0.75f)),  // inner bottom
+                Node(13, Offset(0.32f, 0.68f)),  // inner bottom-left
+                Node(14, Offset(0.25f, 0.50f)),  // inner left
+                Node(15, Offset(0.32f, 0.32f)),  // inner top-left
+                // Center hub (1 node)
+                Node(16, Offset(0.50f, 0.50f))   // center
+            ),
+            edges = listOf(
+                // Outer octagon ring (8 edges)
+                Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4),
+                Edge(4, 5), Edge(5, 6), Edge(6, 7), Edge(7, 0),
+                // Inner octagon ring (8 edges)
+                Edge(8, 9), Edge(9, 10), Edge(10, 11), Edge(11, 12),
+                Edge(12, 13), Edge(13, 14), Edge(14, 15), Edge(15, 8),
+                // Radial spokes - outer to inner (8 edges)
+                Edge(0, 8), Edge(1, 9), Edge(2, 10), Edge(3, 11),
+                Edge(4, 12), Edge(5, 13), Edge(6, 14), Edge(7, 15),
+                // Star skip connections - clockwise (8 edges)
+                Edge(0, 9), Edge(1, 10), Edge(2, 11), Edge(3, 12),
+                Edge(4, 13), Edge(5, 14), Edge(6, 15), Edge(7, 8),
+                // Center to diagonal inner nodes only (2 edges) - creates PATH
+                Edge(16, 9), Edge(16, 13)
+            ),
+            hints = LevelHints(
+                validStartNodeIds = listOf(9, 13),
+                firstEdge = Pair(9, 1),
+                steps = listOf(
+                    HintStep(text = "The Apex - the final challenge with a diagonal axis."),
+                    HintStep(text = "Start from inner top-right or inner bottom-left.", showValidStarts = true),
+                    HintStep(text = "The center creates a diagonal bridge.", showValidStarts = true, showFirstEdge = true)
+                )
+            )
         )
     )
 

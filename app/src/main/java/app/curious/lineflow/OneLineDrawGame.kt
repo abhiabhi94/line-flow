@@ -292,23 +292,68 @@ fun OneLineDrawGame(
             .background(DarkBackground)
     ) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-            val width = constraints.maxWidth.toFloat()
-            val height = constraints.maxHeight.toFloat()
+            val screenWidth = constraints.maxWidth.toFloat()
+            val screenHeight = constraints.maxHeight.toFloat()
             val nodeRadius = with(LocalDensity.current) { 14.dp.toPx() }
             val nodeHitRadius = nodeRadius * 3f
 
-            val side = min(width, height)
-            val xOffset = (width - side) / 2f
-            val yOffset = (height - side) / 2f
+            // Calculate the bounding box of all nodes in the level
+            val nodes = gameState.level.nodes
+            val minX = nodes.minOf { it.position.x }
+            val maxX = nodes.maxOf { it.position.x }
+            val minY = nodes.minOf { it.position.y }
+            val maxY = nodes.maxOf { it.position.y }
+
+            // Add padding around the nodes (in normalized space)
+            val padding = 0.08f
+            val paddedMinX = minX - padding
+            val paddedMaxX = maxX + padding
+            val paddedMinY = minY - padding
+            val paddedMaxY = maxY + padding
+            val contentWidth = paddedMaxX - paddedMinX
+            val contentHeight = paddedMaxY - paddedMinY
+
+            // Calculate base scale to fit width (standard approach)
+            val baseScale = screenWidth / contentWidth
+
+            // Calculate how much vertical space we'd use with uniform scaling
+            val uniformCanvasHeight = contentHeight * baseScale
+
+            // Check if we have extra vertical space and if the level needs more node separation
+            // For levels with many nodes (dense levels), use available vertical space to spread nodes
+            val isDenseLevel = nodes.size >= 12
+            val hasExtraVerticalSpace = screenHeight > uniformCanvasHeight * 1.2f
+
+            // For dense levels with extra vertical space, stretch vertically
+            // Limit the stretch to avoid distortion (max 1.5x taller than uniform scaling)
+            val verticalStretchFactor = if (isDenseLevel && hasExtraVerticalSpace) {
+                val maxStretch = 1.5f
+                val availableStretch = screenHeight / uniformCanvasHeight
+                min(availableStretch * 0.9f, maxStretch)  // Use 90% of available space, capped
+            } else {
+                1f
+            }
+
+            // Final canvas dimensions
+            val canvasWidth = screenWidth
+            val canvasHeight = uniformCanvasHeight * verticalStretchFactor
+
+            // Center the canvas vertically on screen
+            val canvasOffsetX = 0f
+            val canvasOffsetY = (screenHeight - canvasHeight) / 2f
+
+            // Scale factors: X is uniform, Y is stretched for dense levels
+            val scaleX = canvasWidth / contentWidth
+            val scaleY = canvasHeight / contentHeight
 
             fun toPixelOffset(normalized: Offset): Offset {
                 return Offset(
-                    xOffset + normalized.x * side,
-                    yOffset + normalized.y * side
+                    canvasOffsetX + (normalized.x - paddedMinX) * scaleX,
+                    canvasOffsetY + (normalized.y - paddedMinY) * scaleY
                 )
             }
 
-            val pixelNodes = remember(gameState.level.nodes, width, height) {
+            val pixelNodes = remember(gameState.level.nodes, screenWidth, screenHeight) {
                 gameState.level.nodes.associateWith { node ->
                     toPixelOffset(node.position)
                 }
@@ -317,8 +362,8 @@ fun OneLineDrawGame(
             Canvas(
                 modifier = Modifier
                     .fillMaxSize()
-                    .pointerInput(gameState.isLevelComplete, gameState.isGameOver) {
-                        if (gameState.isLevelComplete || gameState.isGameOver) return@pointerInput
+                    .pointerInput(gameState.isLevelComplete) {
+                        if (gameState.isLevelComplete) return@pointerInput
 
                         awaitPointerEventScope {
                             while (true) {
@@ -334,15 +379,23 @@ fun OneLineDrawGame(
 
                                 val startNodeId = closestNode?.key?.id
                                 if (startNodeId != null && (closestNode.value - down.position).getDistance() < nodeHitRadius) {
-                                    gameState = gameState.reset().copy(
+                                    // Auto-reset if game is over (loss state) - allows instant retry on touch
+                                    val baseState = if (gameState.isGameOver) gameState.reset() else gameState.reset()
+                                    gameState = baseState.copy(
                                         currentStartNodeId = startNodeId,
                                         currentNodeId = startNodeId
                                     )
+                                    hintsUsedThisAttempt = false
                                     vibrateTick()
                                     down.consume()
                                 }
 
                                 var tracking = gameState.currentNodeId != null
+                                var previousPos: Offset? = null
+                                // Track where the last node was confirmed to require minimum travel distance
+                                var lastConfirmedPos: Offset? = down.position
+                                val minTravelDistance = nodeRadius * 2f
+
                                 while (tracking) {
                                     val moveEvent = awaitPointerEvent()
                                     val change = moveEvent.changes.firstOrNull() ?: break
@@ -369,16 +422,45 @@ fun OneLineDrawGame(
                                     }
 
                                     val currentPos = change.position
+                                    val movementVector = previousPos?.let { prev -> currentPos - prev }
+                                    previousPos = currentPos
 
-                                    val movedToNewNode = gameState.level.nodes.firstOrNull { node ->
-                                        val pixelOffset = pixelNodes.getValue(node)
-                                        val distance = (pixelOffset - currentPos).getDistance()
-                                        distance < nodeHitRadius
+                                    // Check if finger has traveled enough from last confirmed node
+                                    val distanceFromLastConfirm = lastConfirmedPos?.let {
+                                        (currentPos - it).getDistance()
+                                    } ?: Float.MAX_VALUE
+                                    val hasMovedEnough = distanceFromLastConfirm >= minTravelDistance
+
+                                    // Find the closest node to current finger position
+                                    val closestNodeEntry = pixelNodes.minByOrNull { (_, pixelOffset) ->
+                                        (pixelOffset - currentPos).getDistance()
                                     }
 
-                                    if (movedToNewNode != null && movedToNewNode.id != gameState.currentNodeId) {
-                                        val unvisitedEdges = gameState.level.edges.filter { !it.isVisited }
+                                    val unvisitedEdges = gameState.level.edges.filter { !it.isVisited }
 
+                                    val movedToNewNode = closestNodeEntry?.let { (node, pixelOffset) ->
+                                        if ((pixelOffset - currentPos).getDistance() < nodeHitRadius && node.id != gameState.currentNodeId) {
+                                            // Direction check: only accept if finger is moving decisively TOWARD this node
+                                            val directionToNode = pixelOffset - currentPos
+                                            val isMovingToward = movementVector?.let { mv ->
+                                                val mvMag = mv.getDistance()
+                                                val dirMag = directionToNode.getDistance()
+                                                if (mvMag > 0.1f && dirMag > 0.1f) {
+                                                    // Normalized dot product (cosine of angle between vectors)
+                                                    val cosAngle = (mv.x * directionToNode.x + mv.y * directionToNode.y) / (mvMag * dirMag)
+                                                    cosAngle > 0.5f // ~60 degree cone toward node
+                                                } else {
+                                                    true // Accept if barely moving
+                                                }
+                                            } ?: true // Accept on first frame when no previous position
+
+                                            if (isMovingToward && hasMovedEnough) node else null
+                                        } else {
+                                            null
+                                        }
+                                    }
+
+                                    if (movedToNewNode != null) {
                                         val connectingEdge = unvisitedEdges.firstOrNull { edge ->
                                             edge.containsNode(gameState.currentNodeId!!) && edge.containsNode(movedToNewNode.id)
                                         }
@@ -387,22 +469,25 @@ fun OneLineDrawGame(
                                             gameState = gameState
                                                 .updateEdgeVisited(connectingEdge, true)
                                                 .copy(currentNodeId = movedToNewNode.id)
+                                            lastConfirmedPos = currentPos
                                             vibrateTick()
                                         } else {
-                                            // Find the already-visited edge that was retraced
-                                            val retracedEdge = gameState.level.edges.firstOrNull { edge ->
-                                                edge.isVisited &&
-                                                edge.containsNode(gameState.currentNodeId!!) &&
-                                                edge.containsNode(movedToNewNode.id)
+                                            // Check if there's an edge at all between these nodes
+                                            val anyEdge = gameState.level.edges.firstOrNull { edge ->
+                                                edge.containsNode(gameState.currentNodeId!!) && edge.containsNode(movedToNewNode.id)
                                             }
-                                            gameState = gameState.copy(
-                                                isGameOver = true,
-                                                gameOverReason = GameOverReason.RETRACED_EDGE,
-                                                failedEdge = retracedEdge
-                                            )
+
+                                            if (anyEdge != null) {
+                                                // Edge exists but is visited - retraced
+                                                gameState = gameState.copy(
+                                                    isGameOver = true,
+                                                    gameOverReason = GameOverReason.RETRACED_EDGE,
+                                                    failedEdge = anyEdge
+                                                )
+                                            }
+                                            // If no edge exists, ignore (non-adjacent node)
                                         }
                                     }
-
                                     change.consume()
                                 }
                             }

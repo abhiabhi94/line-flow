@@ -40,17 +40,7 @@ captures/
 *.iml
 *.ipr
 *.iws
-.idea/workspace.xml
-.idea/tasks.xml
-.idea/gradle.xml
-.idea/assetWizardSettings.xml
-.idea/dictionaries
-.idea/libraries
-.idea/caches
-.idea/modules.xml
-.idea/misc.xml
-# Android Studio 3.1+ serialized cache file
-.idea/caches/build_file_checksums.ser
+.idea/
 
 # Keystore files
 # Uncomment the following lines if you do generate an upload keystore and

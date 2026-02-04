@@ -4,8 +4,15 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import kotlin.math.atan2
 
 class LevelValidationTest {
+
+    companion object {
+        // Minimum angular separation (in degrees) between edges at any node
+        // 30 degrees provides ~60 pixels separation at typical touch radius
+        const val MIN_EDGE_ANGLE_DEGREES = 30.0
+    }
 
     @Test
     fun allLevelsHaveValidEulerianPath() {
@@ -108,14 +115,14 @@ class LevelValidationTest {
         val ids = LevelManager.levels.map { it.id }
         assertEquals(
             "Levels are not in sequential order",
-            (1..25).toList(),
+            (1..35).toList(),
             ids
         )
     }
 
     @Test
-    fun exactly15LevelsExist() {
-        assertEquals("Expected 25 levels", 25, LevelManager.levels.size)
+    fun exactly35LevelsExist() {
+        assertEquals("Expected 35 levels", 35, LevelManager.levels.size)
     }
 
     @Test
@@ -268,6 +275,104 @@ class LevelValidationTest {
                         )
                     }
                 }
+            }
+        }
+    }
+
+    @Test
+    fun allNodesHaveAdequateEdgeAngularSeparation() {
+        // Only check levels 28 and beyond (as specified by user)
+        // Earlier levels have been playtested and work fine despite tighter angles
+        val levelsToCheck = LevelManager.levels.filter { it.id >= 28 }
+
+        levelsToCheck.forEach { level ->
+            val nodePositions = level.nodes.associate { it.id to it.position }
+
+            level.nodes.forEach { node ->
+                // Find all nodes connected to this node via edges
+                val connectedNodeIds = level.edges
+                    .filter { it.containsNode(node.id) }
+                    .map { edge -> if (edge.node1Id == node.id) edge.node2Id else edge.node1Id }
+
+                // Skip nodes with 0 or 1 edges (no separation to check)
+                if (connectedNodeIds.size < 2) return@forEach
+
+                // Calculate angle from this node to each connected node
+                val angles = connectedNodeIds.map { otherId ->
+                    val other = nodePositions[otherId]!!
+                    val dx = other.x - node.position.x
+                    val dy = other.y - node.position.y
+                    Math.toDegrees(atan2(dy.toDouble(), dx.toDouble()))
+                }.sorted()
+
+                // Check angular separation between consecutive edges (including wrap-around)
+                for (i in angles.indices) {
+                    val current = angles[i]
+                    val next = angles[(i + 1) % angles.size]
+                    var separation = next - current
+                    if (separation <= 0) separation += 360.0
+
+                    assertTrue(
+                        "Level ${level.id} (${level.name}): Node ${node.id} has edges with only " +
+                            "${String.format("%.1f", separation)}° separation (minimum required: $MIN_EDGE_ANGLE_DEGREES°). " +
+                            "Connected nodes: $connectedNodeIds",
+                        separation >= MIN_EDGE_ANGLE_DEGREES
+                    )
+                }
+            }
+        }
+    }
+
+    @Test
+    fun reportAngularSeparationForLevels28AndAbove() {
+        // Diagnostic test - always passes but prints angular separation info
+        println("=== Angular Separation Report for Levels 28+ ===")
+
+        LevelManager.levels.filter { it.id >= 28 }.forEach { level ->
+            val nodePositions = level.nodes.associate { it.id to it.position }
+            var levelMinSeparation = Double.MAX_VALUE
+            var worstNodeId = -1
+            val failingNodes = mutableListOf<String>()
+
+            level.nodes.forEach { node ->
+                val connectedNodeIds = level.edges
+                    .filter { it.containsNode(node.id) }
+                    .map { edge -> if (edge.node1Id == node.id) edge.node2Id else edge.node1Id }
+
+                if (connectedNodeIds.size < 2) return@forEach
+
+                val angles = connectedNodeIds.map { otherId ->
+                    val other = nodePositions[otherId]!!
+                    val dx = other.x - node.position.x
+                    val dy = other.y - node.position.y
+                    Math.toDegrees(atan2(dy.toDouble(), dx.toDouble()))
+                }.sorted()
+
+                var nodeMinSeparation = Double.MAX_VALUE
+                for (i in angles.indices) {
+                    val current = angles[i]
+                    val next = angles[(i + 1) % angles.size]
+                    var separation = next - current
+                    if (separation <= 0) separation += 360.0
+                    if (separation < nodeMinSeparation) {
+                        nodeMinSeparation = separation
+                    }
+                }
+
+                if (nodeMinSeparation < levelMinSeparation) {
+                    levelMinSeparation = nodeMinSeparation
+                    worstNodeId = node.id
+                }
+
+                if (nodeMinSeparation < MIN_EDGE_ANGLE_DEGREES) {
+                    failingNodes.add("Node ${node.id}: ${String.format("%.1f", nodeMinSeparation)}° (${connectedNodeIds.size} edges)")
+                }
+            }
+
+            val status = if (levelMinSeparation < MIN_EDGE_ANGLE_DEGREES) "FAIL" else "PASS"
+            println("Level ${level.id} (${level.name}): min ${String.format("%.1f", levelMinSeparation)}° at node $worstNodeId [$status]")
+            if (failingNodes.isNotEmpty()) {
+                failingNodes.forEach { println("  - $it") }
             }
         }
     }

@@ -1,5 +1,6 @@
 package app.curious.lineflow
 
+import app.curious.lineflow.BuildConfig
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -108,6 +109,14 @@ fun LevelSelectScreen(
     val totalLevels = LevelManager.levels.size
     val completedCount = completedLevels.value.size
 
+    // Pre-compute unlocked levels to avoid SharedPreferences reads during scroll
+    // In debug builds, all levels are unlocked for testing
+    val unlockedLevels = remember(completedLevels.value) {
+        LevelManager.levels.map { level ->
+            level.id to (BuildConfig.DEBUG || level.id == 1 || completedLevels.value.contains(level.id - 1))
+        }.toMap()
+    }
+
     Box(modifier = modifier.fillMaxSize()) {
     Column(
         modifier = Modifier
@@ -166,10 +175,13 @@ fun LevelSelectScreen(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(LevelManager.levels.size) { index ->
+            items(
+                count = LevelManager.levels.size,
+                key = { index -> LevelManager.levels[index].id }
+            ) { index ->
                 val level = LevelManager.levels[index]
                 val isCompleted = completedLevels.value.contains(level.id)
-                val isUnlocked = progressRepository.isLevelUnlocked(level.id)
+                val isUnlocked = unlockedLevels[level.id] ?: false
 
                 LevelCard(
                     level = level,
@@ -259,28 +271,13 @@ fun LevelCard(
         else -> BorderDefault.copy(alpha = 0.5f)
     }
 
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.95f else 1f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessHigh
-        ),
-        label = "card_press_scale"
-    )
-
     Surface(
         modifier = Modifier
             .aspectRatio(1f)
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
             .then(
                 if (isUnlocked) Modifier.clickable(
-                    interactionSource = interactionSource,
                     indication = ripple(),
+                    interactionSource = null,
                     onClick = onClick
                 ) else Modifier
             ),
