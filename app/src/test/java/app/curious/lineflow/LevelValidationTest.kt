@@ -115,14 +115,14 @@ class LevelValidationTest {
         val ids = LevelManager.levels.map { it.id }
         assertEquals(
             "Levels are not in sequential order",
-            (1..35).toList(),
+            (1..40).toList(),
             ids
         )
     }
 
     @Test
     fun exactly35LevelsExist() {
-        assertEquals("Expected 35 levels", 35, LevelManager.levels.size)
+        assertEquals("Expected 40 levels", 40, LevelManager.levels.size)
     }
 
     @Test
