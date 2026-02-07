@@ -173,8 +173,9 @@ class LevelValidationTest {
         LevelManager.levels.forEach { level ->
             val expectedMin = if (level.id <= 10) 2 else 3
             assertTrue(
-                "Level ${level.id} (${level.name}) expected at least $expectedMin hint steps, has ${level.hints.steps.size}",
-                level.hints.steps.size >= expectedMin
+                "Level ${level.id} (${level.name}) expected at least $expectedMin " +
+                    "hint steps, has ${level.hints.steps.size}",
+                level.hints.steps.size >= expectedMin,
             )
         }
     }
@@ -312,11 +313,13 @@ class LevelValidationTest {
                     var separation = next - current
                     if (separation <= 0) separation += 360.0
 
+                    val sepStr = String.format("%.1f", separation)
                     assertTrue(
-                        "Level ${level.id} (${level.name}): Node ${node.id} has edges with only " +
-                            "${String.format("%.1f", separation)}° separation (minimum required: $MIN_EDGE_ANGLE_DEGREES°). " +
+                        "Level ${level.id} (${level.name}): " +
+                            "Node ${node.id} has edges with only ${sepStr}° " +
+                            "separation (minimum: $MIN_EDGE_ANGLE_DEGREES°). " +
                             "Connected nodes: $connectedNodeIds",
-                        separation >= MIN_EDGE_ANGLE_DEGREES
+                        separation >= MIN_EDGE_ANGLE_DEGREES,
                     )
                 }
             }
@@ -365,12 +368,20 @@ class LevelValidationTest {
                 }
 
                 if (nodeMinSeparation < MIN_EDGE_ANGLE_DEGREES) {
-                    failingNodes.add("Node ${node.id}: ${String.format("%.1f", nodeMinSeparation)}° (${connectedNodeIds.size} edges)")
+                    val sepStr = String.format("%.1f", nodeMinSeparation)
+                    failingNodes.add(
+                        "Node ${node.id}: ${sepStr}° " +
+                            "(${connectedNodeIds.size} edges)",
+                    )
                 }
             }
 
             val status = if (levelMinSeparation < MIN_EDGE_ANGLE_DEGREES) "FAIL" else "PASS"
-            println("Level ${level.id} (${level.name}): min ${String.format("%.1f", levelMinSeparation)}° at node $worstNodeId [$status]")
+            val minSepStr = String.format("%.1f", levelMinSeparation)
+            println(
+                "Level ${level.id} (${level.name}): " +
+                    "min ${minSepStr}° at node $worstNodeId [$status]",
+            )
             if (failingNodes.isNotEmpty()) {
                 failingNodes.forEach { println("  - $it") }
             }
