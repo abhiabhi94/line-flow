@@ -1450,6 +1450,303 @@ object LevelManager {
                     HintStep(text = "The center creates a diagonal bridge.", showValidStarts = true, showFirstEdge = true)
                 )
             )
+        ),
+
+        // Level 36: The Fracture — 17 nodes, 34 edges
+        // Mixed CW/CCW skip directions break rotational symmetry - PATH
+        // Alternating skip pattern: even outer nodes skip CW, odd outer nodes skip CCW
+        // Odd nodes: 8, 12 (inner top and inner bottom)
+        Level(
+            id = 36,
+            name = "The Fracture",
+            nodes = listOf(
+                // Outer octagon (8 nodes) - same positions as levels 30-35
+                Node(0, Offset(0.50f, 0.06f)),   // top
+                Node(1, Offset(0.81f, 0.19f)),   // top-right
+                Node(2, Offset(0.94f, 0.50f)),   // right
+                Node(3, Offset(0.81f, 0.81f)),   // bottom-right
+                Node(4, Offset(0.50f, 0.94f)),   // bottom
+                Node(5, Offset(0.19f, 0.81f)),   // bottom-left
+                Node(6, Offset(0.06f, 0.50f)),   // left
+                Node(7, Offset(0.19f, 0.19f)),   // top-left
+                // Inner octagon (8 nodes)
+                Node(8, Offset(0.50f, 0.25f)),   // inner top
+                Node(9, Offset(0.68f, 0.32f)),   // inner top-right
+                Node(10, Offset(0.75f, 0.50f)),  // inner right
+                Node(11, Offset(0.68f, 0.68f)),  // inner bottom-right
+                Node(12, Offset(0.50f, 0.75f)),  // inner bottom
+                Node(13, Offset(0.32f, 0.68f)),  // inner bottom-left
+                Node(14, Offset(0.25f, 0.50f)),  // inner left
+                Node(15, Offset(0.32f, 0.32f)),  // inner top-left
+                // Center hub (1 node)
+                Node(16, Offset(0.50f, 0.50f))   // center
+            ),
+            edges = listOf(
+                // Outer octagon ring (8 edges)
+                Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4),
+                Edge(4, 5), Edge(5, 6), Edge(6, 7), Edge(7, 0),
+                // Inner octagon ring (8 edges)
+                Edge(8, 9), Edge(9, 10), Edge(10, 11), Edge(11, 12),
+                Edge(12, 13), Edge(13, 14), Edge(14, 15), Edge(15, 8),
+                // Radial spokes - outer to inner (8 edges)
+                Edge(0, 8), Edge(1, 9), Edge(2, 10), Edge(3, 11),
+                Edge(4, 12), Edge(5, 13), Edge(6, 14), Edge(7, 15),
+                // Mixed skip connections - alternating CW/CCW (8 edges)
+                Edge(0, 9), Edge(1, 8),   // 0 CW, 1 CCW
+                Edge(2, 11), Edge(3, 10), // 2 CW, 3 CCW
+                Edge(4, 13), Edge(5, 12), // 4 CW, 5 CCW
+                Edge(6, 15), Edge(7, 14), // 6 CW, 7 CCW
+                // Center to top and bottom inner nodes (2 edges) - creates PATH
+                Edge(16, 8), Edge(16, 12)
+            ),
+            hints = LevelHints(
+                validStartNodeIds = listOf(8, 12),
+                firstEdge = Pair(8, 0),
+                steps = listOf(
+                    HintStep(text = "The skip connections alternate directions — watch the pattern shift."),
+                    HintStep(text = "Inner top and inner bottom have odd connections.", showValidStarts = true),
+                    HintStep(text = "Start from the inner top and head outward.", showValidStarts = true, showFirstEdge = true)
+                )
+            )
+        ),
+
+        // Level 37: The Rift — 17 nodes, 34 edges
+        // Broken inner ring with cross-connections creating shortcuts and bottlenecks - PATH
+        // Inner ring breaks at 8-9 and 11-12, replaced with cross-edges 8-11 and 12-15
+        // Odd nodes: 13, 15 (both in lower-left quadrant — asymmetric endpoints)
+        Level(
+            id = 37,
+            name = "The Rift",
+            nodes = listOf(
+                // Outer octagon (8 nodes)
+                Node(0, Offset(0.50f, 0.06f)),   // top
+                Node(1, Offset(0.81f, 0.19f)),   // top-right
+                Node(2, Offset(0.94f, 0.50f)),   // right
+                Node(3, Offset(0.81f, 0.81f)),   // bottom-right
+                Node(4, Offset(0.50f, 0.94f)),   // bottom
+                Node(5, Offset(0.19f, 0.81f)),   // bottom-left
+                Node(6, Offset(0.06f, 0.50f)),   // left
+                Node(7, Offset(0.19f, 0.19f)),   // top-left
+                // Inner octagon (8 nodes)
+                Node(8, Offset(0.50f, 0.25f)),   // inner top
+                Node(9, Offset(0.68f, 0.32f)),   // inner top-right
+                Node(10, Offset(0.75f, 0.50f)),  // inner right
+                Node(11, Offset(0.68f, 0.68f)),  // inner bottom-right
+                Node(12, Offset(0.50f, 0.75f)),  // inner bottom
+                Node(13, Offset(0.32f, 0.68f)),  // inner bottom-left
+                Node(14, Offset(0.25f, 0.50f)),  // inner left
+                Node(15, Offset(0.32f, 0.32f)),  // inner top-left
+                // Center hub (1 node)
+                Node(16, Offset(0.50f, 0.50f))   // center
+            ),
+            edges = listOf(
+                // Outer octagon ring (8 edges)
+                Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4),
+                Edge(4, 5), Edge(5, 6), Edge(6, 7), Edge(7, 0),
+                // Modified inner connections (8 edges)
+                // Ring segments kept: 9-10, 10-11, 12-13, 13-14, 14-15, 15-8
+                // Ring segments removed: 8-9, 11-12
+                // Cross-connections added: 8-11, 12-15
+                Edge(9, 10), Edge(10, 11), Edge(12, 13), Edge(13, 14),
+                Edge(14, 15), Edge(15, 8), Edge(8, 11), Edge(12, 15),
+                // Radial spokes - outer to inner (8 edges)
+                Edge(0, 8), Edge(1, 9), Edge(2, 10), Edge(3, 11),
+                Edge(4, 12), Edge(5, 13), Edge(6, 14), Edge(7, 15),
+                // Star skip connections - clockwise (8 edges)
+                Edge(0, 9), Edge(1, 10), Edge(2, 11), Edge(3, 12),
+                Edge(4, 13), Edge(5, 14), Edge(6, 15), Edge(7, 8),
+                // Center to inner top-right and inner bottom-left (2 edges) - creates PATH
+                Edge(16, 9), Edge(16, 13)
+            ),
+            hints = LevelHints(
+                validStartNodeIds = listOf(13, 15),
+                firstEdge = Pair(13, 12),
+                steps = listOf(
+                    HintStep(text = "The inner ring is broken — two cross-connections create shortcuts."),
+                    HintStep(text = "Both start nodes are in the lower-left quadrant.", showValidStarts = true),
+                    HintStep(text = "Start from inner bottom-left and go to inner bottom.", showValidStarts = true, showFirstEdge = true)
+                )
+            )
+        ),
+
+        // Level 38: The Crucible — 17 nodes, 34 edges
+        // 4-degree center hub with 2 inner ring breaks - CIRCUIT
+        // Inner ring breaks at 9-10 and 13-14, bridged only through center
+        // Center must be visited exactly twice with correct edge pairing
+        // All even degrees = 0 odd nodes = circuit
+        Level(
+            id = 38,
+            name = "The Crucible",
+            nodes = listOf(
+                // Outer octagon (8 nodes)
+                Node(0, Offset(0.50f, 0.06f)),   // top
+                Node(1, Offset(0.81f, 0.19f)),   // top-right
+                Node(2, Offset(0.94f, 0.50f)),   // right
+                Node(3, Offset(0.81f, 0.81f)),   // bottom-right
+                Node(4, Offset(0.50f, 0.94f)),   // bottom
+                Node(5, Offset(0.19f, 0.81f)),   // bottom-left
+                Node(6, Offset(0.06f, 0.50f)),   // left
+                Node(7, Offset(0.19f, 0.19f)),   // top-left
+                // Inner octagon (8 nodes)
+                Node(8, Offset(0.50f, 0.25f)),   // inner top
+                Node(9, Offset(0.68f, 0.32f)),   // inner top-right
+                Node(10, Offset(0.75f, 0.50f)),  // inner right
+                Node(11, Offset(0.68f, 0.68f)),  // inner bottom-right
+                Node(12, Offset(0.50f, 0.75f)),  // inner bottom
+                Node(13, Offset(0.32f, 0.68f)),  // inner bottom-left
+                Node(14, Offset(0.25f, 0.50f)),  // inner left
+                Node(15, Offset(0.32f, 0.32f)),  // inner top-left
+                // Center hub (1 node)
+                Node(16, Offset(0.50f, 0.50f))   // center
+            ),
+            edges = listOf(
+                // Outer octagon ring (8 edges)
+                Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4),
+                Edge(4, 5), Edge(5, 6), Edge(6, 7), Edge(7, 0),
+                // Modified inner ring (6 edges)
+                // Kept: 8-9, 10-11, 11-12, 12-13, 14-15, 15-8
+                // Removed: 9-10, 13-14
+                Edge(8, 9), Edge(10, 11), Edge(11, 12),
+                Edge(12, 13), Edge(14, 15), Edge(15, 8),
+                // Radial spokes - outer to inner (8 edges)
+                Edge(0, 8), Edge(1, 9), Edge(2, 10), Edge(3, 11),
+                Edge(4, 12), Edge(5, 13), Edge(6, 14), Edge(7, 15),
+                // Star skip connections - clockwise (8 edges)
+                Edge(0, 9), Edge(1, 10), Edge(2, 11), Edge(3, 12),
+                Edge(4, 13), Edge(5, 14), Edge(6, 15), Edge(7, 8),
+                // Center connections (4 edges) - bridges the inner ring gaps
+                Edge(16, 9), Edge(16, 10), Edge(16, 13), Edge(16, 14)
+            ),
+            hints = LevelHints(
+                validStartNodeIds = (0..16).toList(),
+                firstEdge = Pair(0, 1),
+                steps = listOf(
+                    HintStep(text = "The center is a crossroads — plan your visits carefully."),
+                    HintStep(text = "All nodes have even degree — this is a circuit, start anywhere.", showValidStarts = true),
+                    HintStep(text = "The center must be visited exactly twice. Try starting at the top.", showValidStarts = true, showFirstEdge = true)
+                )
+            )
+        ),
+
+        // Level 39: The Labyrinth — 17 nodes, 34 edges
+        // Broken inner ring + mixed CW/CCW skips + asymmetric degrees - PATH
+        // Node 11 has degree 3 (bottleneck), node 13 has degree 6 (trap hub)
+        // No rotational symmetry remains
+        // Odd nodes: 9 (degree 5), 11 (degree 3)
+        Level(
+            id = 39,
+            name = "The Labyrinth",
+            nodes = listOf(
+                // Outer octagon (8 nodes)
+                Node(0, Offset(0.50f, 0.06f)),   // top
+                Node(1, Offset(0.81f, 0.19f)),   // top-right
+                Node(2, Offset(0.94f, 0.50f)),   // right
+                Node(3, Offset(0.81f, 0.81f)),   // bottom-right
+                Node(4, Offset(0.50f, 0.94f)),   // bottom
+                Node(5, Offset(0.19f, 0.81f)),   // bottom-left
+                Node(6, Offset(0.06f, 0.50f)),   // left
+                Node(7, Offset(0.19f, 0.19f)),   // top-left
+                // Inner octagon (8 nodes)
+                Node(8, Offset(0.50f, 0.25f)),   // inner top
+                Node(9, Offset(0.68f, 0.32f)),   // inner top-right
+                Node(10, Offset(0.75f, 0.50f)),  // inner right
+                Node(11, Offset(0.68f, 0.68f)),  // inner bottom-right
+                Node(12, Offset(0.50f, 0.75f)),  // inner bottom
+                Node(13, Offset(0.32f, 0.68f)),  // inner bottom-left
+                Node(14, Offset(0.25f, 0.50f)),  // inner left
+                Node(15, Offset(0.32f, 0.32f)),  // inner top-left
+                // Center hub (1 node)
+                Node(16, Offset(0.50f, 0.50f))   // center
+            ),
+            edges = listOf(
+                // Outer octagon ring (8 edges)
+                Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4),
+                Edge(4, 5), Edge(5, 6), Edge(6, 7), Edge(7, 0),
+                // Modified inner connections (8 edges)
+                // Ring segments kept: 9-10, 10-11, 12-13, 13-14, 14-15, 15-8
+                // Ring segments removed: 8-9, 11-12
+                // Cross-connections added: 8-11, 12-15
+                Edge(9, 10), Edge(10, 11), Edge(12, 13), Edge(13, 14),
+                Edge(14, 15), Edge(15, 8), Edge(8, 11), Edge(12, 15),
+                // Radial spokes - outer to inner (8 edges)
+                Edge(0, 8), Edge(1, 9), Edge(2, 10), Edge(3, 11),
+                Edge(4, 12), Edge(5, 13), Edge(6, 14), Edge(7, 15),
+                // Mixed skip connections (8 edges)
+                // CW kept: 0-9, 1-10, 3-12, 4-13, 5-14, 7-8
+                // CCW replacements: 2-9 (was 2-11), 6-13 (was 6-15)
+                Edge(0, 9), Edge(1, 10), Edge(2, 9), Edge(3, 12),
+                Edge(4, 13), Edge(5, 14), Edge(6, 13), Edge(7, 8),
+                // Center connections (2 edges) - creates PATH
+                Edge(16, 9), Edge(16, 13)
+            ),
+            hints = LevelHints(
+                validStartNodeIds = listOf(9, 11),
+                firstEdge = Pair(9, 10),
+                steps = listOf(
+                    HintStep(text = "A labyrinth of asymmetric connections — node 11 is a critical bottleneck."),
+                    HintStep(text = "Inner top-right and inner bottom-right are your endpoints.", showValidStarts = true),
+                    HintStep(text = "Start from inner top-right and head to inner right.", showValidStarts = true, showFirstEdge = true)
+                )
+            )
+        ),
+
+        // Level 40: The Singularity — 17 nodes, 34 edges
+        // 6-degree center hub with 4 inner ring breaks creating island topology - PATH
+        // Center must be visited 3 times with correct edge pairing each time
+        // Inner ring 75% broken — 4 isolated node-pairs connected only through center
+        // Odd nodes: 11 (degree 3), 15 (degree 3) — opposite sides, no center access
+        Level(
+            id = 40,
+            name = "The Singularity",
+            nodes = listOf(
+                // Outer octagon (8 nodes)
+                Node(0, Offset(0.50f, 0.06f)),   // top
+                Node(1, Offset(0.81f, 0.19f)),   // top-right
+                Node(2, Offset(0.94f, 0.50f)),   // right
+                Node(3, Offset(0.81f, 0.81f)),   // bottom-right
+                Node(4, Offset(0.50f, 0.94f)),   // bottom
+                Node(5, Offset(0.19f, 0.81f)),   // bottom-left
+                Node(6, Offset(0.06f, 0.50f)),   // left
+                Node(7, Offset(0.19f, 0.19f)),   // top-left
+                // Inner octagon (8 nodes)
+                Node(8, Offset(0.50f, 0.25f)),   // inner top
+                Node(9, Offset(0.68f, 0.32f)),   // inner top-right
+                Node(10, Offset(0.75f, 0.50f)),  // inner right
+                Node(11, Offset(0.68f, 0.68f)),  // inner bottom-right
+                Node(12, Offset(0.50f, 0.75f)),  // inner bottom
+                Node(13, Offset(0.32f, 0.68f)),  // inner bottom-left
+                Node(14, Offset(0.25f, 0.50f)),  // inner left
+                Node(15, Offset(0.32f, 0.32f)),  // inner top-left
+                // Center hub (1 node)
+                Node(16, Offset(0.50f, 0.50f))   // center
+            ),
+            edges = listOf(
+                // Outer octagon ring (8 edges)
+                Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4),
+                Edge(4, 5), Edge(5, 6), Edge(6, 7), Edge(7, 0),
+                // Modified inner ring (4 edges) — 75% broken
+                // Kept: 9-10, 11-12, 13-14, 15-8
+                // Removed: 8-9, 10-11, 12-13, 14-15
+                Edge(9, 10), Edge(11, 12), Edge(13, 14), Edge(15, 8),
+                // Radial spokes - outer to inner (8 edges)
+                Edge(0, 8), Edge(1, 9), Edge(2, 10), Edge(3, 11),
+                Edge(4, 12), Edge(5, 13), Edge(6, 14), Edge(7, 15),
+                // Star skip connections - clockwise (8 edges)
+                Edge(0, 9), Edge(1, 10), Edge(2, 11), Edge(3, 12),
+                Edge(4, 13), Edge(5, 14), Edge(6, 15), Edge(7, 8),
+                // Center connections (6 edges) - bridges the island topology
+                Edge(16, 8), Edge(16, 9), Edge(16, 10),
+                Edge(16, 12), Edge(16, 13), Edge(16, 14)
+            ),
+            hints = LevelHints(
+                validStartNodeIds = listOf(11, 15),
+                firstEdge = Pair(11, 12),
+                steps = listOf(
+                    HintStep(text = "The Singularity — the center controls everything with six connections."),
+                    HintStep(text = "Inner bottom-right and inner top-left are the only start points.", showValidStarts = true),
+                    HintStep(text = "Start from inner bottom-right and go to inner bottom.", showValidStarts = true, showFirstEdge = true)
+                )
+            )
         )
     )
 
