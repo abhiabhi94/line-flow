@@ -51,6 +51,7 @@ import app.curious.lineflow.ui.theme.NodeCurrent
 import app.curious.lineflow.ui.theme.Success
 import app.curious.lineflow.ui.theme.TextPrimary
 import app.curious.lineflow.ui.theme.TextSecondary
+import app.curious.lineflow.LevelManager
 import kotlinx.coroutines.delay
 import kotlin.math.PI
 import kotlin.math.cos
@@ -256,7 +257,7 @@ fun ChampionScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "All 35 levels completed",
+                    text = "All ${LevelManager.levels.size} levels completed",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = Success

@@ -121,7 +121,7 @@ class LevelValidationTest {
     }
 
     @Test
-    fun exactly35LevelsExist() {
+    fun expectedNumberOfLevelsExist() {
         assertEquals("Expected 40 levels", 40, LevelManager.levels.size)
     }
 
