@@ -1747,6 +1747,288 @@ object LevelManager {
                     HintStep(text = "Start from inner bottom-right and go to inner bottom.", showValidStarts = true, showFirstEdge = true)
                 )
             )
+        ),
+
+        // Level 41: The Gauntlet — 17 nodes, 34 edges
+        // Missing skip at node 4 creates outer bottleneck, 6-degree center requires 3 visits - PATH
+        // 3 inner ring breaks at 8-9, 11-12, 13-14
+        // Odd nodes: 4 (degree 3), 13 (degree 3)
+        Level(
+            id = 41,
+            name = "The Gauntlet",
+            nodes = listOf(
+                // Outer octagon (8 nodes)
+                Node(0, Offset(0.50f, 0.06f)),   // top
+                Node(1, Offset(0.81f, 0.19f)),   // top-right
+                Node(2, Offset(0.94f, 0.50f)),   // right
+                Node(3, Offset(0.81f, 0.81f)),   // bottom-right
+                Node(4, Offset(0.50f, 0.94f)),   // bottom
+                Node(5, Offset(0.19f, 0.81f)),   // bottom-left
+                Node(6, Offset(0.06f, 0.50f)),   // left
+                Node(7, Offset(0.19f, 0.19f)),   // top-left
+                // Inner octagon (8 nodes)
+                Node(8, Offset(0.50f, 0.25f)),   // inner top
+                Node(9, Offset(0.68f, 0.32f)),   // inner top-right
+                Node(10, Offset(0.75f, 0.50f)),  // inner right
+                Node(11, Offset(0.68f, 0.68f)),  // inner bottom-right
+                Node(12, Offset(0.50f, 0.75f)),  // inner bottom
+                Node(13, Offset(0.32f, 0.68f)),  // inner bottom-left
+                Node(14, Offset(0.25f, 0.50f)),  // inner left
+                Node(15, Offset(0.32f, 0.32f)),  // inner top-left
+                // Center hub (1 node)
+                Node(16, Offset(0.50f, 0.50f))   // center
+            ),
+            edges = listOf(
+                // Outer octagon ring (8 edges)
+                Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4),
+                Edge(4, 5), Edge(5, 6), Edge(6, 7), Edge(7, 0),
+                // Inner ring (5 edges) — breaks at 8-9, 11-12, 13-14
+                Edge(9, 10), Edge(10, 11), Edge(12, 13), Edge(14, 15), Edge(15, 8),
+                // Radial spokes - outer to inner (8 edges)
+                Edge(0, 8), Edge(1, 9), Edge(2, 10), Edge(3, 11),
+                Edge(4, 12), Edge(5, 13), Edge(6, 14), Edge(7, 15),
+                // CW skip connections (7 edges) — skip removed for outer 4
+                Edge(0, 9), Edge(1, 10), Edge(2, 11), Edge(3, 12),
+                Edge(5, 14), Edge(6, 15), Edge(7, 8),
+                // Center connections (6 edges)
+                Edge(16, 8), Edge(16, 9), Edge(16, 11),
+                Edge(16, 12), Edge(16, 13), Edge(16, 14)
+            ),
+            hints = LevelHints(
+                validStartNodeIds = listOf(4, 13),
+                firstEdge = Pair(4, 5),
+                steps = listOf(
+                    HintStep(text = "The center is a 6-way junction — time your visits or get trapped."),
+                    HintStep(text = "One start is on the outer ring, the other is hidden inside.", showValidStarts = true),
+                    HintStep(text = "Start from the outer bottom and head toward bottom-left.", showValidStarts = true, showFirstEdge = true)
+                )
+            )
+        ),
+
+        // Level 42: The Vortex — 17 nodes, 33 edges
+        // Center node has odd degree — forced start/end at the center is counterintuitive - PATH
+        // Single inner ring break at 10-11, missing skip at outer 6
+        // Odd nodes: 6 (degree 3), 16 (degree 3)
+        Level(
+            id = 42,
+            name = "The Vortex",
+            nodes = listOf(
+                // Outer octagon (8 nodes)
+                Node(0, Offset(0.50f, 0.06f)),   // top
+                Node(1, Offset(0.81f, 0.19f)),   // top-right
+                Node(2, Offset(0.94f, 0.50f)),   // right
+                Node(3, Offset(0.81f, 0.81f)),   // bottom-right
+                Node(4, Offset(0.50f, 0.94f)),   // bottom
+                Node(5, Offset(0.19f, 0.81f)),   // bottom-left
+                Node(6, Offset(0.06f, 0.50f)),   // left
+                Node(7, Offset(0.19f, 0.19f)),   // top-left
+                // Inner octagon (8 nodes)
+                Node(8, Offset(0.50f, 0.25f)),   // inner top
+                Node(9, Offset(0.68f, 0.32f)),   // inner top-right
+                Node(10, Offset(0.75f, 0.50f)),  // inner right
+                Node(11, Offset(0.68f, 0.68f)),  // inner bottom-right
+                Node(12, Offset(0.50f, 0.75f)),  // inner bottom
+                Node(13, Offset(0.32f, 0.68f)),  // inner bottom-left
+                Node(14, Offset(0.25f, 0.50f)),  // inner left
+                Node(15, Offset(0.32f, 0.32f)),  // inner top-left
+                // Center hub (1 node)
+                Node(16, Offset(0.50f, 0.50f))   // center
+            ),
+            edges = listOf(
+                // Outer octagon ring (8 edges)
+                Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4),
+                Edge(4, 5), Edge(5, 6), Edge(6, 7), Edge(7, 0),
+                // Inner ring (7 edges) — break at 10-11
+                Edge(8, 9), Edge(9, 10), Edge(11, 12),
+                Edge(12, 13), Edge(13, 14), Edge(14, 15), Edge(15, 8),
+                // Radial spokes - outer to inner (8 edges)
+                Edge(0, 8), Edge(1, 9), Edge(2, 10), Edge(3, 11),
+                Edge(4, 12), Edge(5, 13), Edge(6, 14), Edge(7, 15),
+                // CW skip connections (7 edges) — skip removed for outer 6
+                Edge(0, 9), Edge(1, 10), Edge(2, 11), Edge(3, 12),
+                Edge(4, 13), Edge(5, 14), Edge(7, 8),
+                // Center connections (3 edges) — bridges the 10-11 gap
+                Edge(16, 10), Edge(16, 11), Edge(16, 15)
+            ),
+            hints = LevelHints(
+                validStartNodeIds = listOf(6, 16),
+                firstEdge = Pair(16, 10),
+                steps = listOf(
+                    HintStep(text = "The center draws everything in — but can you start from the eye of the vortex?"),
+                    HintStep(text = "One start point is on the outer edge, the other is at the very center.", showValidStarts = true),
+                    HintStep(text = "Start from the center and head to inner right.", showValidStarts = true, showFirstEdge = true)
+                )
+            )
+        ),
+
+        // Level 43: The Funnel — 17 nodes, 33 edges
+        // Right half CW skips, left half CCW skips creating directional funnels - PATH
+        // Node 8 extreme bottleneck (degree 2), node 12 is 5-way junction
+        // 3 inner ring breaks at 8-9, 10-11, 12-13
+        // Odd nodes: 12 (degree 5), 15 (degree 3)
+        Level(
+            id = 43,
+            name = "The Funnel",
+            nodes = listOf(
+                // Outer octagon (8 nodes)
+                Node(0, Offset(0.50f, 0.06f)),   // top
+                Node(1, Offset(0.81f, 0.19f)),   // top-right
+                Node(2, Offset(0.94f, 0.50f)),   // right
+                Node(3, Offset(0.81f, 0.81f)),   // bottom-right
+                Node(4, Offset(0.50f, 0.94f)),   // bottom
+                Node(5, Offset(0.19f, 0.81f)),   // bottom-left
+                Node(6, Offset(0.06f, 0.50f)),   // left
+                Node(7, Offset(0.19f, 0.19f)),   // top-left
+                // Inner octagon (8 nodes)
+                Node(8, Offset(0.50f, 0.25f)),   // inner top
+                Node(9, Offset(0.68f, 0.32f)),   // inner top-right
+                Node(10, Offset(0.75f, 0.50f)),  // inner right
+                Node(11, Offset(0.68f, 0.68f)),  // inner bottom-right
+                Node(12, Offset(0.50f, 0.75f)),  // inner bottom
+                Node(13, Offset(0.32f, 0.68f)),  // inner bottom-left
+                Node(14, Offset(0.25f, 0.50f)),  // inner left
+                Node(15, Offset(0.32f, 0.32f)),  // inner top-left
+                // Center hub (1 node)
+                Node(16, Offset(0.50f, 0.50f))   // center
+            ),
+            edges = listOf(
+                // Outer octagon ring (8 edges)
+                Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4),
+                Edge(4, 5), Edge(5, 6), Edge(6, 7), Edge(7, 0),
+                // Inner ring (5 edges) — breaks at 8-9, 10-11, 12-13
+                Edge(9, 10), Edge(11, 12), Edge(13, 14), Edge(14, 15), Edge(15, 8),
+                // Radial spokes - outer to inner (8 edges)
+                Edge(0, 8), Edge(1, 9), Edge(2, 10), Edge(3, 11),
+                Edge(4, 12), Edge(5, 13), Edge(6, 14), Edge(7, 15),
+                // Mixed skip connections (8 edges) — right CW, left CCW
+                Edge(0, 9), Edge(1, 10), Edge(2, 11), Edge(3, 12),
+                Edge(4, 11), Edge(5, 12), Edge(6, 13), Edge(7, 14),
+                // Center connections (4 edges)
+                Edge(16, 9), Edge(16, 10), Edge(16, 12), Edge(16, 13)
+            ),
+            hints = LevelHints(
+                validStartNodeIds = listOf(12, 15),
+                firstEdge = Pair(12, 11),
+                steps = listOf(
+                    HintStep(text = "The skip connections funnel you in one direction — fighting the current is the key."),
+                    HintStep(text = "Inner bottom is a 5-way junction. Inner top-left is a tight bottleneck.", showValidStarts = true),
+                    HintStep(text = "Start from inner bottom and head to inner bottom-right.", showValidStarts = true, showFirstEdge = true)
+                )
+            )
+        ),
+
+        // Level 44: The Paradox — 17 nodes, 34 edges
+        // All 17 nodes have degree 4 — perfect balance hides deadly traps - CIRCUIT
+        // Alternating CW/CCW skips, 2 inner ring breaks at 10-11 and 13-14
+        // Center bridges both gaps, must be visited exactly twice
+        // 0 odd nodes = circuit (start anywhere)
+        Level(
+            id = 44,
+            name = "The Paradox",
+            nodes = listOf(
+                // Outer octagon (8 nodes)
+                Node(0, Offset(0.50f, 0.06f)),   // top
+                Node(1, Offset(0.81f, 0.19f)),   // top-right
+                Node(2, Offset(0.94f, 0.50f)),   // right
+                Node(3, Offset(0.81f, 0.81f)),   // bottom-right
+                Node(4, Offset(0.50f, 0.94f)),   // bottom
+                Node(5, Offset(0.19f, 0.81f)),   // bottom-left
+                Node(6, Offset(0.06f, 0.50f)),   // left
+                Node(7, Offset(0.19f, 0.19f)),   // top-left
+                // Inner octagon (8 nodes)
+                Node(8, Offset(0.50f, 0.25f)),   // inner top
+                Node(9, Offset(0.68f, 0.32f)),   // inner top-right
+                Node(10, Offset(0.75f, 0.50f)),  // inner right
+                Node(11, Offset(0.68f, 0.68f)),  // inner bottom-right
+                Node(12, Offset(0.50f, 0.75f)),  // inner bottom
+                Node(13, Offset(0.32f, 0.68f)),  // inner bottom-left
+                Node(14, Offset(0.25f, 0.50f)),  // inner left
+                Node(15, Offset(0.32f, 0.32f)),  // inner top-left
+                // Center hub (1 node)
+                Node(16, Offset(0.50f, 0.50f))   // center
+            ),
+            edges = listOf(
+                // Outer octagon ring (8 edges)
+                Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4),
+                Edge(4, 5), Edge(5, 6), Edge(6, 7), Edge(7, 0),
+                // Inner ring (6 edges) — breaks at 10-11 and 13-14
+                Edge(8, 9), Edge(9, 10), Edge(11, 12),
+                Edge(12, 13), Edge(14, 15), Edge(15, 8),
+                // Radial spokes - outer to inner (8 edges)
+                Edge(0, 8), Edge(1, 9), Edge(2, 10), Edge(3, 11),
+                Edge(4, 12), Edge(5, 13), Edge(6, 14), Edge(7, 15),
+                // Alternating skip connections (8 edges) — even CW, odd CCW
+                Edge(0, 9), Edge(1, 8), Edge(2, 11), Edge(3, 10),
+                Edge(4, 13), Edge(5, 12), Edge(6, 15), Edge(7, 14),
+                // Center connections (4 edges) — bridges both inner ring gaps
+                Edge(16, 10), Edge(16, 11), Edge(16, 13), Edge(16, 14)
+            ),
+            hints = LevelHints(
+                validStartNodeIds = (0..16).toList(),
+                firstEdge = Pair(0, 1),
+                steps = listOf(
+                    HintStep(text = "Every node has exactly 4 connections — perfect symmetry hides a deadly trap."),
+                    HintStep(text = "Start anywhere, but the center is a one-way bridge between two halves.", showValidStarts = true),
+                    HintStep(text = "Try starting at the top outer node and going clockwise first.", showValidStarts = true, showFirstEdge = true)
+                )
+            )
+        ),
+
+        // Level 45: The Abyss — 17 nodes, 34 edges
+        // Reversed skip pattern (mirror of Level 36), 5-degree center as forced endpoint - PATH
+        // Node 9 has degree 3 with no direct center access
+        // 3 inner ring breaks at 8-9, 10-11, 12-13
+        // Odd nodes: 9 (degree 3), 16 (degree 5)
+        Level(
+            id = 45,
+            name = "The Abyss",
+            nodes = listOf(
+                // Outer octagon (8 nodes)
+                Node(0, Offset(0.50f, 0.06f)),   // top
+                Node(1, Offset(0.81f, 0.19f)),   // top-right
+                Node(2, Offset(0.94f, 0.50f)),   // right
+                Node(3, Offset(0.81f, 0.81f)),   // bottom-right
+                Node(4, Offset(0.50f, 0.94f)),   // bottom
+                Node(5, Offset(0.19f, 0.81f)),   // bottom-left
+                Node(6, Offset(0.06f, 0.50f)),   // left
+                Node(7, Offset(0.19f, 0.19f)),   // top-left
+                // Inner octagon (8 nodes)
+                Node(8, Offset(0.50f, 0.25f)),   // inner top
+                Node(9, Offset(0.68f, 0.32f)),   // inner top-right
+                Node(10, Offset(0.75f, 0.50f)),  // inner right
+                Node(11, Offset(0.68f, 0.68f)),  // inner bottom-right
+                Node(12, Offset(0.50f, 0.75f)),  // inner bottom
+                Node(13, Offset(0.32f, 0.68f)),  // inner bottom-left
+                Node(14, Offset(0.25f, 0.50f)),  // inner left
+                Node(15, Offset(0.32f, 0.32f)),  // inner top-left
+                // Center hub (1 node)
+                Node(16, Offset(0.50f, 0.50f))   // center
+            ),
+            edges = listOf(
+                // Outer octagon ring (8 edges)
+                Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4),
+                Edge(4, 5), Edge(5, 6), Edge(6, 7), Edge(7, 0),
+                // Inner ring (5 edges) — breaks at 8-9, 10-11, 12-13
+                Edge(9, 10), Edge(11, 12), Edge(13, 14), Edge(14, 15), Edge(15, 8),
+                // Radial spokes - outer to inner (8 edges)
+                Edge(0, 8), Edge(1, 9), Edge(2, 10), Edge(3, 11),
+                Edge(4, 12), Edge(5, 13), Edge(6, 14), Edge(7, 15),
+                // Reversed alternating skip connections (8 edges) — even CCW, odd CW
+                Edge(0, 15), Edge(1, 10), Edge(2, 9), Edge(3, 12),
+                Edge(4, 11), Edge(5, 14), Edge(6, 13), Edge(7, 8),
+                // Center connections (5 edges)
+                Edge(16, 8), Edge(16, 10), Edge(16, 11),
+                Edge(16, 12), Edge(16, 13)
+            ),
+            hints = LevelHints(
+                validStartNodeIds = listOf(9, 16),
+                firstEdge = Pair(9, 1),
+                steps = listOf(
+                    HintStep(text = "Everything you learned is reversed. The abyss stares back."),
+                    HintStep(text = "The center is a 5-way dead end. Inner top-right is a 3-way bottleneck.", showValidStarts = true),
+                    HintStep(text = "Start from inner top-right and head to outer top-right.", showValidStarts = true, showFirstEdge = true)
+                )
+            )
         )
     )
 
