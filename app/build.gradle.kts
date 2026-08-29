@@ -29,12 +29,13 @@ android {
 
     signingConfigs {
         if (keystorePropertiesFile.exists()) {
-            create("release") {
-                storeFile = rootProject.file(keystoreProperties.getProperty("storeFile"))
-                storePassword = keystoreProperties.getProperty("storePassword")
-                keyAlias = keystoreProperties.getProperty("keyAlias")
-                keyPassword = keystoreProperties.getProperty("keyPassword")
-            }
+create("release") {
+    val storeFilePath = requireNotNull(keystoreProperties.getProperty("storeFile")) { "Missing 'storeFile' in ${keystorePropertiesFile.path}" }
+    storeFile = rootProject.file(storeFilePath)
+    storePassword = requireNotNull(keystoreProperties.getProperty("storePassword")) { "Missing 'storePassword' in ${keystorePropertiesFile.path}" }
+    keyAlias = requireNotNull(keystoreProperties.getProperty("keyAlias")) { "Missing 'keyAlias' in ${keystorePropertiesFile.path}" }
+    keyPassword = requireNotNull(keystoreProperties.getProperty("keyPassword")) { "Missing 'keyPassword' in ${keystorePropertiesFile.path}" }
+}
         }
     }
 
