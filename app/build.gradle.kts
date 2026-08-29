@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -5,18 +7,48 @@ plugins {
     alias(libs.plugins.detekt)
 }
 
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties()
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.inputStream().use { keystoreProperties.load(it) }
+}
+
 android {
     namespace = "app.curious.lineflow"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "app.curious.lineflow"
         minSdk = 24
-        targetSdk = 35
-        versionCode = 5
-        versionName = "1.0.4"
+        targetSdk = 36
+        versionCode = 6
+        versionName = "1.0.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        if (keystorePropertiesFile.exists()) {
+            create("release") {
+                val storeFilePath =
+                    requireNotNull(keystoreProperties.getProperty("storeFile")) {
+                        "Missing 'storeFile' in ${keystorePropertiesFile.path}"
+                    }
+                storeFile = rootProject.file(storeFilePath)
+                storePassword =
+                    requireNotNull(keystoreProperties.getProperty("storePassword")) {
+                        "Missing 'storePassword' in ${keystorePropertiesFile.path}"
+                    }
+                keyAlias =
+                    requireNotNull(keystoreProperties.getProperty("keyAlias")) {
+                        "Missing 'keyAlias' in ${keystorePropertiesFile.path}"
+                    }
+                keyPassword =
+                    requireNotNull(keystoreProperties.getProperty("keyPassword")) {
+                        "Missing 'keyPassword' in ${keystorePropertiesFile.path}"
+                    }
+            }
+        }
     }
 
     buildTypes {
@@ -24,6 +56,9 @@ android {
             applicationIdSuffix = ".debug"
         }
         release {
+            if (keystorePropertiesFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(

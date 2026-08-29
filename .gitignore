@@ -185,3 +185,6 @@ Sessionx.vim
 tags
 # Persistent undo
 [._]*.un~
+
+# Signing config (contains passwords)
+keystore.properties
