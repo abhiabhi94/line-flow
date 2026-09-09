@@ -7,6 +7,7 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
 import java.io.File
+import java.util.regex.Pattern
 import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Rule
@@ -45,13 +46,15 @@ class SmokeScreenshotTest {
 
     @Test
     fun walkThroughMainScreens() {
-        // First launch shows the animated tutorial overlay.
-        device.wait(Until.hasObject(By.textContains("Watch closely")), TIMEOUT_MS)
-        snap("01_tutorial")
-
-        // Tapping anywhere dismisses it and reveals the level list.
-        device.click(device.displayWidth / 2, device.displayHeight / 2)
+        // First launch shows the animated tutorial overlay. With animations
+        // disabled it finishes almost immediately, so it may already be gone.
+        if (device.wait(Until.hasObject(By.text(TUTORIAL_TEXT)), SHORT_TIMEOUT_MS)) {
+            snap("01_tutorial")
+            // Tapping anywhere dismisses it; aim at empty space below the status bar.
+            device.click(device.displayWidth / 2, device.displayHeight / 12)
+        }
         assertNotNull("Level select did not appear", device.wait(Until.findObject(By.text("LINEFLOW")), TIMEOUT_MS))
+        device.waitForIdle()
         snap("02_level_select")
 
         // Open level 1.
@@ -79,5 +82,7 @@ class SmokeScreenshotTest {
 
     private companion object {
         const val TIMEOUT_MS = 15_000L
+        const val SHORT_TIMEOUT_MS = 2_000L
+        val TUTORIAL_TEXT: Pattern = Pattern.compile("Watch closely.*|Don't .*|Trace every line.*")
     }
 }
