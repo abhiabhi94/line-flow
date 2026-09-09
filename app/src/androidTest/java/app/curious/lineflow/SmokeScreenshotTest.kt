@@ -9,6 +9,7 @@ import androidx.test.uiautomator.Until
 import java.io.File
 import java.util.regex.Pattern
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -41,7 +42,7 @@ class SmokeScreenshotTest {
             } else {
                 File(instrumentation.targetContext.getExternalFilesDir(null), "screenshots")
             }
-        outputDir.mkdirs()
+        check(outputDir.isDirectory || outputDir.mkdirs()) { "Could not create $outputDir" }
     }
 
     @Test
@@ -58,15 +59,13 @@ class SmokeScreenshotTest {
         snap("02_level_select")
 
         // Open level 1.
-        device.findObject(By.text("1")).click()
+        tap("1")
         assertNotNull("Game screen did not appear", device.wait(Until.findObject(By.text("Level 1")), TIMEOUT_MS))
         device.waitForIdle()
         snap("03_game_level_1")
 
         // Ask for a hint; the first hint for level 1 explains it is a circuit.
-        val hintButton = device.findObject(By.text("💡"))
-        assertNotNull("Hint button not found", hintButton)
-        hintButton.click()
+        tap("💡")
         assertNotNull(
             "Hint text did not appear",
             device.wait(Until.findObject(By.textStartsWith("This is a circuit")), TIMEOUT_MS),
@@ -74,15 +73,23 @@ class SmokeScreenshotTest {
         snap("04_game_level_1_hint")
 
         // Back to the level list, then into settings.
-        device.findObject(By.text("←")).click()
+        tap("←")
         assertNotNull("Level select did not reappear", device.wait(Until.findObject(By.text("LINEFLOW")), TIMEOUT_MS))
-        device.findObject(By.text("⚙️")).click()
+        tap("⚙️")
         assertNotNull("Settings did not appear", device.wait(Until.findObject(By.text("Settings")), TIMEOUT_MS))
         snap("05_settings")
     }
 
+    /** Waits for an element with the given text to appear, then clicks it. */
+    private fun tap(text: String) {
+        val target = device.wait(Until.findObject(By.text(text)), TIMEOUT_MS)
+        assertNotNull("No element with text \"$text\" to tap", target)
+        target.click()
+    }
+
     private fun snap(name: String) {
-        device.takeScreenshot(File(outputDir, "$name.png"))
+        val file = File(outputDir, "$name.png")
+        assertTrue("Failed to capture screenshot $file", device.takeScreenshot(file))
     }
 
     private companion object {

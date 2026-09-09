@@ -17,6 +17,7 @@ class ExampleInstrumentedTest {
     fun useAppContext() {
         // The debug build type appends ".debug" to the application id.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertTrue(appContext.packageName.startsWith("app.curious.lineflow"))
+        val expected = setOf("app.curious.lineflow", "app.curious.lineflow.debug")
+        assertTrue("Unexpected package ${appContext.packageName}", appContext.packageName in expected)
     }
 }

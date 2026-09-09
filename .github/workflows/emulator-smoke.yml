@@ -2,6 +2,8 @@ name: Emulator smoke test
 
 on:
   workflow_dispatch:
+  push:
+    branches: [claude/modest-gauss-x11ip2] # temporary, removed once validated
 
 jobs:
   smoke:
@@ -51,8 +53,9 @@ jobs:
 
       - name: Upload test reports
         uses: actions/upload-artifact@v4
-        if: failure()
+        if: always()
         with:
           name: instrumented-test-reports
           path: app/build/reports/androidTests/
+          if-no-files-found: warn
           retention-days: 7
