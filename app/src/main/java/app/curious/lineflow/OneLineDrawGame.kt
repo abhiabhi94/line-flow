@@ -5,7 +5,6 @@ import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
-import android.view.HapticFeedbackConstants
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
@@ -21,18 +20,18 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -52,17 +51,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.curious.lineflow.ui.theme.Accent
@@ -71,6 +72,7 @@ import app.curious.lineflow.ui.theme.DarkSurface
 import app.curious.lineflow.ui.theme.DarkSurfaceVariant
 import app.curious.lineflow.ui.theme.EdgeDefault
 import app.curious.lineflow.ui.theme.EdgeVisited
+import app.curious.lineflow.ui.theme.Error
 import app.curious.lineflow.ui.theme.HintCyan
 import app.curious.lineflow.ui.theme.HintCyanSubtle
 import app.curious.lineflow.ui.theme.NodeCurrent
@@ -79,16 +81,30 @@ import app.curious.lineflow.ui.theme.NodeStart
 import app.curious.lineflow.ui.theme.OverlayScrim
 import app.curious.lineflow.ui.theme.Success
 import app.curious.lineflow.ui.theme.TextPrimary
-import app.curious.lineflow.ui.theme.TextSecondary
 import app.curious.lineflow.ui.theme.TextTertiary
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.min
 
+/**
+ * Touch geometry, in dp. The level layouts in Graph.kt are generated against
+ * these numbers (see `.scripts/leveldesign/geometry.py`): dots are always at
+ * least two hit radii apart and no dot sits within a hit radius of a line it
+ * is not part of, so a finger following a line can only ever reach the dot
+ * at its end.
+ */
+object PlayfieldSpec {
+    val nodeRadius: Dp = 12.dp
+    val hitRadius: Dp = 32.dp
+    val horizontalMargin: Dp = 24.dp
+    val bottomMargin: Dp = 24.dp
+    val statusStripHeight: Dp = 84.dp
+}
+
 enum class GameOverReason {
     LIFTED_FINGER,
     RETRACED_EDGE,
-    INCOMPLETE_PATH
+    NO_LINE,
 }
 
 data class GameState(
@@ -99,7 +115,7 @@ data class GameState(
     val isGameOver: Boolean = false,
     val isLevelComplete: Boolean = false,
     val gameOverReason: GameOverReason? = null,
-    val failedEdge: Edge? = null
+    val failedEdge: Edge? = null,
 ) {
     fun reset(): GameState {
         val resetEdges = level.edges.map { it.copy(isVisited = false) }
@@ -108,21 +124,78 @@ data class GameState(
             level = resetLevel,
             currentLevelId = resetLevel.id,
             gameOverReason = null,
-            failedEdge = null
+            failedEdge = null,
         )
     }
+
+    fun edgeBetween(a: Int, b: Int): Edge? = level.edges.firstOrNull { it.containsNode(a) && it.containsNode(b) }
 
     fun updateEdgeVisited(edgeToUpdate: Edge, isVisited: Boolean): GameState {
         val newEdges = level.edges.map { edge ->
             val isSameEdge = (edge.node1Id == edgeToUpdate.node1Id && edge.node2Id == edgeToUpdate.node2Id) ||
-                             (edge.node1Id == edgeToUpdate.node2Id && edge.node2Id == edgeToUpdate.node1Id)
+                (edge.node1Id == edgeToUpdate.node2Id && edge.node2Id == edgeToUpdate.node1Id)
             Edge(edge.node1Id, edge.node2Id, if (isSameEdge) isVisited else edge.isVisited)
         }
         val newLevel = level.copy(edges = newEdges)
         val isComplete = newLevel.edges.all { it.isVisited }
         return this.copy(level = newLevel, isLevelComplete = isComplete)
     }
+
+    /**
+     * The result of dragging from the current dot onto [nodeId]. Pure so it can
+     * be unit tested without a pointer.
+     */
+    fun moveTo(nodeId: Int): GameState {
+        val from = currentNodeId ?: return this
+        if (nodeId == from || isGameOver || isLevelComplete) return this
+        val edge = edgeBetween(from, nodeId)
+        return when {
+            edge == null -> copy(isGameOver = true, gameOverReason = GameOverReason.NO_LINE)
+            edge.isVisited -> copy(isGameOver = true, gameOverReason = GameOverReason.RETRACED_EDGE, failedEdge = edge)
+            else -> updateEdgeVisited(edge, true).copy(currentNodeId = nodeId)
+        }
+    }
+
+    fun liftFinger(): GameState =
+        if (currentNodeId != null && !isLevelComplete && !isGameOver) {
+            copy(isGameOver = true, gameOverReason = GameOverReason.LIFTED_FINGER)
+        } else {
+            this
+        }
 }
+
+/**
+ * Maps a level's normalized node positions into a play area of [size] pixels,
+ * scaling uniformly (no distortion) and centring the drawing, with [margin]
+ * pixels kept free on every side so the outermost dots are fully touchable.
+ */
+fun layoutNodes(nodes: List<Node>, size: Size, margin: Float): Map<Int, Offset> {
+    if (nodes.isEmpty()) return emptyMap()
+    val minX = nodes.minOf { it.position.x }
+    val maxX = nodes.maxOf { it.position.x }
+    val minY = nodes.minOf { it.position.y }
+    val maxY = nodes.maxOf { it.position.y }
+    val contentWidth = (maxX - minX).coerceAtLeast(1e-4f)
+    val contentHeight = (maxY - minY).coerceAtLeast(1e-4f)
+    val availableWidth = (size.width - 2 * margin).coerceAtLeast(1f)
+    val availableHeight = (size.height - 2 * margin).coerceAtLeast(1f)
+    val scale = min(availableWidth / contentWidth, availableHeight / contentHeight)
+    val offsetX = (size.width - contentWidth * scale) / 2f
+    val offsetY = (size.height - contentHeight * scale) / 2f
+    return nodes.associate { node ->
+        node.id to Offset(
+            offsetX + (node.position.x - minX) * scale,
+            offsetY + (node.position.y - minY) * scale,
+        )
+    }
+}
+
+/** The dot under [position], if any is within [hitRadius]. */
+fun nodeAt(pixelNodes: Map<Int, Offset>, position: Offset, hitRadius: Float): Int? =
+    pixelNodes.entries
+        .minByOrNull { (_, center) -> (center - position).getDistance() }
+        ?.takeIf { (_, center) -> (center - position).getDistance() <= hitRadius }
+        ?.key
 
 @Composable
 fun OneLineDrawGame(
@@ -130,7 +203,7 @@ fun OneLineDrawGame(
     levelId: Int,
     progressRepository: GameProgressRepository,
     onBackToLevelSelect: () -> Unit,
-    onNextLevel: (Int) -> Unit
+    onNextLevel: (Int) -> Unit,
 ) {
     BackHandler { onBackToLevelSelect() }
 
@@ -161,7 +234,6 @@ fun OneLineDrawGame(
         }
     }
 
-    val view = LocalView.current
     val context = LocalContext.current
     val vibrator = remember {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -200,9 +272,9 @@ fun OneLineDrawGame(
         targetValue = 1.0f,
         animationSpec = infiniteRepeatable(
             animation = tween(800),
-            repeatMode = RepeatMode.Reverse
+            repeatMode = RepeatMode.Reverse,
         ),
-        label = "hint_alpha"
+        label = "hint_alpha",
     )
 
     // Current node glow pulse
@@ -211,9 +283,9 @@ fun OneLineDrawGame(
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
             animation = tween(1_000),
-            repeatMode = RepeatMode.Reverse
+            repeatMode = RepeatMode.Reverse,
         ),
-        label = "current_node_glow"
+        label = "current_node_glow",
     )
 
     // Node touch bounce
@@ -225,8 +297,8 @@ fun OneLineDrawGame(
                 targetValue = 1f,
                 animationSpec = spring(
                     dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessMedium
-                )
+                    stiffness = Spring.StiffnessMedium,
+                ),
             )
         }
     }
@@ -279,414 +351,85 @@ fun OneLineDrawGame(
                 targetValue = 1f,
                 animationSpec = spring(
                     dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessMedium
-                )
+                    stiffness = Spring.StiffnessMedium,
+                ),
             )
         }
+    }
+
+    fun restart() {
+        hintsUsedThisAttempt = false
+        gameState = gameState.reset()
+        hintRevealIndex = -1
     }
 
     Box(
         modifier = modifier
             .fillMaxSize()
             .graphicsLayer { translationX = shakeOffset.value }
-            .background(DarkBackground)
+            .background(DarkBackground),
     ) {
-        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-            val screenWidth = constraints.maxWidth.toFloat()
-            val screenHeight = constraints.maxHeight.toFloat()
-            val nodeRadius = with(LocalDensity.current) { 14.dp.toPx() }
-            val nodeHitRadius = nodeRadius * 3f
-
-            // Calculate the bounding box of all nodes in the level
-            val nodes = gameState.level.nodes
-            val minX = nodes.minOf { it.position.x }
-            val maxX = nodes.maxOf { it.position.x }
-            val minY = nodes.minOf { it.position.y }
-            val maxY = nodes.maxOf { it.position.y }
-
-            // Add padding around the nodes (in normalized space)
-            val padding = 0.08f
-            val paddedMinX = minX - padding
-            val paddedMaxX = maxX + padding
-            val paddedMinY = minY - padding
-            val paddedMaxY = maxY + padding
-            val contentWidth = paddedMaxX - paddedMinX
-            val contentHeight = paddedMaxY - paddedMinY
-
-            // Calculate base scale to fit width (standard approach)
-            val baseScale = screenWidth / contentWidth
-
-            // Calculate how much vertical space we'd use with uniform scaling
-            val uniformCanvasHeight = contentHeight * baseScale
-
-            // Check if we have extra vertical space and if the level needs more node separation
-            // For levels with many nodes (dense levels), use available vertical space to spread nodes
-            val isDenseLevel = nodes.size >= 12
-            val hasExtraVerticalSpace = screenHeight > uniformCanvasHeight * 1.2f
-
-            // For dense levels with extra vertical space, stretch vertically
-            // Limit the stretch to avoid distortion (max 1.5x taller than uniform scaling)
-            val verticalStretchFactor = if (isDenseLevel && hasExtraVerticalSpace) {
-                val maxStretch = 1.5f
-                val availableStretch = screenHeight / uniformCanvasHeight
-                min(availableStretch * 0.9f, maxStretch)  // Use 90% of available space, capped
-            } else {
-                1f
-            }
-
-            // Final canvas dimensions
-            val canvasWidth = screenWidth
-            val canvasHeight = uniformCanvasHeight * verticalStretchFactor
-
-            // Center the canvas vertically on screen
-            val canvasOffsetX = 0f
-            val canvasOffsetY = (screenHeight - canvasHeight) / 2f
-
-            // Scale factors: X is uniform, Y is stretched for dense levels
-            val scaleX = canvasWidth / contentWidth
-            val scaleY = canvasHeight / contentHeight
-
-            fun toPixelOffset(normalized: Offset): Offset {
-                return Offset(
-                    canvasOffsetX + (normalized.x - paddedMinX) * scaleX,
-                    canvasOffsetY + (normalized.y - paddedMinY) * scaleY
-                )
-            }
-
-            val pixelNodes = remember(gameState.level.nodes, screenWidth, screenHeight) {
-                gameState.level.nodes.associateWith { node ->
-                    toPixelOffset(node.position)
-                }
-            }
-
-            Canvas(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .pointerInput(gameState.isLevelComplete) {
-                        if (gameState.isLevelComplete) return@pointerInput
-
-                        awaitPointerEventScope {
-                            while (true) {
-                                val downEvent = awaitPointerEvent()
-                                if (downEvent.type != PointerEventType.Press) continue
-                                val down = downEvent.changes.firstOrNull() ?: continue
-
-                                hintRevealIndex = -1
-
-                                val closestNode = pixelNodes.minByOrNull { (_, pixelOffset) ->
-                                    (pixelOffset - down.position).getDistance()
-                                }
-
-                                val startNodeId = closestNode?.key?.id
-                                if (startNodeId != null && (closestNode.value - down.position).getDistance() < nodeHitRadius) {
-                                    // Auto-reset if game is over (loss state) - allows instant retry on touch
-                                    val baseState = if (gameState.isGameOver) gameState.reset() else gameState.reset()
-                                    gameState = baseState.copy(
-                                        currentStartNodeId = startNodeId,
-                                        currentNodeId = startNodeId
-                                    )
-                                    hintsUsedThisAttempt = false
-                                    vibrateTick()
-                                    down.consume()
-                                }
-
-                                var tracking = gameState.currentNodeId != null
-                                var previousPos: Offset? = null
-                                // Track where the last node was confirmed to require minimum travel distance
-                                var lastConfirmedPos: Offset? = down.position
-                                val minTravelDistance = nodeRadius * 2f
-
-                                while (tracking) {
-                                    val moveEvent = awaitPointerEvent()
-                                    val change = moveEvent.changes.firstOrNull() ?: break
-
-                                    if (!change.pressed) {
-                                        if (gameState.currentNodeId != null && !gameState.isLevelComplete) {
-                                            val reason = if (gameState.level.edges.all { it.isVisited }) {
-                                                GameOverReason.INCOMPLETE_PATH
-                                            } else {
-                                                GameOverReason.LIFTED_FINGER
-                                            }
-                                            gameState = gameState.copy(
-                                                isGameOver = true,
-                                                gameOverReason = reason
-                                            )
-                                        }
-                                        change.consume()
-                                        break
-                                    }
-
-                                    if (gameState.currentNodeId == null || gameState.isGameOver) {
-                                        change.consume()
-                                        break
-                                    }
-
-                                    val currentPos = change.position
-                                    val movementVector = previousPos?.let { prev -> currentPos - prev }
-                                    previousPos = currentPos
-
-                                    // Check if finger has traveled enough from last confirmed node
-                                    val distanceFromLastConfirm = lastConfirmedPos?.let {
-                                        (currentPos - it).getDistance()
-                                    } ?: Float.MAX_VALUE
-                                    val hasMovedEnough = distanceFromLastConfirm >= minTravelDistance
-
-                                    // Find the closest node to current finger position
-                                    val closestNodeEntry = pixelNodes.minByOrNull { (_, pixelOffset) ->
-                                        (pixelOffset - currentPos).getDistance()
-                                    }
-
-                                    val unvisitedEdges = gameState.level.edges.filter { !it.isVisited }
-
-                                    val movedToNewNode = closestNodeEntry?.let { (node, pixelOffset) ->
-                                        if ((pixelOffset - currentPos).getDistance() < nodeHitRadius && node.id != gameState.currentNodeId) {
-                                            // Direction check: only accept if finger is moving decisively TOWARD this node
-                                            val directionToNode = pixelOffset - currentPos
-                                            val isMovingToward = movementVector?.let { mv ->
-                                                val mvMag = mv.getDistance()
-                                                val dirMag = directionToNode.getDistance()
-                                                if (mvMag > 0.1f && dirMag > 0.1f) {
-                                                    // Normalized dot product (cosine of angle between vectors)
-                                                    val cosAngle = (mv.x * directionToNode.x + mv.y * directionToNode.y) / (mvMag * dirMag)
-                                                    cosAngle > 0.5f // ~60 degree cone toward node
-                                                } else {
-                                                    true // Accept if barely moving
-                                                }
-                                            } ?: true // Accept on first frame when no previous position
-
-                                            if (isMovingToward && hasMovedEnough) node else null
-                                        } else {
-                                            null
-                                        }
-                                    }
-
-                                    if (movedToNewNode != null) {
-                                        val connectingEdge = unvisitedEdges.firstOrNull { edge ->
-                                            edge.containsNode(gameState.currentNodeId!!) && edge.containsNode(movedToNewNode.id)
-                                        }
-
-                                        if (connectingEdge != null) {
-                                            gameState = gameState
-                                                .updateEdgeVisited(connectingEdge, true)
-                                                .copy(currentNodeId = movedToNewNode.id)
-                                            lastConfirmedPos = currentPos
-                                            vibrateTick()
-                                        } else {
-                                            // Check if there's an edge at all between these nodes
-                                            val anyEdge = gameState.level.edges.firstOrNull { edge ->
-                                                edge.containsNode(gameState.currentNodeId!!) && edge.containsNode(movedToNewNode.id)
-                                            }
-
-                                            if (anyEdge != null) {
-                                                // Edge exists but is visited - retraced
-                                                gameState = gameState.copy(
-                                                    isGameOver = true,
-                                                    gameOverReason = GameOverReason.RETRACED_EDGE,
-                                                    failedEdge = anyEdge
-                                                )
-                                            }
-                                            // If no edge exists, ignore (non-adjacent node)
-                                        }
-                                    }
-                                    change.consume()
-                                }
-                            }
+        Column(modifier = Modifier.fillMaxSize()) {
+            TopBar(
+                level = level,
+                hintRevealIndex = hintRevealIndex,
+                hintBounce = hintBounce.value,
+                onBack = onBackToLevelSelect,
+                onHint = {
+                    val maxIndex = level.hints.steps.lastIndex
+                    if (hintRevealIndex < maxIndex) {
+                        hintRevealIndex += 1
+                        if (hintRevealIndex == 0) {
+                            hintsUsedThisAttempt = true
                         }
-                    }
-            ) {
-                val defaultStrokeWidth = 6f
-                val visitedStrokeWidth = 8f
-
-                // Glow pass for visited edges (drawn first, behind everything)
-                gameState.level.edges.forEach { edge ->
-                    if (!edge.isVisited) return@forEach
-                    val startNode = gameState.level.nodes.first { it.id == edge.node1Id }
-                    val endNode = gameState.level.nodes.first { it.id == edge.node2Id }
-                    val startOff = pixelNodes.getValue(startNode)
-                    val endOff = pixelNodes.getValue(endNode)
-
-                    // Outer glow
-                    drawLine(
-                        color = EdgeVisited.copy(alpha = 0.15f),
-                        start = startOff,
-                        end = endOff,
-                        strokeWidth = 24f,
-                        cap = StrokeCap.Round
-                    )
-                    // Inner glow
-                    drawLine(
-                        color = EdgeVisited.copy(alpha = 0.3f),
-                        start = startOff,
-                        end = endOff,
-                        strokeWidth = 14f,
-                        cap = StrokeCap.Round
-                    )
-                }
-
-                // Draw edges
-                gameState.level.edges.forEach { edge ->
-                    val startNode = gameState.level.nodes.first { it.id == edge.node1Id }
-                    val endNode = gameState.level.nodes.first { it.id == edge.node2Id }
-                    val startOff = pixelNodes.getValue(startNode)
-                    val endOff = pixelNodes.getValue(endNode)
-
-                    val isFailedEdge = gameState.failedEdge?.let { failed ->
-                        (edge.node1Id == failed.node1Id && edge.node2Id == failed.node2Id) ||
-                        (edge.node1Id == failed.node2Id && edge.node2Id == failed.node1Id)
-                    } ?: false
-
-                    val color = when {
-                        isFailedEdge -> app.curious.lineflow.ui.theme.Error
-                        edge.isVisited -> EdgeVisited
-                        else -> EdgeDefault
-                    }
-                    val strokeWidth = if (edge.isVisited || isFailedEdge) visitedStrokeWidth else defaultStrokeWidth
-
-                    drawLine(
-                        color = color,
-                        start = startOff,
-                        end = endOff,
-                        strokeWidth = strokeWidth,
-                        cap = StrokeCap.Round
-                    )
-                }
-
-                // Hint first edge highlight
-                if (currentHintStep?.showFirstEdge == true) {
-                    val firstEdge = level.hints.firstEdge
-                    if (firstEdge != null) {
-                        val fromNode = gameState.level.nodes.firstOrNull { it.id == firstEdge.first }
-                        val toNode = gameState.level.nodes.firstOrNull { it.id == firstEdge.second }
-                        if (fromNode != null && toNode != null) {
-                            drawLine(
-                                color = HintCyan.copy(alpha = hintAlpha),
-                                start = pixelNodes.getValue(fromNode),
-                                end = pixelNodes.getValue(toNode),
-                                strokeWidth = visitedStrokeWidth,
-                                cap = StrokeCap.Round
-                            )
+                        if (hintRevealIndex == maxIndex) {
+                            progressRepository.markHintUsed(level.id, hintRevealIndex + 1)
                         }
-                    }
-                }
-
-                // Draw nodes
-                pixelNodes.forEach { (node, pixelOffset) ->
-                    val color = when (node.id) {
-                        gameState.currentStartNodeId -> NodeStart
-                        gameState.currentNodeId -> NodeCurrent
-                        else -> NodeDefault
-                    }
-
-                    val isCurrentNode = node.id == gameState.currentNodeId
-
-                    // Current node ambient glow
-                    if (isCurrentNode && gameState.currentNodeId != null) {
-                        drawCircle(
-                            color = NodeCurrent.copy(alpha = 0.2f + currentNodeGlow * 0.3f),
-                            radius = nodeRadius + 8f + currentNodeGlow * 6f,
-                            center = pixelOffset
-                        )
-                    }
-
-                    // Hint glow on valid start nodes
-                    if (currentHintStep?.showValidStarts == true &&
-                        level.hints.validStartNodeIds.contains(node.id) &&
-                        gameState.currentNodeId == null
-                    ) {
-                        drawCircle(
-                            color = HintCyan.copy(alpha = hintAlpha * 0.5f),
-                            radius = nodeRadius + 10f,
-                            center = pixelOffset,
-                            style = Stroke(width = 3f)
-                        )
-                    }
-
-                    // Outer ring
-                    drawCircle(
-                        color = Color.White.copy(alpha = 0.15f),
-                        radius = nodeRadius + 3f,
-                        center = pixelOffset,
-                        style = Stroke(width = 2f)
-                    )
-
-                    // Inner fill with bounce scale for current node
-                    val radius = if (isCurrentNode) {
-                        nodeRadius * nodeScaleAnimatable.value
                     } else {
-                        nodeRadius
+                        hintRevealIndex = -1
                     }
-                    drawCircle(
-                        color = color,
-                        radius = radius,
-                        center = pixelOffset
-                    )
-                }
+                },
+            )
 
-                // Snap ring effect at current node
-                if (snapRingAlpha.value > 0f && gameState.currentNodeId != null) {
-                    val currentNode = gameState.level.nodes.firstOrNull { it.id == gameState.currentNodeId }
-                    if (currentNode != null) {
-                        val currentPixel = pixelNodes.getValue(currentNode)
-                        drawCircle(
-                            color = NodeCurrent.copy(alpha = snapRingAlpha.value),
-                            radius = snapRingRadius.value,
-                            center = currentPixel,
-                            style = Stroke(width = 2f)
-                        )
+            StatusStrip(
+                gameState = gameState,
+                hintText = currentHintStep?.text,
+                visitedEdgeCount = visitedEdgeCount,
+                onRetry = { restart() },
+            )
+
+            Playfield(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(
+                        start = PlayfieldSpec.horizontalMargin,
+                        end = PlayfieldSpec.horizontalMargin,
+                        bottom = PlayfieldSpec.bottomMargin,
+                    ),
+                gameState = gameState,
+                level = level,
+                currentHintStep = currentHintStep,
+                hintAlpha = hintAlpha,
+                currentNodeGlow = currentNodeGlow,
+                nodeScale = nodeScaleAnimatable.value,
+                snapRingRadius = snapRingRadius.value,
+                snapRingAlpha = snapRingAlpha.value,
+                onStrokeStart = { nodeId ->
+                    hintRevealIndex = -1
+                    hintsUsedThisAttempt = false
+                    gameState = gameState.reset().copy(currentStartNodeId = nodeId, currentNodeId = nodeId)
+                    vibrateTick()
+                },
+                onStrokeMove = { nodeId ->
+                    val next = gameState.moveTo(nodeId)
+                    if (next !== gameState) {
+                        gameState = next
+                        if (!next.isGameOver) vibrateTick()
                     }
-                }
-            }
-
-            // Inline loss UI - positioned just above the topmost node
-            if (gameState.isGameOver && !gameState.isLevelComplete) {
-                val topMostNodeY = pixelNodes.values.minOf { it.y }
-                val topMostNodeYDp = with(LocalDensity.current) { topMostNodeY.toDp() }
-
-                val errorMessage = when (gameState.gameOverReason) {
-                    GameOverReason.LIFTED_FINGER -> "Lifted finger too early"
-                    GameOverReason.RETRACED_EDGE -> "Retraced a line"
-                    GameOverReason.INCOMPLETE_PATH -> "Not all edges covered"
-                    null -> "Try again"
-                }
-
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(top = (topMostNodeYDp - 140.dp).coerceAtLeast(16.dp)),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = errorMessage,
-                        color = app.curious.lineflow.ui.theme.Error,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier
-                            .background(DarkSurface.copy(alpha = 0.9f), RoundedCornerShape(20.dp))
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
-                    )
-
-                    Spacer(Modifier.height(12.dp))
-
-                    Button(
-                        onClick = {
-                            hintsUsedThisAttempt = false
-                            gameState = gameState.reset()
-                            hintRevealIndex = -1
-                        },
-                        shape = RoundedCornerShape(24.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Accent,
-                            contentColor = DarkBackground
-                        )
-                    ) {
-                        Text(
-                            text = "Retry",
-                            fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp)
-                        )
-                    }
-                }
-            }
+                },
+                onStrokeEnd = { gameState = gameState.liftFinger() },
+            )
         }
 
         // Red flash overlay on loss
@@ -694,178 +437,8 @@ fun OneLineDrawGame(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(app.curious.lineflow.ui.theme.Error.copy(alpha = failFlashAlpha.value))
+                    .background(Error.copy(alpha = failFlashAlpha.value)),
             )
-        }
-
-        // Top bar
-        Row(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .fillMaxWidth()
-                .padding(top = 16.dp, start = 16.dp, end = 16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Back button with press scale
-            val backInteraction = remember { MutableInteractionSource() }
-            val backPressed by backInteraction.collectIsPressedAsState()
-            val backScale by animateFloatAsState(
-                targetValue = if (backPressed) 0.9f else 1f,
-                animationSpec = spring(stiffness = Spring.StiffnessHigh),
-                label = "back_btn_scale"
-            )
-
-            TextButton(
-                onClick = onBackToLevelSelect,
-                interactionSource = backInteraction,
-                modifier = Modifier
-                    .size(40.dp)
-                    .graphicsLayer {
-                        scaleX = backScale
-                        scaleY = backScale
-                    }
-                    .background(DarkSurfaceVariant, CircleShape),
-                contentPadding = ButtonDefaults.TextButtonContentPadding
-            ) {
-                Text(
-                    text = "\u2190",
-                    color = TextPrimary,
-                    fontSize = 18.sp
-                )
-            }
-
-            Spacer(Modifier.width(12.dp))
-
-            // Level info
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "Level ${level.id}",
-                    color = Accent,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 0.5.sp
-                )
-                Text(
-                    text = level.name,
-                    color = TextTertiary,
-                    fontSize = 12.sp,
-                    letterSpacing = 0.3.sp
-                )
-            }
-
-            // Hint button with press scale and bounce
-            val hintInteraction = remember { MutableInteractionSource() }
-            val hintPressed by hintInteraction.collectIsPressedAsState()
-            val hintScale by animateFloatAsState(
-                targetValue = if (hintPressed) 0.9f else 1f,
-                animationSpec = spring(stiffness = Spring.StiffnessHigh),
-                label = "hint_btn_scale"
-            )
-
-            val totalHintSteps = level.hints.steps.size
-            val hintRemaining = when {
-                hintRevealIndex < 0 -> totalHintSteps
-                else -> totalHintSteps - (hintRevealIndex + 1)
-            }
-
-            Box {
-                TextButton(
-                    onClick = {
-                        val maxIndex = level.hints.steps.lastIndex
-                        if (hintRevealIndex < maxIndex) {
-                            hintRevealIndex += 1
-                            if (hintRevealIndex == 0) {
-                                hintsUsedThisAttempt = true
-                            }
-                            if (hintRevealIndex == maxIndex) {
-                                progressRepository.markHintUsed(level.id, hintRevealIndex + 1)
-                            }
-                        } else {
-                            hintRevealIndex = -1
-                        }
-                    },
-                    interactionSource = hintInteraction,
-                    modifier = Modifier
-                        .size(44.dp)
-                        .graphicsLayer {
-                            scaleX = hintScale
-                            scaleY = hintScale
-                        }
-                        .background(
-                            color = if (hintRevealIndex < 0) DarkSurfaceVariant else HintCyanSubtle,
-                            shape = CircleShape
-                        ),
-                    contentPadding = ButtonDefaults.TextButtonContentPadding
-                ) {
-                    Text(
-                        text = "\uD83D\uDCA1",
-                        color = if (hintRevealIndex < 0) Accent else HintCyan,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.graphicsLayer {
-                            scaleX = hintBounce.value
-                            scaleY = hintBounce.value
-                        }
-                    )
-                }
-
-                // Badge showing remaining hints
-                if (hintRemaining > 0) {
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .offset(x = 4.dp, y = (-4).dp)
-                            .size(20.dp)
-                            .background(Accent, CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "$hintRemaining",
-                            color = DarkBackground,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Black
-                        )
-                    }
-                }
-            }
-        }
-
-        // Hint text overlay
-        if (currentHintStep != null && gameState.currentNodeId == null) {
-            Text(
-                text = currentHintStep.text,
-                color = HintCyan,
-                fontSize = 13.sp,
-                textAlign = TextAlign.Center,
-                letterSpacing = 0.3.sp,
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = 72.dp)
-                    .background(DarkSurface.copy(alpha = 0.9f), RoundedCornerShape(20.dp))
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            )
-        }
-
-        // Progress bar - shown during active tracing
-        if (gameState.currentNodeId != null && !gameState.isGameOver && !gameState.isLevelComplete) {
-            val totalEdges = gameState.level.edges.size
-            val progress = visitedEdgeCount.toFloat() / totalEdges
-
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = 72.dp)
-                    .fillMaxWidth(0.5f)
-                    .height(4.dp)
-                    .background(DarkSurfaceVariant, RoundedCornerShape(2.dp))
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(progress)
-                        .height(4.dp)
-                        .background(EdgeVisited, RoundedCornerShape(2.dp))
-                )
-            }
         }
 
         // Win overlay
@@ -883,14 +456,14 @@ fun OneLineDrawGame(
                     onBackToLevelSelect = {
                         showOverlay = false
                         onBackToLevelSelect()
-                    }
+                    },
                 )
             } else {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(OverlayScrim),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     // Confetti inside the overlay
                     ConfettiOverlay()
@@ -899,8 +472,8 @@ fun OneLineDrawGame(
                         visible = true,
                         enter = scaleIn(
                             initialScale = 0.7f,
-                            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
-                        ) + fadeIn(animationSpec = tween(200))
+                            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                        ) + fadeIn(animationSpec = tween(200)),
                     ) {
                         WinOverlayContent(
                             gameState = gameState,
@@ -918,10 +491,434 @@ fun OneLineDrawGame(
                             onBackToLevelSelect = {
                                 showOverlay = false
                                 onBackToLevelSelect()
-                            }
+                            },
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TopBar(
+    level: Level,
+    hintRevealIndex: Int,
+    hintBounce: Float,
+    onBack: () -> Unit,
+    onHint: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 16.dp, start = 16.dp, end = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        // Back button with press scale
+        val backInteraction = remember { MutableInteractionSource() }
+        val backPressed by backInteraction.collectIsPressedAsState()
+        val backScale by animateFloatAsState(
+            targetValue = if (backPressed) 0.9f else 1f,
+            animationSpec = spring(stiffness = Spring.StiffnessHigh),
+            label = "back_btn_scale",
+        )
+
+        TextButton(
+            onClick = onBack,
+            interactionSource = backInteraction,
+            modifier = Modifier
+                .size(40.dp)
+                .graphicsLayer {
+                    scaleX = backScale
+                    scaleY = backScale
+                }
+                .background(DarkSurfaceVariant, CircleShape),
+            contentPadding = ButtonDefaults.TextButtonContentPadding,
+        ) {
+            Text(
+                text = "←",
+                color = TextPrimary,
+                fontSize = 18.sp,
+            )
+        }
+
+        Spacer(Modifier.width(12.dp))
+
+        // Level info
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "Level ${level.id}",
+                color = Accent,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.5.sp,
+            )
+            Text(
+                text = "${level.name} · ${level.edges.size} lines",
+                color = TextTertiary,
+                fontSize = 12.sp,
+                letterSpacing = 0.3.sp,
+            )
+        }
+
+        // Hint button with press scale and bounce
+        val hintInteraction = remember { MutableInteractionSource() }
+        val hintPressed by hintInteraction.collectIsPressedAsState()
+        val hintScale by animateFloatAsState(
+            targetValue = if (hintPressed) 0.9f else 1f,
+            animationSpec = spring(stiffness = Spring.StiffnessHigh),
+            label = "hint_btn_scale",
+        )
+
+        val totalHintSteps = level.hints.steps.size
+        val hintRemaining = when {
+            hintRevealIndex < 0 -> totalHintSteps
+            else -> totalHintSteps - (hintRevealIndex + 1)
+        }
+
+        Box {
+            TextButton(
+                onClick = onHint,
+                interactionSource = hintInteraction,
+                modifier = Modifier
+                    .size(44.dp)
+                    .graphicsLayer {
+                        scaleX = hintScale
+                        scaleY = hintScale
+                    }
+                    .background(
+                        color = if (hintRevealIndex < 0) DarkSurfaceVariant else HintCyanSubtle,
+                        shape = CircleShape,
+                    ),
+                contentPadding = ButtonDefaults.TextButtonContentPadding,
+            ) {
+                Text(
+                    text = "💡",
+                    color = if (hintRevealIndex < 0) Accent else HintCyan,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.graphicsLayer {
+                        scaleX = hintBounce
+                        scaleY = hintBounce
+                    },
+                )
+            }
+
+            // Badge showing remaining hints
+            if (hintRemaining > 0) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .offset(x = 4.dp, y = (-4).dp)
+                        .size(20.dp)
+                        .background(Accent, CircleShape),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "$hintRemaining",
+                        color = DarkBackground,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Black,
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Fixed-height band between the top bar and the drawing. It shows, in order
+ * of priority: why the last stroke failed (with a retry button), the progress
+ * of the current stroke, or the active hint. Keeping it a fixed size means
+ * the drawing below never moves or gets covered.
+ */
+@Composable
+private fun StatusStrip(
+    gameState: GameState,
+    hintText: String?,
+    visitedEdgeCount: Int,
+    onRetry: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(PlayfieldSpec.statusStripHeight)
+            .padding(horizontal = 16.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        when {
+            gameState.isGameOver && !gameState.isLevelComplete -> {
+                val errorMessage = when (gameState.gameOverReason) {
+                    GameOverReason.LIFTED_FINGER -> "Lifted too early"
+                    GameOverReason.RETRACED_EDGE -> "That line was already drawn"
+                    GameOverReason.NO_LINE -> "No line between those dots"
+                    null -> "Try again"
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = errorMessage,
+                        color = Error,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier
+                            .background(DarkSurface.copy(alpha = 0.9f), RoundedCornerShape(20.dp))
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                    )
+                    Spacer(Modifier.width(12.dp))
+                    Button(
+                        onClick = onRetry,
+                        shape = RoundedCornerShape(24.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Accent,
+                            contentColor = DarkBackground,
+                        ),
+                    ) {
+                        Text(
+                            text = "Retry",
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(horizontal = 8.dp),
+                        )
+                    }
+                }
+            }
+
+            gameState.currentNodeId != null && !gameState.isLevelComplete -> {
+                val totalEdges = gameState.level.edges.size
+                val progress = visitedEdgeCount.toFloat() / totalEdges
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(0.5f)
+                            .height(4.dp)
+                            .background(DarkSurfaceVariant, RoundedCornerShape(2.dp)),
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(progress)
+                                .height(4.dp)
+                                .background(EdgeVisited, RoundedCornerShape(2.dp)),
+                        )
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = "$visitedEdgeCount / $totalEdges",
+                        color = TextTertiary,
+                        fontSize = 12.sp,
+                        letterSpacing = 0.5.sp,
+                    )
+                }
+            }
+
+            hintText != null -> {
+                Text(
+                    text = hintText,
+                    color = HintCyan,
+                    fontSize = 13.sp,
+                    textAlign = TextAlign.Center,
+                    letterSpacing = 0.3.sp,
+                    modifier = Modifier
+                        .background(DarkSurface.copy(alpha = 0.9f), RoundedCornerShape(20.dp))
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun Playfield(
+    modifier: Modifier,
+    gameState: GameState,
+    level: Level,
+    currentHintStep: HintStep?,
+    hintAlpha: Float,
+    currentNodeGlow: Float,
+    nodeScale: Float,
+    snapRingRadius: Float,
+    snapRingAlpha: Float,
+    onStrokeStart: (Int) -> Unit,
+    onStrokeMove: (Int) -> Unit,
+    onStrokeEnd: () -> Unit,
+) {
+    val density = LocalDensity.current
+    val nodeRadiusPx = with(density) { PlayfieldSpec.nodeRadius.toPx() }
+    val hitRadiusPx = with(density) { PlayfieldSpec.hitRadius.toPx() }
+    val defaultStrokeWidth = with(density) { 4.dp.toPx() }
+    val visitedStrokeWidth = with(density) { 6.dp.toPx() }
+
+    var canvasSize by remember { mutableStateOf(IntSize.Zero) }
+    val pixelNodes = remember(level.nodes, canvasSize) {
+        layoutNodes(
+            nodes = level.nodes,
+            size = Size(canvasSize.width.toFloat(), canvasSize.height.toFloat()),
+            margin = hitRadiusPx,
+        )
+    }
+
+    Canvas(
+        modifier = modifier
+            .onSizeChanged { canvasSize = it }
+            .pointerInput(level.id, gameState.isLevelComplete, pixelNodes) {
+                if (gameState.isLevelComplete) return@pointerInput
+
+                awaitPointerEventScope {
+                    while (true) {
+                        // A stroke starts when a finger lands on a dot ...
+                        val down = awaitFirstDown(requireUnconsumed = false)
+                        val startNode = nodeAt(pixelNodes, down.position, hitRadiusPx) ?: continue
+                        down.consume()
+                        onStrokeStart(startNode)
+
+                        // ... and is followed by that same finger only.
+                        var ended = false
+                        while (!ended) {
+                            val event = awaitPointerEvent()
+                            val change = event.changes.firstOrNull { it.id == down.id }
+                            if (change == null || !change.pressed) {
+                                change?.consume()
+                                onStrokeEnd()
+                                ended = true
+                            } else {
+                                change.consume()
+                                val node = nodeAt(pixelNodes, change.position, hitRadiusPx)
+                                if (node != null) {
+                                    onStrokeMove(node)
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+    ) {
+        if (pixelNodes.isEmpty()) return@Canvas
+
+        // Glow pass for visited edges (drawn first, behind everything)
+        gameState.level.edges.forEach { edge ->
+            if (!edge.isVisited) return@forEach
+            val startOff = pixelNodes.getValue(edge.node1Id)
+            val endOff = pixelNodes.getValue(edge.node2Id)
+
+            // Outer glow
+            drawLine(
+                color = EdgeVisited.copy(alpha = 0.15f),
+                start = startOff,
+                end = endOff,
+                strokeWidth = visitedStrokeWidth * 4f,
+                cap = StrokeCap.Round,
+            )
+            // Inner glow
+            drawLine(
+                color = EdgeVisited.copy(alpha = 0.3f),
+                start = startOff,
+                end = endOff,
+                strokeWidth = visitedStrokeWidth * 2.2f,
+                cap = StrokeCap.Round,
+            )
+        }
+
+        // Draw edges
+        gameState.level.edges.forEach { edge ->
+            val startOff = pixelNodes.getValue(edge.node1Id)
+            val endOff = pixelNodes.getValue(edge.node2Id)
+
+            val isFailedEdge = gameState.failedEdge?.let { failed ->
+                (edge.node1Id == failed.node1Id && edge.node2Id == failed.node2Id) ||
+                    (edge.node1Id == failed.node2Id && edge.node2Id == failed.node1Id)
+            } ?: false
+
+            val color = when {
+                isFailedEdge -> Error
+                edge.isVisited -> EdgeVisited
+                else -> EdgeDefault
+            }
+            val strokeWidth = if (edge.isVisited || isFailedEdge) visitedStrokeWidth else defaultStrokeWidth
+
+            drawLine(
+                color = color,
+                start = startOff,
+                end = endOff,
+                strokeWidth = strokeWidth,
+                cap = StrokeCap.Round,
+            )
+        }
+
+        // Hint first edge highlight
+        if (currentHintStep?.showFirstEdge == true) {
+            val firstEdge = level.hints.firstEdge
+            if (firstEdge != null) {
+                val from = pixelNodes[firstEdge.first]
+                val to = pixelNodes[firstEdge.second]
+                if (from != null && to != null) {
+                    drawLine(
+                        color = HintCyan.copy(alpha = hintAlpha),
+                        start = from,
+                        end = to,
+                        strokeWidth = visitedStrokeWidth,
+                        cap = StrokeCap.Round,
+                    )
+                }
+            }
+        }
+
+        // Draw nodes
+        pixelNodes.forEach { (nodeId, pixelOffset) ->
+            val color = when (nodeId) {
+                gameState.currentStartNodeId -> NodeStart
+                gameState.currentNodeId -> NodeCurrent
+                else -> NodeDefault
+            }
+
+            val isCurrentNode = nodeId == gameState.currentNodeId
+
+            // Current node ambient glow
+            if (isCurrentNode) {
+                drawCircle(
+                    color = NodeCurrent.copy(alpha = 0.2f + currentNodeGlow * 0.3f),
+                    radius = nodeRadiusPx + 8f + currentNodeGlow * 6f,
+                    center = pixelOffset,
+                )
+            }
+
+            // Hint glow on valid start nodes
+            if (currentHintStep?.showValidStarts == true &&
+                level.hints.validStartNodeIds.contains(nodeId) &&
+                gameState.currentNodeId == null
+            ) {
+                drawCircle(
+                    color = HintCyan.copy(alpha = hintAlpha * 0.5f),
+                    radius = nodeRadiusPx + 10f,
+                    center = pixelOffset,
+                    style = Stroke(width = 3f),
+                )
+            }
+
+            // Outer ring
+            drawCircle(
+                color = Color.White.copy(alpha = 0.15f),
+                radius = nodeRadiusPx + 3f,
+                center = pixelOffset,
+                style = Stroke(width = 2f),
+            )
+
+            // Inner fill with bounce scale for current node
+            val radius = if (isCurrentNode) nodeRadiusPx * nodeScale else nodeRadiusPx
+            drawCircle(
+                color = color,
+                radius = radius,
+                center = pixelOffset,
+            )
+        }
+
+        // Snap ring effect at current node
+        if (snapRingAlpha > 0f && gameState.currentNodeId != null) {
+            val currentPixel = pixelNodes[gameState.currentNodeId]
+            if (currentPixel != null) {
+                drawCircle(
+                    color = NodeCurrent.copy(alpha = snapRingAlpha),
+                    radius = snapRingRadius,
+                    center = currentPixel,
+                    style = Stroke(width = 2f),
+                )
             }
         }
     }
@@ -932,7 +929,7 @@ private fun WinOverlayContent(
     gameState: GameState,
     hintsUsedThisAttempt: Boolean,
     onNextLevel: () -> Unit,
-    onBackToLevelSelect: () -> Unit
+    onBackToLevelSelect: () -> Unit,
 ) {
     val starsEarned = if (hintsUsedThisAttempt) 1 else 3
 
@@ -942,14 +939,14 @@ private fun WinOverlayContent(
         modifier = Modifier
             .fillMaxWidth(0.8f)
             .background(DarkSurface, RoundedCornerShape(24.dp))
-            .padding(32.dp)
+            .padding(32.dp),
     ) {
         Text(
             text = "Level ${gameState.currentLevelId} Complete",
             fontSize = 22.sp,
             fontWeight = FontWeight.Bold,
             color = Success,
-            letterSpacing = 0.5.sp
+            letterSpacing = 0.5.sp,
         )
 
         Spacer(Modifier.height(12.dp))
@@ -958,11 +955,11 @@ private fun WinOverlayContent(
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             repeat(3) { index ->
                 Text(
-                    text = "\u2B50",
+                    text = "⭐",
                     fontSize = 20.sp,
                     modifier = Modifier.graphicsLayer {
                         alpha = if (index < starsEarned) 1f else 0.2f
-                    }
+                    },
                 )
             }
         }
@@ -975,26 +972,25 @@ private fun WinOverlayContent(
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = Accent,
-                contentColor = DarkBackground
-            )
+                contentColor = DarkBackground,
+            ),
         ) {
             Text(
                 text = "Next Level",
                 fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(vertical = 4.dp)
+                modifier = Modifier.padding(vertical = 4.dp),
             )
         }
         Spacer(Modifier.height(8.dp))
         TextButton(
             onClick = onBackToLevelSelect,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         ) {
             Text(
                 text = "Back to Levels",
                 color = TextTertiary,
-                fontSize = 14.sp
+                fontSize = 14.sp,
             )
         }
     }
 }
-

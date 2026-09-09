@@ -13,7 +13,7 @@ It's the kind of puzzle you might doodle on a napkin — now on your phone.
 ## Features
 
 - Clean, minimalist design
-- Progressive difficulty
+- 50 hand-designed levels in five chapters, each a little harder than the last
 - Hint system when you need a nudge
 - No ads, no tracking, no nonsense
 

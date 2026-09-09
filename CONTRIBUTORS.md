@@ -37,8 +37,34 @@ Thanks for your interest in contributing! This guide will help you get set up.
 ./gradlew test
 
 # Run a specific test class
-./gradlew testDebugUnitTest --tests "com.example.lineflow.LevelValidationTest"
+./gradlew testDebugUnitTest --tests "app.curious.lineflow.LevelValidationTest"
 ```
+
+## Designing Levels
+
+`app/src/main/java/app/curious/lineflow/Graph.kt` is generated; do not edit
+it by hand. The levels live in `.scripts/leveldesign/catalog.py`, and the
+toolkit around it checks every level the way the game plays it:
+
+```bash
+# Verify all 50 levels and print the difficulty table
+python3 .scripts/leveldesign/build.py
+
+# Also render preview sheets (needs Pillow: pip install pillow)
+python3 .scripts/leveldesign/build.py --png /tmp/levels
+
+# Regenerate Graph.kt (refuses if any level has a problem)
+python3 .scripts/leveldesign/build.py --write
+```
+
+Each level must be connected with 0 or 2 odd dots, have a solution found by
+Hierholzer's algorithm and replayed line by line, and fit the smallest phone
+we support with dots at least 72dp apart, no dot within 44dp of a line it is
+not on, and lines at least 30 degrees apart at every dot. Levels are ordered
+by a difficulty score (lines drawn plus the share of random strokes that get
+stuck), and the build fails if a level is easier than the one before it.
+Hint text is derived from the geometry, so it always names the right dot and
+direction. The same rules are enforced again by `LevelValidationTest`.
 
 ## Code Style
 

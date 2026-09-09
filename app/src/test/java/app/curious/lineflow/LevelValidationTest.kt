@@ -1,324 +1,235 @@
 package app.curious.lineflow
 
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import kotlin.math.abs
 import kotlin.math.atan2
+import kotlin.math.hypot
+import kotlin.math.max
+import kotlin.math.min
 
+/**
+ * Every level must be drawable by hand: solvable in one stroke, and laid out
+ * so a finger can reach each dot without brushing another one. The numbers
+ * mirror `.scripts/leveldesign/geometry.py`, which generates Graph.kt.
+ */
 class LevelValidationTest {
 
     companion object {
-        // Minimum angular separation (in degrees) between edges at any node
-        // 30 degrees provides ~60 pixels separation at typical touch radius
-        const val MIN_EDGE_ANGLE_DEGREES = 30.0
+        const val EXPECTED_LEVELS = 50
+
+        // Smallest play area we support: a 360dp-wide phone with 24dp side
+        // margins, and a short 16:9 screen once the top bar and status strip
+        // are taken away.
+        const val PLAY_WIDTH_DP = 312f
+        const val PLAY_HEIGHT_DP = 410f
+
+        const val HIT_RADIUS_DP = 32f
+        const val MIN_NODE_DISTANCE_DP = 72f
+        const val MIN_NODE_EDGE_DISTANCE_DP = 44f
+        const val MIN_CROSSING_NODE_DISTANCE_DP = 44f
+        const val MIN_EDGE_ANGLE_DEGREES = 29.5
+    }
+
+    private fun Level.degrees(): Map<Int, Int> {
+        val degree = nodes.associate { it.id to 0 }.toMutableMap()
+        edges.forEach { edge ->
+            degree[edge.node1Id] = degree.getValue(edge.node1Id) + 1
+            degree[edge.node2Id] = degree.getValue(edge.node2Id) + 1
+        }
+        return degree
+    }
+
+    private fun Level.oddNodes(): Set<Int> = degrees().filterValues { it % 2 != 0 }.keys
+
+    /** Dots in dp on the smallest supported play area (same maths as layoutNodes). */
+    private fun Level.layoutOnSmallPhone(): Map<Int, Offset> =
+        layoutNodes(nodes, Size(PLAY_WIDTH_DP + 2 * HIT_RADIUS_DP, PLAY_HEIGHT_DP + 2 * HIT_RADIUS_DP), HIT_RADIUS_DP)
+
+    // ------------------------------------------------------------------
+    // Graph structure
+    // ------------------------------------------------------------------
+
+    @Test
+    fun expectedNumberOfLevelsInOrder() {
+        assertEquals("Expected $EXPECTED_LEVELS levels", EXPECTED_LEVELS, LevelManager.levels.size)
+        assertEquals("Levels must be numbered 1..$EXPECTED_LEVELS in order", (1..EXPECTED_LEVELS).toList(), LevelManager.levels.map { it.id })
     }
 
     @Test
-    fun allLevelsHaveValidEulerianPath() {
-        LevelManager.levels.forEach { level ->
-            val degreeMap = mutableMapOf<Int, Int>()
-            level.nodes.forEach { degreeMap[it.id] = 0 }
-            level.edges.forEach { edge ->
-                degreeMap[edge.node1Id] = (degreeMap[edge.node1Id] ?: 0) + 1
-                degreeMap[edge.node2Id] = (degreeMap[edge.node2Id] ?: 0) + 1
-            }
+    fun levelNamesAreUnique() {
+        val names = LevelManager.levels.map { it.name }
+        assertEquals("Level names must be unique: $names", names.size, names.toSet().size)
+    }
 
-            val oddDegreeCount = degreeMap.values.count { it % 2 != 0 }
-            assertTrue(
-                "Level ${level.id} (${level.name}) has $oddDegreeCount odd-degree nodes. " +
-                    "Must be 0 (circuit) or 2 (path). Degrees: $degreeMap",
-                oddDegreeCount == 0 || oddDegreeCount == 2
-            )
+    @Test
+    fun allEdgesReferenceValidDistinctNodesOnce() {
+        LevelManager.levels.forEach { level ->
+            val nodeIds = level.nodes.map { it.id }.toSet()
+            assertEquals("Level ${level.id}: node ids must be unique", level.nodes.size, nodeIds.size)
+            val seen = mutableSetOf<Set<Int>>()
+            level.edges.forEach { edge ->
+                assertTrue("Level ${level.id}: edge references unknown node ${edge.node1Id}", edge.node1Id in nodeIds)
+                assertTrue("Level ${level.id}: edge references unknown node ${edge.node2Id}", edge.node2Id in nodeIds)
+                assertTrue("Level ${level.id}: edge ${edge.node1Id}-${edge.node2Id} is a loop", edge.node1Id != edge.node2Id)
+                assertTrue(
+                    "Level ${level.id}: duplicate edge ${edge.node1Id}-${edge.node2Id}",
+                    seen.add(setOf(edge.node1Id, edge.node2Id)),
+                )
+            }
+            level.nodes.forEach { node ->
+                assertTrue("Level ${level.id}: node ${node.id} has no lines", level.edges.any { it.containsNode(node.id) })
+            }
         }
     }
 
     @Test
     fun allLevelsAreConnected() {
         LevelManager.levels.forEach { level ->
-            val adjacency = mutableMapOf<Int, MutableSet<Int>>()
-            level.nodes.forEach { adjacency[it.id] = mutableSetOf() }
+            val adjacency = level.nodes.associate { it.id to mutableSetOf<Int>() }
             level.edges.forEach { edge ->
-                adjacency[edge.node1Id]?.add(edge.node2Id)
-                adjacency[edge.node2Id]?.add(edge.node1Id)
+                adjacency.getValue(edge.node1Id).add(edge.node2Id)
+                adjacency.getValue(edge.node2Id).add(edge.node1Id)
             }
-
-            val visited = mutableSetOf<Int>()
-            val queue = ArrayDeque<Int>()
-            val startId = level.nodes.first().id
-            queue.add(startId)
-            visited.add(startId)
-
+            val visited = mutableSetOf(level.nodes.first().id)
+            val queue = ArrayDeque(visited)
             while (queue.isNotEmpty()) {
-                val current = queue.removeFirst()
-                adjacency[current]?.forEach { neighbor ->
-                    if (neighbor !in visited) {
-                        visited.add(neighbor)
-                        queue.add(neighbor)
-                    }
-                }
+                adjacency.getValue(queue.removeFirst()).forEach { if (visited.add(it)) queue.add(it) }
             }
+            assertEquals("Level ${level.id} (${level.name}) is not connected", level.nodes.size, visited.size)
+        }
+    }
 
-            assertEquals(
-                "Level ${level.id} (${level.name}) is not connected. " +
-                    "Reachable: $visited, Total nodes: ${level.nodes.map { it.id }}",
-                level.nodes.size,
-                visited.size
+    @Test
+    fun allLevelsHaveZeroOrTwoOddNodes() {
+        LevelManager.levels.forEach { level ->
+            val odd = level.oddNodes()
+            assertTrue(
+                "Level ${level.id} (${level.name}) has ${odd.size} odd-degree nodes $odd; must be 0 (loop) or 2 (path)",
+                odd.isEmpty() || odd.size == 2,
             )
         }
     }
+
+    @Test
+    fun everyLevelHasAVerifiedOneStrokeSolutionFromTheHintedEdge() {
+        LevelManager.levels.forEach { level ->
+            val firstEdge = level.hints.firstEdge
+            assertNotNull("Level ${level.id}: hint must name a first edge", firstEdge)
+            val trail = EulerSolver.trail(level, firstEdge!!.first, firstEdge.second)
+            assertNotNull(
+                "Level ${level.id} (${level.name}) cannot be drawn in one stroke starting ${firstEdge.first}->${firstEdge.second}",
+                trail,
+            )
+            // Replay the trail exactly like a finger would.
+            var state = GameState(level).reset().copy(currentStartNodeId = trail!!.first(), currentNodeId = trail.first())
+            trail.drop(1).forEach { next ->
+                state = state.moveTo(next)
+                assertFalse("Level ${level.id}: solution stroke failed at dot $next (${state.gameOverReason})", state.isGameOver)
+            }
+            assertTrue("Level ${level.id}: solution stroke did not cover every line", state.isLevelComplete)
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // Hints
+    // ------------------------------------------------------------------
 
     @Test
     fun hintValidStartNodesMatchOddDegreeNodes() {
         LevelManager.levels.forEach { level ->
-            val degreeMap = mutableMapOf<Int, Int>()
-            level.nodes.forEach { degreeMap[it.id] = 0 }
-            level.edges.forEach { edge ->
-                degreeMap[edge.node1Id] = (degreeMap[edge.node1Id] ?: 0) + 1
-                degreeMap[edge.node2Id] = (degreeMap[edge.node2Id] ?: 0) + 1
-            }
-
-            val oddDegreeNodes = degreeMap.filter { it.value % 2 != 0 }.keys
-            val isCircuit = oddDegreeNodes.isEmpty()
-
-            if (isCircuit) {
-                // For circuits, all nodes are valid starts
-                assertEquals(
-                    "Level ${level.id} (${level.name}) is a circuit but hint doesn't list all nodes as valid starts",
-                    level.nodes.map { it.id }.toSet(),
-                    level.hints.validStartNodeIds.toSet()
-                )
-            } else {
-                // For paths, only odd-degree nodes are valid starts
-                assertEquals(
-                    "Level ${level.id} (${level.name}) has odd-degree nodes $oddDegreeNodes " +
-                        "but hint lists ${level.hints.validStartNodeIds}",
-                    oddDegreeNodes,
-                    level.hints.validStartNodeIds.toSet()
-                )
-            }
-        }
-    }
-
-    @Test
-    fun allLevelsHaveUniqueIds() {
-        val ids = LevelManager.levels.map { it.id }
-        assertEquals(
-            "Level IDs are not unique: $ids",
-            ids.size,
-            ids.toSet().size
-        )
-    }
-
-    @Test
-    fun levelsAreInOrder() {
-        val ids = LevelManager.levels.map { it.id }
-        assertEquals(
-            "Levels are not in sequential order",
-            (1..45).toList(),
-            ids
-        )
-    }
-
-    @Test
-    fun expectedNumberOfLevelsExist() {
-        assertEquals("Expected 45 levels", 45, LevelManager.levels.size)
-    }
-
-    @Test
-    fun allEdgesReferenceValidNodes() {
-        LevelManager.levels.forEach { level ->
-            val nodeIds = level.nodes.map { it.id }.toSet()
-            level.edges.forEach { edge ->
-                assertTrue(
-                    "Level ${level.id}: Edge references invalid node1Id ${edge.node1Id}",
-                    edge.node1Id in nodeIds
-                )
-                assertTrue(
-                    "Level ${level.id}: Edge references invalid node2Id ${edge.node2Id}",
-                    edge.node2Id in nodeIds
-                )
-            }
-        }
-    }
-
-    @Test
-    fun hintFirstEdgeIsValid() {
-        LevelManager.levels.forEach { level ->
-            val firstEdge = level.hints.firstEdge ?: return@forEach
-            val hasEdge = level.edges.any { edge ->
-                (edge.node1Id == firstEdge.first && edge.node2Id == firstEdge.second) ||
-                    (edge.node1Id == firstEdge.second && edge.node2Id == firstEdge.first)
-            }
-            assertTrue(
-                "Level ${level.id}: Hint firstEdge (${firstEdge.first}, ${firstEdge.second}) " +
-                    "does not match any edge in the level",
-                hasEdge
-            )
-        }
-    }
-
-    @Test
-    fun allLevelsHaveAtLeastTwoHintSteps() {
-        LevelManager.levels.forEach { level ->
-            assertTrue(
-                "Level ${level.id} (${level.name}) must have at least 2 hint steps, has ${level.hints.steps.size}",
-                level.hints.steps.size >= 2
-            )
-        }
-    }
-
-    @Test
-    fun earlyLevelsHaveTwoHints_laterLevelsHaveThree() {
-        LevelManager.levels.forEach { level ->
-            val expectedMin = if (level.id <= 10) 2 else 3
-            assertTrue(
-                "Level ${level.id} (${level.name}) expected at least $expectedMin " +
-                    "hint steps, has ${level.hints.steps.size}",
-                level.hints.steps.size >= expectedMin,
-            )
-        }
-    }
-
-    @Test
-    fun lastHintStepAlwaysShowsFirstEdge() {
-        LevelManager.levels.forEach { level ->
-            val lastStep = level.hints.steps.last()
-            assertTrue(
-                "Level ${level.id} (${level.name}) last hint step must show first edge",
-                lastStep.showFirstEdge
+            val odd = level.oddNodes()
+            val expected = if (odd.isEmpty()) level.nodes.map { it.id }.toSet() else odd
+            assertEquals(
+                "Level ${level.id} (${level.name}): valid starts should be $expected",
+                expected,
+                level.hints.validStartNodeIds.toSet(),
             )
             assertTrue(
-                "Level ${level.id} (${level.name}) last hint step must show valid starts",
-                lastStep.showValidStarts
+                "Level ${level.id}: hinted first edge must leave a valid start",
+                level.hints.firstEdge!!.first in level.hints.validStartNodeIds,
             )
         }
     }
 
     @Test
-    fun firstHintStepIsTextOnly() {
-        LevelManager.levels.forEach { level ->
-            val firstStep = level.hints.steps.first()
-            assertFalse(
-                "Level ${level.id} (${level.name}) first hint step should not show visual overlays",
-                firstStep.showValidStarts || firstStep.showFirstEdge
-            )
-        }
-    }
-
-    @Test
-    fun hintStepsAreProgressivelyRevealing() {
+    fun hintStepsFollowTheSharedFormat() {
         LevelManager.levels.forEach { level ->
             val steps = level.hints.steps
+            val expected = if (level.id <= 10) 2 else 3
+            assertEquals("Level ${level.id} (${level.name}) should have $expected hint steps", expected, steps.size)
+            steps.forEach { assertTrue("Level ${level.id}: empty hint text", it.text.isNotBlank()) }
+            assertFalse("Level ${level.id}: first hint is text only", steps.first().showValidStarts || steps.first().showFirstEdge)
+            assertTrue("Level ${level.id}: last hint shows valid starts", steps.last().showValidStarts)
+            assertTrue("Level ${level.id}: last hint shows the first edge", steps.last().showFirstEdge)
             for (i in 1 until steps.size) {
-                val prev = steps[i - 1]
-                val curr = steps[i]
-                if (prev.showValidStarts) {
-                    assertTrue(
-                        "Level ${level.id} step $i should not hide valid starts after step ${i - 1} showed them",
-                        curr.showValidStarts
-                    )
-                }
-                if (prev.showFirstEdge) {
-                    assertTrue(
-                        "Level ${level.id} step $i should not hide first edge after step ${i - 1} showed it",
-                        curr.showFirstEdge
-                    )
-                }
+                if (steps[i - 1].showValidStarts) assertTrue("Level ${level.id}: hints must not hide starts again", steps[i].showValidStarts)
+                if (steps[i - 1].showFirstEdge) assertTrue("Level ${level.id}: hints must not hide the first edge again", steps[i].showFirstEdge)
             }
         }
     }
 
-    @Test
-    fun noEdgePassesThroughAnotherNode() {
-        val epsilon = 0.001f
+    // ------------------------------------------------------------------
+    // Layout: everything measured in dp on the smallest phone we support
+    // ------------------------------------------------------------------
 
+    @Test
+    fun dotsAreFarEnoughApartToTouch() {
         LevelManager.levels.forEach { level ->
-            val nodePositions = level.nodes.associate { it.id to it.position }
+            val pts = level.layoutOnSmallPhone()
+            val ids = pts.keys.toList()
+            for (i in ids.indices) for (j in i + 1 until ids.size) {
+                val d = (pts.getValue(ids[i]) - pts.getValue(ids[j])).getDistance()
+                assertTrue(
+                    "Level ${level.id} (${level.name}): dots ${ids[i]} and ${ids[j]} are only ${d.toInt()}dp apart",
+                    d >= MIN_NODE_DISTANCE_DP - 0.5f,
+                )
+            }
+        }
+    }
 
+    @Test
+    fun noDotSitsCloseToALineItIsNotPartOf() {
+        LevelManager.levels.forEach { level ->
+            val pts = level.layoutOnSmallPhone()
             level.edges.forEach { edge ->
-                val p1 = nodePositions[edge.node1Id]!!
-                val p2 = nodePositions[edge.node2Id]!!
-
+                val a = pts.getValue(edge.node1Id)
+                val b = pts.getValue(edge.node2Id)
                 level.nodes.forEach { node ->
-                    if (node.id == edge.node1Id || node.id == edge.node2Id) return@forEach
-
-                    val p = node.position
-
-                    // Check if point p lies on line segment p1-p2
-                    // Using parametric form: p = p1 + t * (p2 - p1), where t in (0, 1)
-                    val dx = p2.x - p1.x
-                    val dy = p2.y - p1.y
-
-                    // Calculate parameter t for both x and y
-                    val tx = if (kotlin.math.abs(dx) > epsilon) (p.x - p1.x) / dx else Float.NaN
-                    val ty = if (kotlin.math.abs(dy) > epsilon) (p.y - p1.y) / dy else Float.NaN
-
-                    val t = when {
-                        tx.isNaN() && ty.isNaN() -> Float.NaN // Degenerate edge (same point)
-                        tx.isNaN() -> ty // Vertical line
-                        ty.isNaN() -> tx // Horizontal line
-                        kotlin.math.abs(tx - ty) < epsilon -> tx // Point is on line
-                        else -> Float.NaN // Point not on line
-                    }
-
-                    if (!t.isNaN() && t > epsilon && t < 1 - epsilon) {
-                        // Verify the point is actually on the line (not just collinear at wrong position)
-                        val expectedX = p1.x + t * dx
-                        val expectedY = p1.y + t * dy
-                        val onLine = kotlin.math.abs(p.x - expectedX) < epsilon &&
-                            kotlin.math.abs(p.y - expectedY) < epsilon
-
-                        assertFalse(
-                            "Level ${level.id} (${level.name}): Edge (${edge.node1Id}, ${edge.node2Id}) " +
-                                "passes through node ${node.id} at position (${p.x}, ${p.y})",
-                            onLine
-                        )
-                    }
+                    if (edge.containsNode(node.id)) return@forEach
+                    val d = pointToSegment(pts.getValue(node.id), a, b)
+                    assertTrue(
+                        "Level ${level.id} (${level.name}): dot ${node.id} is ${d.toInt()}dp from line " +
+                            "${edge.node1Id}-${edge.node2Id}; tracing it would touch the dot",
+                        d >= MIN_NODE_EDGE_DISTANCE_DP - 0.5f,
+                    )
                 }
             }
         }
     }
 
     @Test
-    fun allNodesHaveAdequateEdgeAngularSeparation() {
-        // Only check levels 28 and beyond (as specified by user)
-        // Earlier levels have been playtested and work fine despite tighter angles
-        val levelsToCheck = LevelManager.levels.filter { it.id >= 28 }
-
-        levelsToCheck.forEach { level ->
-            val nodePositions = level.nodes.associate { it.id to it.position }
-
+    fun linesLeavingADotAreVisuallySeparate() {
+        LevelManager.levels.forEach { level ->
+            val pts = level.layoutOnSmallPhone()
             level.nodes.forEach { node ->
-                // Find all nodes connected to this node via edges
-                val connectedNodeIds = level.edges
+                val here = pts.getValue(node.id)
+                val angles = level.edges
                     .filter { it.containsNode(node.id) }
                     .map { edge -> if (edge.node1Id == node.id) edge.node2Id else edge.node1Id }
-
-                // Skip nodes with 0 or 1 edges (no separation to check)
-                if (connectedNodeIds.size < 2) return@forEach
-
-                // Calculate angle from this node to each connected node
-                val angles = connectedNodeIds.map { otherId ->
-                    val other = nodePositions[otherId]!!
-                    val dx = other.x - node.position.x
-                    val dy = other.y - node.position.y
-                    Math.toDegrees(atan2(dy.toDouble(), dx.toDouble()))
-                }.sorted()
-
-                // Check angular separation between consecutive edges (including wrap-around)
+                    .map { other -> Math.toDegrees(atan2((pts.getValue(other).y - here.y).toDouble(), (pts.getValue(other).x - here.x).toDouble())) }
+                    .sorted()
+                if (angles.size < 2) return@forEach
                 for (i in angles.indices) {
-                    val current = angles[i]
-                    val next = angles[(i + 1) % angles.size]
-                    var separation = next - current
+                    var separation = angles[(i + 1) % angles.size] - angles[i]
                     if (separation <= 0) separation += 360.0
-
-                    val sepStr = String.format("%.1f", separation)
                     assertTrue(
-                        "Level ${level.id} (${level.name}): " +
-                            "Node ${node.id} has edges with only ${sepStr}° " +
-                            "separation (minimum: $MIN_EDGE_ANGLE_DEGREES°). " +
-                            "Connected nodes: $connectedNodeIds",
+                        "Level ${level.id} (${level.name}): lines at dot ${node.id} are only ${"%.1f".format(separation)} degrees apart",
                         separation >= MIN_EDGE_ANGLE_DEGREES,
                     )
                 }
@@ -327,64 +238,181 @@ class LevelValidationTest {
     }
 
     @Test
-    fun reportAngularSeparationForLevels28AndAbove() {
-        // Diagnostic test - always passes but prints angular separation info
-        println("=== Angular Separation Report for Levels 28+ ===")
-
-        LevelManager.levels.filter { it.id >= 28 }.forEach { level ->
-            val nodePositions = level.nodes.associate { it.id to it.position }
-            var levelMinSeparation = Double.MAX_VALUE
-            var worstNodeId = -1
-            val failingNodes = mutableListOf<String>()
-
-            level.nodes.forEach { node ->
-                val connectedNodeIds = level.edges
-                    .filter { it.containsNode(node.id) }
-                    .map { edge -> if (edge.node1Id == node.id) edge.node2Id else edge.node1Id }
-
-                if (connectedNodeIds.size < 2) return@forEach
-
-                val angles = connectedNodeIds.map { otherId ->
-                    val other = nodePositions[otherId]!!
-                    val dx = other.x - node.position.x
-                    val dy = other.y - node.position.y
-                    Math.toDegrees(atan2(dy.toDouble(), dx.toDouble()))
-                }.sorted()
-
-                var nodeMinSeparation = Double.MAX_VALUE
-                for (i in angles.indices) {
-                    val current = angles[i]
-                    val next = angles[(i + 1) % angles.size]
-                    var separation = next - current
-                    if (separation <= 0) separation += 360.0
-                    if (separation < nodeMinSeparation) {
-                        nodeMinSeparation = separation
-                    }
-                }
-
-                if (nodeMinSeparation < levelMinSeparation) {
-                    levelMinSeparation = nodeMinSeparation
-                    worstNodeId = node.id
-                }
-
-                if (nodeMinSeparation < MIN_EDGE_ANGLE_DEGREES) {
-                    val sepStr = String.format("%.1f", nodeMinSeparation)
-                    failingNodes.add(
-                        "Node ${node.id}: ${sepStr}° " +
-                            "(${connectedNodeIds.size} edges)",
+    fun crossingsNeverHappenNearADot() {
+        LevelManager.levels.forEach { level ->
+            val pts = level.layoutOnSmallPhone()
+            val edges = level.edges
+            for (i in edges.indices) for (j in i + 1 until edges.size) {
+                val e1 = edges[i]
+                val e2 = edges[j]
+                if (setOf(e1.node1Id, e1.node2Id, e2.node1Id, e2.node2Id).size < 4) continue
+                val x = segmentIntersection(pts.getValue(e1.node1Id), pts.getValue(e1.node2Id), pts.getValue(e2.node1Id), pts.getValue(e2.node2Id))
+                    ?: continue
+                level.nodes.forEach { node ->
+                    val d = (pts.getValue(node.id) - x).getDistance()
+                    assertTrue(
+                        "Level ${level.id} (${level.name}): lines cross ${d.toInt()}dp from dot ${node.id}",
+                        d >= MIN_CROSSING_NODE_DISTANCE_DP - 0.5f,
                     )
                 }
             }
+        }
+    }
 
-            val status = if (levelMinSeparation < MIN_EDGE_ANGLE_DEGREES) "FAIL" else "PASS"
-            val minSepStr = String.format("%.1f", levelMinSeparation)
-            println(
-                "Level ${level.id} (${level.name}): " +
-                    "min ${minSepStr}° at node $worstNodeId [$status]",
-            )
-            if (failingNodes.isNotEmpty()) {
-                failingNodes.forEach { println("  - $it") }
+    @Test
+    fun layoutFillsTheAvailableAreaAndStaysCentred() {
+        val size = Size(600f, 900f)
+        val margin = 40f
+        LevelManager.levels.forEach { level ->
+            val pts = layoutNodes(level.nodes, size, margin).values
+            val minX = pts.minOf { it.x }
+            val maxX = pts.maxOf { it.x }
+            val minY = pts.minOf { it.y }
+            val maxY = pts.maxOf { it.y }
+            assertTrue("Level ${level.id}: drawing leaves the play area", minX >= margin - 0.5f && maxX <= size.width - margin + 0.5f)
+            assertTrue("Level ${level.id}: drawing leaves the play area", minY >= margin - 0.5f && maxY <= size.height - margin + 0.5f)
+            assertEquals("Level ${level.id}: not horizontally centred", size.width / 2, (minX + maxX) / 2, 0.5f)
+            assertEquals("Level ${level.id}: not vertically centred", size.height / 2, (minY + maxY) / 2, 0.5f)
+            val touchesWidth = abs(maxX - minX - (size.width - 2 * margin)) < 0.5f
+            val touchesHeight = abs(maxY - minY - (size.height - 2 * margin)) < 0.5f
+            assertTrue("Level ${level.id}: drawing should be scaled up to the margins", touchesWidth || touchesHeight)
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // Difficulty curve
+    // ------------------------------------------------------------------
+
+    @Test
+    fun firstLevelsAreTinyAndTheGameKeepsGrowing() {
+        val levels = LevelManager.levels
+        (0 until 5).forEach { i ->
+            assertTrue("Level ${i + 1} should have at most 7 lines", levels[i].edges.size <= 7)
+        }
+        assertTrue("Last level should be the biggest stroke", levels.last().edges.size >= 40)
+        // Line counts rise in broad strokes: every ten levels ask for more than the ten before.
+        val chapterAverages = levels.chunked(10).map { chapter -> chapter.map { it.edges.size }.average() }
+        chapterAverages.zipWithNext().forEach { (before, after) ->
+            assertTrue("Each chapter should have more lines on average ($chapterAverages)", after > before)
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // Game rules (pure state)
+    // ------------------------------------------------------------------
+
+    @Test
+    fun retracingALineEndsTheStroke() {
+        val level = LevelManager.getLevel(2)!! // The Square
+        var state = GameState(level).reset().copy(currentStartNodeId = 0, currentNodeId = 0)
+        state = state.moveTo(1)
+        assertFalse(state.isGameOver)
+        state = state.moveTo(0)
+        assertTrue(state.isGameOver)
+        assertEquals(GameOverReason.RETRACED_EDGE, state.gameOverReason)
+        assertNotNull(state.failedEdge)
+    }
+
+    @Test
+    fun connectingTwoDotsWithoutALineEndsTheStroke() {
+        val level = LevelManager.getLevel(2)!! // The Square: no diagonal
+        val state = GameState(level).reset().copy(currentStartNodeId = 0, currentNodeId = 0).moveTo(2)
+        assertTrue(state.isGameOver)
+        assertEquals(GameOverReason.NO_LINE, state.gameOverReason)
+    }
+
+    @Test
+    fun liftingTheFingerEarlyEndsTheStrokeButNotAfterCompletion() {
+        val level = LevelManager.getLevel(1)!! // The Triangle
+        var state = GameState(level).reset().copy(currentStartNodeId = 0, currentNodeId = 0).moveTo(1)
+        assertEquals(GameOverReason.LIFTED_FINGER, state.liftFinger().gameOverReason)
+        state = state.moveTo(2).moveTo(0)
+        assertTrue(state.isLevelComplete)
+        assertFalse(state.liftFinger().isGameOver)
+    }
+
+    @Test
+    fun stayingOnTheSameDotIsNotAMove() {
+        val level = LevelManager.getLevel(1)!!
+        val state = GameState(level).reset().copy(currentStartNodeId = 0, currentNodeId = 0)
+        assertTrue(state.moveTo(0) === state)
+    }
+
+    @Test
+    fun nodeAtPicksTheDotUnderTheFingerOnlyWithinTheHitRadius() {
+        val pts = mapOf(0 to Offset(100f, 100f), 1 to Offset(300f, 100f))
+        assertEquals(0, nodeAt(pts, Offset(120f, 110f), 32f))
+        assertEquals(1, nodeAt(pts, Offset(280f, 100f), 32f))
+        assertEquals(null, nodeAt(pts, Offset(200f, 100f), 32f))
+    }
+
+    // ------------------------------------------------------------------
+    // Geometry helpers
+    // ------------------------------------------------------------------
+
+    private fun pointToSegment(p: Offset, a: Offset, b: Offset): Float {
+        val dx = b.x - a.x
+        val dy = b.y - a.y
+        val l2 = dx * dx + dy * dy
+        if (l2 == 0f) return (p - a).getDistance()
+        val t = max(0f, min(1f, ((p.x - a.x) * dx + (p.y - a.y) * dy) / l2))
+        return hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy))
+    }
+
+    private fun segmentIntersection(p1: Offset, p2: Offset, p3: Offset, p4: Offset): Offset? {
+        val d = (p1.x - p2.x) * (p3.y - p4.y) - (p1.y - p2.y) * (p3.x - p4.x)
+        if (abs(d) < 1e-6f) return null
+        val t = ((p1.x - p3.x) * (p3.y - p4.y) - (p1.y - p3.y) * (p3.x - p4.x)) / d
+        val u = -((p1.x - p2.x) * (p1.y - p3.y) - (p1.y - p2.y) * (p1.x - p3.x)) / d
+        val eps = 1e-4f
+        if (t <= eps || t >= 1 - eps || u <= eps || u >= 1 - eps) return null
+        return Offset(p1.x + t * (p2.x - p1.x), p1.y + t * (p2.y - p1.y))
+    }
+}
+
+/** Hierholzer's algorithm, used by the tests to prove each level is drawable. */
+object EulerSolver {
+    /**
+     * A one-stroke trail through every line of [level] that begins with the
+     * line [start]->[first], or null if none exists.
+     */
+    fun trail(level: Level, start: Int, first: Int): List<Int>? {
+        val edges = level.edges.map { setOf(it.node1Id, it.node2Id) }
+        val used = BooleanArray(edges.size)
+        val incident = level.nodes.associate { node -> node.id to edges.indices.filter { node.id in edges[it] } }
+        val firstIndex = edges.indexOf(setOf(start, first))
+        if (firstIndex < 0) return null
+        used[firstIndex] = true
+
+        val pointer = level.nodes.associate { it.id to 0 }.toMutableMap()
+        val stack = ArrayDeque(listOf(first))
+        val circuit = mutableListOf<Int>()
+        while (stack.isNotEmpty()) {
+            val v = stack.last()
+            val candidates = incident.getValue(v)
+            var p = pointer.getValue(v)
+            while (p < candidates.size && used[candidates[p]]) p++
+            pointer[v] = p
+            if (p < candidates.size) {
+                used[candidates[p]] = true
+                stack.addLast((edges[candidates[p]] - v).first())
+            } else {
+                circuit.add(stack.removeLast())
             }
         }
+        val trail = listOf(start) + circuit.reversed()
+        return if (isValid(level, trail)) trail else null
+    }
+
+    private fun isValid(level: Level, trail: List<Int>): Boolean {
+        if (trail.size != level.edges.size + 1) return false
+        val pool = level.edges.groupingBy { setOf(it.node1Id, it.node2Id) }.eachCount().toMutableMap()
+        trail.zipWithNext().forEach { (a, b) ->
+            val key = setOf(a, b)
+            val left = pool[key] ?: return false
+            if (left == 0) return false
+            pool[key] = left - 1
+        }
+        return pool.values.all { it == 0 }
     }
 }

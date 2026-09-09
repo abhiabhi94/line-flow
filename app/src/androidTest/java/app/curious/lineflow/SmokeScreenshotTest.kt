@@ -65,11 +65,11 @@ class SmokeScreenshotTest {
         device.waitForIdle()
         snap("03_game_level_1")
 
-        // Ask for a hint; the first hint for level 1 explains it is a circuit.
+        // Ask for a hint; the first hint for level 1 explains it is a loop.
         tap("💡")
         assertNotNull(
             "Hint text did not appear",
-            device.wait(Until.findObject(By.textStartsWith("This is a circuit")), TIMEOUT_MS),
+            device.wait(Until.findObject(By.textStartsWith("A loop can be drawn")), TIMEOUT_MS),
         )
         snap("04_game_level_1_hint")
 
