@@ -63,9 +63,14 @@ class SmokeScreenshotTest {
         device.waitForIdle()
         snap("03_game_level_1")
 
-        // Ask for a hint.
-        device.findObject(By.text("💡"))?.click()
-        device.waitForIdle()
+        // Ask for a hint; the first hint for level 1 explains it is a circuit.
+        val hintButton = device.findObject(By.text("💡"))
+        assertNotNull("Hint button not found", hintButton)
+        hintButton.click()
+        assertNotNull(
+            "Hint text did not appear",
+            device.wait(Until.findObject(By.textStartsWith("This is a circuit")), TIMEOUT_MS),
+        )
         snap("04_game_level_1_hint")
 
         // Back to the level list, then into settings.
