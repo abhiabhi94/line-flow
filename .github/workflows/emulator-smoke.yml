@@ -2,8 +2,6 @@ name: Emulator smoke test
 
 on:
   workflow_dispatch:
-  push:
-    branches: [claude/modest-gauss-x11ip2] # temporary: workflow_dispatch only works once this file is on main
 
 jobs:
   smoke:
