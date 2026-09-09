@@ -52,7 +52,7 @@ jobs:
         with:
           name: emulator-screenshots
           path: app/build/outputs/connected_android_test_additional_output/
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 7
 
       - name: Upload test reports

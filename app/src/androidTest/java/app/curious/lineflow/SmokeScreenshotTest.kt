@@ -36,11 +36,12 @@ class SmokeScreenshotTest {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         device = UiDevice.getInstance(instrumentation)
         val argDir = InstrumentationRegistry.getArguments().getString("additionalTestOutputDir")
+        val context = instrumentation.targetContext
         outputDir =
-            if (argDir != null) {
-                File(argDir)
-            } else {
-                File(instrumentation.targetContext.getExternalFilesDir(null), "screenshots")
+            when {
+                argDir != null -> File(argDir)
+                // External storage can be unavailable; fall back to internal storage.
+                else -> File(context.getExternalFilesDir(null) ?: context.filesDir, "screenshots")
             }
         check(outputDir.isDirectory || outputDir.mkdirs()) { "Could not create $outputDir" }
     }
@@ -95,6 +96,7 @@ class SmokeScreenshotTest {
     private companion object {
         const val TIMEOUT_MS = 15_000L
         const val SHORT_TIMEOUT_MS = 2_000L
-        val TUTORIAL_TEXT: Pattern = Pattern.compile("Watch closely.*|Don't .*|Trace every line.*")
+        // DOTALL because one tutorial string ("Trace every line\nin one stroke") spans two lines.
+        val TUTORIAL_TEXT: Pattern = Pattern.compile("(Watch closely|Don't |Trace every line).*", Pattern.DOTALL)
     }
 }
