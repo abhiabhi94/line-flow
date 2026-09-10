@@ -90,19 +90,27 @@ import kotlinx.coroutines.launch
 import kotlin.math.min
 
 /**
- * Touch geometry, in dp. The level layouts in Graph.kt are generated against
- * these numbers (see `.scripts/leveldesign/geometry.py`): dots are always at
- * least two hit radii apart and no dot sits within a hit radius of a line it
- * is not part of, so a finger following a line can only ever reach the dot
- * at its end.
+ * Touch geometry, in dp. The canvas spans the full width; dot centres keep
+ * [contentMargin] clear of its edge so the outermost dots are fully
+ * touchable. The touch radius is [hitRadius] on roomy screens and shrinks
+ * on cramped ones (see [touchRadius]) so hit circles never overlap and never
+ * reach a line they are not part of. The level layouts in Graph.kt are
+ * generated against these numbers (see `.scripts/leveldesign/geometry.py`),
+ * which guarantee a touch radius of at least 25dp even on a 360x640dp phone.
  */
 object PlayfieldSpec {
     val nodeRadius: Dp = 12.dp
     val hitRadius: Dp = 32.dp
-    val horizontalMargin: Dp = 24.dp
+    val contentMargin: Dp = hitRadius + 8.dp
     val bottomMargin: Dp = 24.dp
     val topBarHeight: Dp = 60.dp
     val statusStripHeight: Dp = 84.dp
+
+    /** Hit circles stay this far apart relative to the closest pair of dots. */
+    const val HIT_RADIUS_TO_DOT_DISTANCE = 0.45f
+
+    /** A hit circle never reaches closer than this to a line it is not on. */
+    const val HIT_RADIUS_TO_LINE_DISTANCE = 0.75f
 
     /** The play area is never squeezed below this height-to-width ratio. */
     const val MIN_PLAY_ASPECT = 1.32f
@@ -114,7 +122,7 @@ object PlayfieldSpec {
      */
     fun balancingBottomSpace(screenWidth: Dp, screenHeight: Dp): Dp {
         val chrome = topBarHeight + statusStripHeight
-        val minPlayHeight = (screenWidth - horizontalMargin * 2) * MIN_PLAY_ASPECT
+        val minPlayHeight = (screenWidth - contentMargin * 2) * MIN_PLAY_ASPECT
         val slack = screenHeight - chrome - bottomMargin - minPlayHeight
         return (chrome - bottomMargin).coerceIn(0.dp, slack.coerceAtLeast(0.dp))
     }
@@ -224,6 +232,37 @@ fun nodeAt(pixelNodes: Map<Int, Offset>, position: Offset, hitRadius: Float): In
         .minByOrNull { (_, center) -> (center - position).getDistance() }
         ?.takeIf { (_, center) -> (center - position).getDistance() <= hitRadius }
         ?.key
+
+/**
+ * The touch radius for a laid-out level: [maxRadius] unless the dots are so
+ * close (a small screen showing a dense level) that hit circles would overlap
+ * or swallow a neighbouring line, in which case it shrinks just enough.
+ */
+fun touchRadius(pixelNodes: Map<Int, Offset>, edges: List<Edge>, maxRadius: Float): Float {
+    var radius = maxRadius
+    val ids = pixelNodes.keys.toList()
+    for (i in ids.indices) for (j in i + 1 until ids.size) {
+        val d = (pixelNodes.getValue(ids[i]) - pixelNodes.getValue(ids[j])).getDistance()
+        radius = min(radius, d * PlayfieldSpec.HIT_RADIUS_TO_DOT_DISTANCE)
+    }
+    edges.forEach { edge ->
+        val a = pixelNodes[edge.node1Id] ?: return@forEach
+        val b = pixelNodes[edge.node2Id] ?: return@forEach
+        pixelNodes.forEach { (id, p) ->
+            if (edge.containsNode(id)) return@forEach
+            radius = min(radius, distanceToSegment(p, a, b) * PlayfieldSpec.HIT_RADIUS_TO_LINE_DISTANCE)
+        }
+    }
+    return radius
+}
+
+private fun distanceToSegment(p: Offset, a: Offset, b: Offset): Float {
+    val dir = b - a
+    val lengthSquared = dir.x * dir.x + dir.y * dir.y
+    if (lengthSquared == 0f) return (p - a).getDistance()
+    val t = (((p.x - a.x) * dir.x + (p.y - a.y) * dir.y) / lengthSquared).coerceIn(0f, 1f)
+    return (p - Offset(a.x + dir.x * t, a.y + dir.y * t)).getDistance()
+}
 
 /**
  * The part of a line the finger has traced so far: from the current dot to
@@ -469,11 +508,7 @@ fun OneLineDrawGame(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .padding(
-                        start = PlayfieldSpec.horizontalMargin,
-                        end = PlayfieldSpec.horizontalMargin,
-                        bottom = PlayfieldSpec.bottomMargin,
-                    ),
+                    .padding(bottom = PlayfieldSpec.bottomMargin),
                 gameState = gameState,
                 level = level,
                 currentHintStep = currentHintStep,
@@ -814,7 +849,8 @@ private fun Playfield(
 ) {
     val density = LocalDensity.current
     val nodeRadiusPx = with(density) { PlayfieldSpec.nodeRadius.toPx() }
-    val hitRadiusPx = with(density) { PlayfieldSpec.hitRadius.toPx() }
+    val maxHitRadiusPx = with(density) { PlayfieldSpec.hitRadius.toPx() }
+    val contentMarginPx = with(density) { PlayfieldSpec.contentMargin.toPx() }
     val defaultStrokeWidth = with(density) { 4.dp.toPx() }
     val visitedStrokeWidth = with(density) { 6.dp.toPx() }
     val missingDash = remember(density) {
@@ -828,9 +864,10 @@ private fun Playfield(
         layoutNodes(
             nodes = level.nodes,
             size = Size(canvasSize.width.toFloat(), canvasSize.height.toFloat()),
-            margin = hitRadiusPx,
+            margin = contentMarginPx,
         )
     }
+    val hitRadiusPx = remember(pixelNodes, level.edges) { touchRadius(pixelNodes, level.edges, maxHitRadiusPx) }
 
     Canvas(
         modifier = modifier

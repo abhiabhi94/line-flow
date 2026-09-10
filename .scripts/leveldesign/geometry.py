@@ -2,14 +2,17 @@
 
 Everything here is derived from how the game is actually played:
 
-* A level is drawn with a uniform scale into a play area that is at least
-  PLAY_WIDTH_DP x PLAY_HEIGHT_DP on the smallest phones we care about.
-* A node is "hit" when the finger comes within HIT_RADIUS_DP of it.
-
-From those two facts we derive the spacing rules that make a level playable
-by hand: dots must be far enough apart that two hit circles never overlap,
-and no dot may sit close to a line it is not part of (otherwise tracing that
-line would accidentally "visit" the dot).
+* The canvas spans the full screen width. On the smallest phone we support
+  (360x640dp with a status bar and a 3-button navigation bar) it measures
+  SMALL_CANVAS_WIDTH_DP x SMALL_CANVAS_HEIGHT_DP once the top bar, status
+  strip and bottom margin are taken away.
+* Dot centres keep CONTENT_MARGIN_DP clear of the canvas edge, so the
+  centres span SMALL_SPAN_WIDTH_DP x SMALL_SPAN_HEIGHT_DP, uniformly scaled.
+* A dot is "hit" when the finger comes within the touch radius of it. The
+  game caps that radius at HIT_RADIUS_DP and shrinks it on cramped screens
+  so hit circles never overlap and never reach a line they are not part of;
+  the spacing rules below guarantee it never drops under MIN_HIT_RADIUS_DP
+  on the smallest phone (and stays at the full 32dp from ~410dp-wide phones).
 """
 from __future__ import annotations
 
@@ -20,12 +23,16 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 
 # --- Play-area assumptions (keep in sync with OneLineDrawGame.kt / tests) ---
-PLAY_WIDTH_DP = 312.0      # 360dp phone minus 24dp margin on each side
-PLAY_HEIGHT_DP = 410.0     # short 16:9 phone after top bar + status strip
-HIT_RADIUS_DP = 32.0       # nodeHitRadius in the game
-MIN_NODE_DISTANCE_DP = 72.0        # two hit circles never overlap (+8dp slack)
-MIN_NODE_EDGE_DISTANCE_DP = 44.0   # tracing a line never brushes another dot
-MIN_CROSSING_NODE_DISTANCE_DP = 44.0
+SMALL_CANVAS_WIDTH_DP = 360.0   # full width of the smallest supported phone
+SMALL_CANVAS_HEIGHT_DP = 400.0  # 640 - 24 status - 48 nav - 60 top bar - 84 strip - 24 bottom
+HIT_RADIUS_DP = 32.0            # touch radius on roomy screens
+CONTENT_MARGIN_DP = HIT_RADIUS_DP + 8.0  # dot centres keep this clear of the canvas edge
+SMALL_SPAN_WIDTH_DP = SMALL_CANVAS_WIDTH_DP - 2 * CONTENT_MARGIN_DP   # 280
+SMALL_SPAN_HEIGHT_DP = SMALL_CANVAS_HEIGHT_DP - 2 * CONTENT_MARGIN_DP  # 320
+MIN_HIT_RADIUS_DP = 25.0        # the game never has to shrink the touch radius below this
+MIN_NODE_DISTANCE_DP = 56.0        # two hit circles of MIN_HIT_RADIUS never overlap (+6dp)
+MIN_NODE_EDGE_DISTANCE_DP = 36.0   # tracing a line never brushes another dot (+11dp)
+MIN_CROSSING_NODE_DISTANCE_DP = 36.0
 MIN_EDGE_ANGLE_DEG = 30.0          # lines leaving a dot are visually distinct
 MAX_VERTICAL_STRETCH = 1.3         # tall phones stretch squat levels up to this
 TALL_PLAY_ASPECT = 2.1             # play-area height/width on the tallest phones
@@ -74,11 +81,12 @@ class LevelSpec:
         return odd if odd else list(range(len(self.nodes)))
 
     def scale_dp(self) -> float:
-        """dp per level unit when fitted into the smallest play area."""
+        """dp per level unit on the smallest supported phone (dot centres
+        fitted into SMALL_SPAN_WIDTH_DP x SMALL_SPAN_HEIGHT_DP, no stretch)."""
         x0, y0, x1, y1 = self.bbox()
         w = max(x1 - x0, 1e-6)
         h = max(y1 - y0, 1e-6)
-        return min(PLAY_WIDTH_DP / w, PLAY_HEIGHT_DP / h)
+        return min(SMALL_SPAN_WIDTH_DP / w, SMALL_SPAN_HEIGHT_DP / h)
 
     def normalized(self) -> list[Point]:
         """Nodes translated/scaled into 0..1 space keeping aspect ratio."""

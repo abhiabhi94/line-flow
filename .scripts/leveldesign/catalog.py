@@ -1,7 +1,7 @@
 """The 50 LineFlow levels, designed by hand.
 
 Design rules of thumb (all enforced by geometry.check):
-  * dots >= 72dp apart, no dot within 44dp of a line it is not on
+  * on the smallest phone, dots >= 56dp apart and >= 36dp from lines they are not on
   * lines leaving a dot are >= 30 degrees apart
   * no crossing lines unless the level opts in (crossings never near dots)
   * exactly 0 or 2 odd dots, connected, and a verified one-stroke solution

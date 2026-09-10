@@ -24,16 +24,20 @@ class LevelValidationTest {
     companion object {
         const val EXPECTED_LEVELS = 50
 
-        // Smallest play area we support: a 360dp-wide phone with 24dp side
-        // margins, and a short 16:9 screen once the top bar and status strip
-        // are taken away.
-        const val PLAY_WIDTH_DP = 312f
-        const val PLAY_HEIGHT_DP = 410f
+        // The canvas on the smallest phone we support: 360x640dp with a status
+        // bar and 3-button navigation, once the top bar, status strip and
+        // bottom margin are taken away. Dot centres keep the content margin
+        // clear of its edge, exactly as layoutNodes does in the game.
+        const val SMALL_CANVAS_WIDTH_DP = 360f
+        const val SMALL_CANVAS_HEIGHT_DP = 400f
+        const val CONTENT_MARGIN_DP = 40f
 
-        const val HIT_RADIUS_DP = 32f
-        const val MIN_NODE_DISTANCE_DP = 72f
-        const val MIN_NODE_EDGE_DISTANCE_DP = 44f
-        const val MIN_CROSSING_NODE_DISTANCE_DP = 44f
+        // The touch radius the game may shrink to on that phone; hit circles of
+        // this size never overlap and never reach a foreign line.
+        const val MIN_HIT_RADIUS_DP = 25f
+        const val MIN_NODE_DISTANCE_DP = 56f
+        const val MIN_NODE_EDGE_DISTANCE_DP = 36f
+        const val MIN_CROSSING_NODE_DISTANCE_DP = 36f
         const val MIN_EDGE_ANGLE_DEGREES = 30.0
 
         // Same slack as the Python checker: exact 30-degree layouts land a hair under after rounding.
@@ -57,7 +61,7 @@ class LevelValidationTest {
      * conservative case for every distance check).
      */
     private fun Level.layoutOnSmallPhone(): Map<Int, Offset> =
-        layoutNodes(nodes, Size(PLAY_WIDTH_DP + 2 * HIT_RADIUS_DP, PLAY_HEIGHT_DP + 2 * HIT_RADIUS_DP), HIT_RADIUS_DP, maxStretch = 1f)
+        layoutNodes(nodes, Size(SMALL_CANVAS_WIDTH_DP, SMALL_CANVAS_HEIGHT_DP), CONTENT_MARGIN_DP, maxStretch = 1f)
 
     // ------------------------------------------------------------------
     // Graph structure
@@ -287,6 +291,32 @@ class LevelValidationTest {
     }
 
     @Test
+    fun touchRadiusNeverShrinksBelowTheGuaranteeOnTheSmallestPhone() {
+        LevelManager.levels.forEach { level ->
+            val pts = level.layoutOnSmallPhone()
+            val radius = touchRadius(pts, level.edges, 32f)
+            assertTrue(
+                "Level ${level.id} (${level.name}): touch radius would be ${radius.toInt()}dp on the smallest phone",
+                radius >= MIN_HIT_RADIUS_DP - 0.5f,
+            )
+        }
+    }
+
+    @Test
+    fun touchRadiusShrinksSoHitCirclesNeverOverlapOrReachALine() {
+        val square = LevelManager.getLevel(2)!! // The Square, side 1
+        val roomy = mapOf(0 to Offset(0f, 0f), 1 to Offset(200f, 0f), 2 to Offset(200f, 200f), 3 to Offset(0f, 200f))
+        assertEquals(32f, touchRadius(roomy, square.edges, 32f), 0.01f)
+        val cramped = mapOf(0 to Offset(0f, 0f), 1 to Offset(50f, 0f), 2 to Offset(50f, 50f), 3 to Offset(0f, 50f))
+        assertEquals(50f * PlayfieldSpec.HIT_RADIUS_TO_DOT_DISTANCE, touchRadius(cramped, square.edges, 32f), 0.01f)
+        // A dot sitting close to a line it is not on limits the radius too: here the
+        // square's dot 3 is pulled to 30dp from line 0-1, which binds before the
+        // dot distances do (30 * 0.75 = 22.5 < 0.45 * closest pair).
+        val nearLine = mapOf(0 to Offset(0f, 0f), 1 to Offset(200f, 0f), 2 to Offset(200f, 200f), 3 to Offset(100f, 30f))
+        assertEquals(30f * PlayfieldSpec.HIT_RADIUS_TO_LINE_DISTANCE, touchRadius(nearLine, square.edges, 32f), 0.01f)
+    }
+
+    @Test
     fun layoutFillsTheAvailableAreaAndStaysCentred() {
         val size = Size(600f, 900f)
         val margin = 40f
@@ -480,7 +510,7 @@ class PlayfieldLayoutTest {
     @Test
     fun shortScreensKeepTheirPlayHeight() {
         // A short 16:9 phone has no slack: nothing is taken from the drawing.
-        val short = PlayfieldSpec.balancingBottomSpace(screenWidth = 360.dp, screenHeight = 560.dp)
+        val short = PlayfieldSpec.balancingBottomSpace(screenWidth = 360.dp, screenHeight = 530.dp)
         assertEquals(0.dp, short)
         // In between, only the slack above the minimum play aspect is used.
         val medium = PlayfieldSpec.balancingBottomSpace(screenWidth = 360.dp, screenHeight = 620.dp)

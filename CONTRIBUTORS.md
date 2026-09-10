@@ -59,8 +59,11 @@ python3 .scripts/leveldesign/build.py --write
 
 Each level must be connected with 0 or 2 odd dots, have a solution found by
 Hierholzer's algorithm and replayed line by line, and fit the smallest phone
-we support with dots at least 72dp apart, no dot within 44dp of a line it is
-not on, and lines at least 30 degrees apart at every dot. Levels are ordered
+we support (360x640dp) with dots at least 56dp apart, no dot within 36dp of a
+line it is not on, and lines at least 30 degrees apart at every dot. The game
+shrinks its touch radius on cramped screens so hit circles never overlap;
+those numbers guarantee it never drops below 25dp, and it stays at the full
+32dp on phones about 410dp wide or more. Levels are ordered
 by a difficulty score (lines drawn plus the share of random strokes that get
 stuck), and the build fails if a level is easier than the one before it.
 Hint text is derived from the geometry, so it always names the right dot and
