@@ -25,6 +25,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -53,6 +54,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
@@ -99,7 +101,23 @@ object PlayfieldSpec {
     val hitRadius: Dp = 32.dp
     val horizontalMargin: Dp = 24.dp
     val bottomMargin: Dp = 24.dp
+    val topBarHeight: Dp = 60.dp
     val statusStripHeight: Dp = 84.dp
+
+    /** The play area is never squeezed below this height-to-width ratio. */
+    const val MIN_PLAY_ASPECT = 1.32f
+
+    /**
+     * Space to leave under the drawing so it sits at the optical centre of the
+     * screen (mirroring the top bar and status strip above it), unless that
+     * would squeeze the play area below [MIN_PLAY_ASPECT].
+     */
+    fun balancingBottomSpace(screenWidth: Dp, screenHeight: Dp): Dp {
+        val chrome = topBarHeight + statusStripHeight
+        val minPlayHeight = (screenWidth - horizontalMargin * 2) * MIN_PLAY_ASPECT
+        val slack = screenHeight - chrome - bottomMargin - minPlayHeight
+        return (chrome - bottomMargin).coerceIn(0.dp, slack.coerceAtLeast(0.dp))
+    }
 }
 
 enum class GameOverReason {
@@ -379,7 +397,9 @@ fun OneLineDrawGame(
             .graphicsLayer { translationX = shakeOffset.value }
             .background(DarkBackground),
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val bottomSpace = PlayfieldSpec.balancingBottomSpace(maxWidth, maxHeight)
+            Column(modifier = Modifier.fillMaxSize()) {
             TopBar(
                 level = level,
                 hintRevealIndex = hintRevealIndex,
@@ -440,6 +460,9 @@ fun OneLineDrawGame(
                 },
                 onStrokeEnd = { gameState = gameState.liftFinger() },
             )
+
+            Spacer(Modifier.height(bottomSpace))
+            }
         }
 
         // Red flash overlay on loss
@@ -521,6 +544,7 @@ private fun TopBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .height(PlayfieldSpec.topBarHeight)
             .padding(top = 16.dp, start = 16.dp, end = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -756,6 +780,9 @@ private fun Playfield(
     val hitRadiusPx = with(density) { PlayfieldSpec.hitRadius.toPx() }
     val defaultStrokeWidth = with(density) { 4.dp.toPx() }
     val visitedStrokeWidth = with(density) { 6.dp.toPx() }
+    val missingDash = remember(density) {
+        with(density) { PathEffect.dashPathEffect(floatArrayOf(12.dp.toPx(), 9.dp.toPx())) }
+    }
 
     var canvasSize by remember { mutableStateOf(IntSize.Zero) }
     val pixelNodes = remember(level.nodes, canvasSize) {
@@ -835,12 +862,14 @@ private fun Playfield(
             }
             val strokeWidth = if (edge.isVisited || isFailedEdge || showRemaining) visitedStrokeWidth else defaultStrokeWidth
 
+            val isMissing = showRemaining && !edge.isVisited && !isFailedEdge
             drawLine(
                 color = color,
                 start = startOff,
                 end = endOff,
                 strokeWidth = strokeWidth,
                 cap = StrokeCap.Round,
+                pathEffect = if (isMissing) missingDash else null,
             )
         }
 

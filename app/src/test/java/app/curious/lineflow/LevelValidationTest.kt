@@ -2,6 +2,7 @@ package app.curious.lineflow
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.unit.dp
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -438,5 +439,24 @@ object EulerSolver {
             pool[key] = left - 1
         }
         return pool.values.all { it == 0 }
+    }
+}
+
+class PlayfieldLayoutTest {
+    @Test
+    fun tallScreensBalanceTheTopChromeWithSpaceBelowTheDrawing() {
+        // A tall phone: the drawing is pushed up to the optical centre.
+        val tall = PlayfieldSpec.balancingBottomSpace(screenWidth = 393.dp, screenHeight = 800.dp)
+        assertEquals(PlayfieldSpec.topBarHeight + PlayfieldSpec.statusStripHeight - PlayfieldSpec.bottomMargin, tall)
+    }
+
+    @Test
+    fun shortScreensKeepTheirPlayHeight() {
+        // A short 16:9 phone has no slack: nothing is taken from the drawing.
+        val short = PlayfieldSpec.balancingBottomSpace(screenWidth = 360.dp, screenHeight = 560.dp)
+        assertEquals(0.dp, short)
+        // In between, only the slack above the minimum play aspect is used.
+        val medium = PlayfieldSpec.balancingBottomSpace(screenWidth = 360.dp, screenHeight = 620.dp)
+        assertTrue(medium > 0.dp && medium < PlayfieldSpec.topBarHeight + PlayfieldSpec.statusStripHeight - PlayfieldSpec.bottomMargin)
     }
 }
