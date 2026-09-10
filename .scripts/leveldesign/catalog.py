@@ -434,6 +434,8 @@ def build() -> list[LevelSpec]:
     # Players feel difficulty mostly as "how many lines", then as "how easy it
     # is to get stuck", so that is the order: line count first, failure rate
     # to break ties. The chapters above describe the ideas, not the numbering.
+    # Ids are positions in this order and saved progress is keyed by id, so a
+    # reorder moves players' progress with the positions (see CONTRIBUTORS.md).
     levels.sort(key=lambda lv: (len(lv.edges), random_walk_failure_rate(lv)))
     for i, lv in enumerate(levels, start=1):
         lv.id = i

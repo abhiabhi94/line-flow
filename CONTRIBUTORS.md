@@ -73,6 +73,10 @@ never drops below 25dp, and it stays at the full 32dp on phones about 410dp
 wide or more. `geometry.py` and `LevelValidationTest` share these constants. Levels are ordered
 by a difficulty score (lines drawn plus the share of random strokes that get
 stuck), and the build fails if a level is easier than the one before it.
+A level's id is its position in that order, and saved progress is keyed by
+id, so a change that reorders the catalog moves players' completed and
+unlocked levels with the positions, not the figures. Treat the printed
+difficulty table as part of the review for any catalog change.
 Hint text is derived from the geometry, so it always names the right dot and
 direction. The same rules are enforced again by `LevelValidationTest`.
 
