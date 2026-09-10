@@ -860,12 +860,18 @@ private fun Playfield(
     var canvasSize by remember { mutableStateOf(IntSize.Zero) }
     // Where the tracked finger is right now, for drawing the line as it is traced.
     var fingerPosition by remember { mutableStateOf<Offset?>(null) }
-    val pixelNodes = remember(level.nodes, canvasSize) {
-        layoutNodes(
-            nodes = level.nodes,
-            size = Size(canvasSize.width.toFloat(), canvasSize.height.toFloat()),
-            margin = contentMarginPx,
-        )
+    // No layout until the canvas has been measured: a zero-size layout would put
+    // every dot at the same off-screen point and confuse hit-testing.
+    val pixelNodes = remember(level.nodes, canvasSize, contentMarginPx) {
+        if (canvasSize.width == 0 || canvasSize.height == 0) {
+            emptyMap()
+        } else {
+            layoutNodes(
+                nodes = level.nodes,
+                size = Size(canvasSize.width.toFloat(), canvasSize.height.toFloat()),
+                margin = contentMarginPx,
+            )
+        }
     }
     val hitRadiusPx = remember(pixelNodes, level.edges) { touchRadius(pixelNodes, level.edges, maxHitRadiusPx) }
 

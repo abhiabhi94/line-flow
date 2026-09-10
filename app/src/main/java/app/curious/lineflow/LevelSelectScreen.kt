@@ -112,7 +112,11 @@ fun LevelSelectScreen(
     // Land near the level that was played last, with the row above it visible for context.
     val firstVisibleIndex = remember {
         val lastPlayedIndex = LevelManager.levels.indexOfFirst { it.id == progressRepository.getLastPlayedLevelId() }
-        (((lastPlayedIndex / LEVEL_GRID_COLUMNS) - 1) * LEVEL_GRID_COLUMNS).coerceAtLeast(0)
+        if (lastPlayedIndex < 0) {
+            0 // unknown or stale level id: start at the top
+        } else {
+            (((lastPlayedIndex / LEVEL_GRID_COLUMNS) - 1) * LEVEL_GRID_COLUMNS).coerceAtLeast(0)
+        }
     }
     val gridState = rememberLazyGridState(initialFirstVisibleItemIndex = firstVisibleIndex)
     val totalLevels = LevelManager.levels.size
