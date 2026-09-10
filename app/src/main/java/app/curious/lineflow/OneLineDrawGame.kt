@@ -414,8 +414,8 @@ fun OneLineDrawGame(
     LaunchedEffect(visitedEdgeCount) {
         if (visitedEdgeCount > 0 && gameState.currentNodeId != null) {
             launch {
-                snapRingRadius.snapTo(14f)
-                snapRingRadius.animateTo(35f, tween(300))
+                snapRingRadius.snapTo(0f)
+                snapRingRadius.animateTo(1f, tween(300))
             }
             launch {
                 snapRingAlpha.snapTo(0.8f)
@@ -515,7 +515,7 @@ fun OneLineDrawGame(
                     hintAlpha = hintAlpha,
                     currentNodeGlow = currentNodeGlow,
                     nodeScale = nodeScaleAnimatable.value,
-                    snapRingRadius = snapRingRadius.value,
+                    snapRingProgress = snapRingRadius.value,
                     snapRingAlpha = snapRingAlpha.value,
                     onStrokeStart = { nodeId ->
                         // Hide the hint while drawing, but keep counting it as used: a
@@ -842,7 +842,7 @@ private fun Playfield(
     hintAlpha: Float,
     currentNodeGlow: Float,
     nodeScale: Float,
-    snapRingRadius: Float,
+    snapRingProgress: Float,
     snapRingAlpha: Float,
     onStrokeStart: (Int) -> Unit,
     onStrokeMove: (Int) -> Unit,
@@ -854,6 +854,13 @@ private fun Playfield(
     val contentMarginPx = with(density) { PlayfieldSpec.contentMargin.toPx() }
     val defaultStrokeWidth = with(density) { 4.dp.toPx() }
     val visitedStrokeWidth = with(density) { 6.dp.toPx() }
+    val glowPadPx = with(density) { 8.dp.toPx() }
+    val glowPulsePx = with(density) { 6.dp.toPx() }
+    val hintRingPadPx = with(density) { 10.dp.toPx() }
+    val hintRingStrokePx = with(density) { 3.dp.toPx() }
+    val outerRingPadPx = with(density) { 3.dp.toPx() }
+    val ringStrokePx = with(density) { 2.dp.toPx() }
+    val snapRingSpanPx = with(density) { 22.dp.toPx() }
     val missingDash = remember(density) {
         with(density) { PathEffect.dashPathEffect(floatArrayOf(12.dp.toPx(), 9.dp.toPx())) }
     }
@@ -874,12 +881,12 @@ private fun Playfield(
             )
         }
     }
-    val hitRadiusPx = remember(pixelNodes, level.edges) { touchRadius(pixelNodes, level.edges, maxHitRadiusPx) }
+    val hitRadiusPx = remember(pixelNodes, level.edges, maxHitRadiusPx) { touchRadius(pixelNodes, level.edges, maxHitRadiusPx) }
 
     Canvas(
         modifier = modifier
             .onSizeChanged { canvasSize = it }
-            .pointerInput(level.id, gameState.isLevelComplete, pixelNodes) {
+            .pointerInput(level.id, gameState.isLevelComplete, pixelNodes, hitRadiusPx) {
                 if (gameState.isLevelComplete) return@pointerInput
 
                 awaitPointerEventScope {
@@ -1014,7 +1021,7 @@ private fun Playfield(
             if (isCurrentNode) {
                 drawCircle(
                     color = NodeCurrent.copy(alpha = 0.2f + currentNodeGlow * 0.3f),
-                    radius = nodeRadiusPx + 8f + currentNodeGlow * 6f,
+                    radius = nodeRadiusPx + glowPadPx + currentNodeGlow * glowPulsePx,
                     center = pixelOffset,
                 )
             }
@@ -1026,18 +1033,18 @@ private fun Playfield(
             ) {
                 drawCircle(
                     color = HintCyan.copy(alpha = hintAlpha * 0.5f),
-                    radius = nodeRadiusPx + 10f,
+                    radius = nodeRadiusPx + hintRingPadPx,
                     center = pixelOffset,
-                    style = Stroke(width = 3f),
+                    style = Stroke(width = hintRingStrokePx),
                 )
             }
 
             // Outer ring
             drawCircle(
                 color = Color.White.copy(alpha = 0.15f),
-                radius = nodeRadiusPx + 3f,
+                radius = nodeRadiusPx + outerRingPadPx,
                 center = pixelOffset,
-                style = Stroke(width = 2f),
+                style = Stroke(width = ringStrokePx),
             )
 
             // Inner fill with bounce scale for current node
@@ -1055,9 +1062,9 @@ private fun Playfield(
             if (currentPixel != null) {
                 drawCircle(
                     color = NodeCurrent.copy(alpha = snapRingAlpha),
-                    radius = snapRingRadius,
+                    radius = nodeRadiusPx + snapRingProgress * snapRingSpanPx,
                     center = currentPixel,
-                    style = Stroke(width = 2f),
+                    style = Stroke(width = ringStrokePx),
                 )
             }
         }
