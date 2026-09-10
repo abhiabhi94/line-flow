@@ -49,6 +49,8 @@ class LevelValidationTest {
         const val ANGLE_TOLERANCE_DEGREES = 0.5
     }
 
+    private fun requireLevel(id: Int): Level = checkNotNull(LevelManager.getLevel(id)) { "Level $id is missing from Graph.kt" }
+
     private fun Level.degrees(): Map<Int, Int> {
         val degree = nodes.associate { it.id to 0 }.toMutableMap()
         edges.forEach { edge ->
@@ -141,13 +143,12 @@ class LevelValidationTest {
     fun everyLevelHasAVerifiedOneStrokeSolutionFromTheHintedEdge() {
         LevelManager.levels.forEach { level ->
             val firstEdge = checkNotNull(level.hints.firstEdge) { "Level ${level.id}: hint must name a first edge" }
-            val trail = EulerSolver.trail(level, firstEdge.first, firstEdge.second)
-            assertNotNull(
-                "Level ${level.id} (${level.name}) cannot be drawn in one stroke starting ${firstEdge.first}->${firstEdge.second}",
-                trail,
-            )
+            val trail = checkNotNull(EulerSolver.trail(level, firstEdge.first, firstEdge.second)) {
+                "Level ${level.id} (${level.name}) cannot be drawn in one stroke starting ${firstEdge.first}->${firstEdge.second}"
+            }
             // Replay the trail exactly like a finger would.
-            var state = GameState(level).reset().copy(currentStartNodeId = trail!!.first(), currentNodeId = trail.first())
+            val start = trail.first()
+            var state = GameState(level).reset().copy(currentStartNodeId = start, currentNodeId = start)
             trail.drop(1).forEach { next ->
                 state = state.moveTo(next)
                 assertFalse("Level ${level.id}: solution stroke failed at dot $next (${state.gameOverReason})", state.isGameOver)
@@ -297,7 +298,7 @@ class LevelValidationTest {
 
     @Test
     fun tallScreensStretchSquatLevelsOnlyUpToTheCap() {
-        val square = LevelManager.getLevel(2)!! // The Square, aspect 1.0
+        val square = requireLevel(2) // The Square, aspect 1.0
         val margin = 20f
         // Play area twice as tall as wide: the square is stretched by the cap, not to fill.
         val tall = layoutNodes(square.nodes, Size(300f, 600f), margin).values
@@ -328,7 +329,7 @@ class LevelValidationTest {
 
     @Test
     fun touchRadiusShrinksSoHitCirclesNeverOverlapOrReachALine() {
-        val square = LevelManager.getLevel(2)!! // The Square, side 1
+        val square = requireLevel(2) // The Square, side 1
         val roomy = mapOf(0 to Offset(0f, 0f), 1 to Offset(200f, 0f), 2 to Offset(200f, 200f), 3 to Offset(0f, 200f))
         assertEquals(32f, touchRadius(roomy, square.edges, 32f), 0.01f)
         val cramped = mapOf(0 to Offset(0f, 0f), 1 to Offset(50f, 0f), 2 to Offset(50f, 50f), 3 to Offset(0f, 50f))
@@ -385,7 +386,7 @@ class LevelValidationTest {
 
     @Test
     fun retracingALineEndsTheStroke() {
-        val level = LevelManager.getLevel(2)!! // The Square
+        val level = requireLevel(2) // The Square
         var state = GameState(level).reset().copy(currentStartNodeId = 0, currentNodeId = 0)
         state = state.moveTo(1)
         assertFalse(state.isGameOver)
@@ -397,7 +398,7 @@ class LevelValidationTest {
 
     @Test
     fun connectingTwoDotsWithoutALineEndsTheStroke() {
-        val level = LevelManager.getLevel(2)!! // The Square: no diagonal
+        val level = requireLevel(2) // The Square: no diagonal
         val state = GameState(level).reset().copy(currentStartNodeId = 0, currentNodeId = 0).moveTo(2)
         assertTrue(state.isGameOver)
         assertEquals(GameOverReason.NO_LINE, state.gameOverReason)
@@ -405,7 +406,7 @@ class LevelValidationTest {
 
     @Test
     fun liftingTheFingerEarlyEndsTheStrokeButNotAfterCompletion() {
-        val level = LevelManager.getLevel(1)!! // The Triangle
+        val level = requireLevel(1) // The Triangle
         var state = GameState(level).reset().copy(currentStartNodeId = 0, currentNodeId = 0).moveTo(1)
         assertEquals(GameOverReason.LIFTED_FINGER, state.liftFinger().gameOverReason)
         state = state.moveTo(2).moveTo(0)
@@ -415,7 +416,7 @@ class LevelValidationTest {
 
     @Test
     fun stayingOnTheSameDotIsNotAMove() {
-        val level = LevelManager.getLevel(1)!!
+        val level = requireLevel(1)
         val state = GameState(level).reset().copy(currentStartNodeId = 0, currentNodeId = 0)
         assertTrue(state.moveTo(0) === state)
     }
@@ -430,18 +431,17 @@ class LevelValidationTest {
 
     @Test
     fun partialLineFollowsTheLineTheFingerIsTracing() {
-        val level = LevelManager.getLevel(2)!! // The Square
+        val level = requireLevel(2) // The Square
         val pts = mapOf(0 to Offset(0f, 0f), 1 to Offset(200f, 0f), 2 to Offset(200f, 200f), 3 to Offset(0f, 200f))
         val edges = level.edges
         // Halfway along the top line, slightly off it: draw from dot 0 to the projection.
-        val along = partialLine(pts, edges, 0, Offset(100f, 8f), tolerance = 32f)
-        assertNotNull(along)
-        assertEquals(Offset(0f, 0f), along!!.first)
+        val along = checkNotNull(partialLine(pts, edges, 0, Offset(100f, 8f), tolerance = 32f)) { "no line traced along the top" }
+        assertEquals(Offset(0f, 0f), along.first)
         assertEquals(100f, along.second.x, 0.01f)
         assertEquals(0f, along.second.y, 0.01f)
         // Past the far dot: the line is capped at the dot.
-        val past = partialLine(pts, edges, 0, Offset(220f, 0f), tolerance = 32f)
-        assertEquals(200f, past!!.second.x, 0.01f)
+        val past = checkNotNull(partialLine(pts, edges, 0, Offset(220f, 0f), tolerance = 32f)) { "no line traced past the dot" }
+        assertEquals(200f, past.second.x, 0.01f)
         // Cutting the corner diagonally: too far from both lines, nothing is drawn.
         assertEquals(null, partialLine(pts, edges, 0, Offset(100f, 100f), tolerance = 32f))
         // Behind the dot: nothing is drawn.
