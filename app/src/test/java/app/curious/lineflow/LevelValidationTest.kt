@@ -523,25 +523,28 @@ class PlayfieldLayoutTest {
     @Test
     fun tallScreensBalanceTheTopChromeWithSpaceBelowTheDrawing() {
         // A tall phone: the drawing is pushed up to the optical centre.
-        val tall = PlayfieldSpec.balancingBottomSpace(screenWidth = 393.dp, screenHeight = 800.dp)
+        val tall = PlayfieldSpec.balancingBottomSpace(screenHeight = 800.dp)
         assertEquals(PlayfieldSpec.topBarHeight + PlayfieldSpec.statusStripHeight - PlayfieldSpec.bottomMargin, tall)
     }
 
     @Test
-    fun absurdlyNarrowWindowsDoNotInflateTheBottomSpace() {
-        // Narrower than the content margins (a tiny split-screen pane): the width term
-        // clamps to zero instead of going negative, so only the real slack
-        // (200 - 60 top bar - 84 strip - 24 margin = 32dp) is used, not an inflated value.
-        assertEquals(32.dp, PlayfieldSpec.balancingBottomSpace(screenWidth = 60.dp, screenHeight = 200.dp))
+    fun theSmallestPhoneKeepsTheCanvasEveryLevelIsVerifiedOn() {
+        // The minimum play height is the canvas the level checker and
+        // LevelValidationTest measure spacing on, so the two can never drift.
+        assertEquals(LevelValidationTest.SMALL_CANVAS_HEIGHT_DP.dp, PlayfieldSpec.minPlayHeight)
+        // 360x640dp with a 24dp status bar and a 48dp navigation bar leaves 568dp:
+        // exactly the chrome, the bottom margin and that canvas, so no space is
+        // taken from the drawing there.
+        assertEquals(0.dp, PlayfieldSpec.balancingBottomSpace(screenHeight = 568.dp))
     }
 
     @Test
     fun shortScreensKeepTheirPlayHeight() {
         // A short 16:9 phone has no slack: nothing is taken from the drawing.
-        val short = PlayfieldSpec.balancingBottomSpace(screenWidth = 360.dp, screenHeight = 530.dp)
+        val short = PlayfieldSpec.balancingBottomSpace(screenHeight = 530.dp)
         assertEquals(0.dp, short)
-        // In between, only the slack above the minimum play aspect is used.
-        val medium = PlayfieldSpec.balancingBottomSpace(screenWidth = 360.dp, screenHeight = 620.dp)
-        assertTrue(medium > 0.dp && medium < PlayfieldSpec.topBarHeight + PlayfieldSpec.statusStripHeight - PlayfieldSpec.bottomMargin)
+        // In between, only the slack above the minimum play height is used
+        // (620 - 60 top bar - 84 strip - 24 margin - 400 canvas = 52dp).
+        assertEquals(52.dp, PlayfieldSpec.balancingBottomSpace(screenHeight = 620.dp))
     }
 }

@@ -112,17 +112,20 @@ object PlayfieldSpec {
     /** A hit circle never reaches closer than this to a line it is not on. */
     const val HIT_RADIUS_TO_LINE_DISTANCE = 0.75f
 
-    /** The play area is never squeezed below this height-to-width ratio. */
-    const val MIN_PLAY_ASPECT = 1.32f
+    /**
+     * The play area is never squeezed below this height: the canvas of the
+     * smallest supported phone (360x640dp less its bars, top bar, status strip
+     * and bottom margin), which is exactly what every level is verified on.
+     */
+    val minPlayHeight: Dp = 400.dp
 
     /**
      * Space to leave under the drawing so it sits at the optical centre of the
      * screen (mirroring the top bar and status strip above it), unless that
-     * would squeeze the play area below [MIN_PLAY_ASPECT].
+     * would squeeze the play area below [minPlayHeight].
      */
-    fun balancingBottomSpace(screenWidth: Dp, screenHeight: Dp): Dp {
+    fun balancingBottomSpace(screenHeight: Dp): Dp {
         val chrome = topBarHeight + statusStripHeight
-        val minPlayHeight = (screenWidth - contentMargin * 2).coerceAtLeast(0.dp) * MIN_PLAY_ASPECT
         val slack = screenHeight - chrome - bottomMargin - minPlayHeight
         return (chrome - bottomMargin).coerceIn(0.dp, slack.coerceAtLeast(0.dp))
     }
@@ -474,7 +477,7 @@ fun OneLineDrawGame(
             .background(DarkBackground),
     ) {
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-            val bottomSpace = PlayfieldSpec.balancingBottomSpace(maxWidth, maxHeight)
+            val bottomSpace = PlayfieldSpec.balancingBottomSpace(maxHeight)
             Column(modifier = Modifier.fillMaxSize()) {
                 TopBar(
                     level = level,

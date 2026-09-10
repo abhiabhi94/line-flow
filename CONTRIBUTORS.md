@@ -63,7 +63,9 @@ Hierholzer's algorithm and replayed line by line, and fit the smallest phone
 we support. That phone is 360x640dp with a status bar and 3-button
 navigation; after the top bar, status strip and bottom margin the canvas is
 360x400dp, and dot centres keep a 40dp content margin inside it, so they
-span 280x320dp. All spacing numbers are measured on that canvas: dots at
+span 280x320dp. The game never reserves centring space below the drawing
+at the expense of that canvas (`PlayfieldSpec.minPlayHeight`). All spacing
+numbers are measured on it: dots at
 least 56dp apart, no dot within 36dp of a line it is not on, and lines at
 least 30 degrees apart at every dot. The game shrinks its touch radius on
 cramped screens so hit circles never overlap; those numbers guarantee it
