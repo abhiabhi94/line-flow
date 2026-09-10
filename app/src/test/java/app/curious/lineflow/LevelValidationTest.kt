@@ -528,10 +528,11 @@ class PlayfieldLayoutTest {
     }
 
     @Test
-    fun absurdlyNarrowWindowsNeverGetBottomSpace() {
+    fun absurdlyNarrowWindowsDoNotInflateTheBottomSpace() {
         // Narrower than the content margins (a tiny split-screen pane): the width term
-        // clamps to zero, so nothing is taken from an already squeezed play area.
-        assertEquals(0.dp, PlayfieldSpec.balancingBottomSpace(screenWidth = 60.dp, screenHeight = 200.dp))
+        // clamps to zero instead of going negative, so only the real slack
+        // (200 - 60 top bar - 84 strip - 24 margin = 32dp) is used, not an inflated value.
+        assertEquals(32.dp, PlayfieldSpec.balancingBottomSpace(screenWidth = 60.dp, screenHeight = 200.dp))
     }
 
     @Test
