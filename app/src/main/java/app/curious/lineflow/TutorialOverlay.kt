@@ -24,6 +24,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.graphicsLayer
@@ -38,6 +40,7 @@ import app.curious.lineflow.ui.theme.Error
 import app.curious.lineflow.ui.theme.NodeCurrent
 import app.curious.lineflow.ui.theme.NodeDefault
 import app.curious.lineflow.ui.theme.OverlayScrim
+import app.curious.lineflow.ui.theme.Success
 import app.curious.lineflow.ui.theme.TextSecondary
 import kotlinx.coroutines.delay
 import kotlin.math.atan2
@@ -62,7 +65,17 @@ private const val RESET_DURATION_MS = 300
 private const val SUCCESS_TRACE_DURATION_MS = 1_800
 private const val FADE_OUT_DURATION_MS = 500
 
+private const val SUCCESS_DISPLAY_DURATION_MS = 1_400
+
+/**
+ * The demo leads with the goal (a finished triangle, drawn in one stroke, with
+ * a tick), then shows the two mistakes marked with a cross, then the finished
+ * stroke once more. Leading with a broken drawing confused first-time players.
+ */
 private enum class TutorialPhase {
+    SUCCESS_TRACE,
+    SUCCESS_DISPLAY,
+    RESET_0,
     LIFT_FAIL_TRACE,
     LIFT_FAIL_DISPLAY,
     RESET_1,
@@ -70,7 +83,8 @@ private enum class TutorialPhase {
     RETRACE_FAIL,
     RETRACE_DISPLAY,
     RESET_2,
-    SUCCESS_TRACE,
+    SUCCESS_TRACE_AGAIN,
+    SUCCESS_DISPLAY_AGAIN,
     FADE_OUT
 }
 
@@ -92,19 +106,27 @@ fun TutorialOverlay(
     var visitedEdgeCount by remember { mutableStateOf(0) }
 
     LaunchedEffect(Unit) {
-        // Phase 1: Lift fail - trace 1.5 edges then lift
+        // 1. The goal: the whole triangle in one stroke, then a tick.
+        phase = TutorialPhase.SUCCESS_TRACE
+        visitedEdgeCount = 0
+        traceProgress.animateTo(1f, tween(SUCCESS_TRACE_DURATION_MS, easing = LinearEasing))
+        phase = TutorialPhase.SUCCESS_DISPLAY
+        delay(SUCCESS_DISPLAY_DURATION_MS.toLong())
+
+        phase = TutorialPhase.RESET_0
+        traceProgress.snapTo(0f)
+        delay(RESET_DURATION_MS.toLong())
+
+        // 2. Mistake one: lifting the finger before the shape is finished.
         phase = TutorialPhase.LIFT_FAIL_TRACE
         visitedEdgeCount = 0
         traceProgress.animateTo(0.5f, tween(LIFT_TRACE_DURATION_MS, easing = LinearEasing))
-
-        // Finger lifts
         fingerAlpha.animateTo(0.3f, tween(150))
         fingerOffsetY.animateTo(-30f, tween(150))
         errorFlashAlpha.animateTo(0.4f, tween(100))
         phase = TutorialPhase.LIFT_FAIL_DISPLAY
         delay(FAIL_DISPLAY_DURATION_MS.toLong())
 
-        // Reset 1
         phase = TutorialPhase.RESET_1
         errorFlashAlpha.animateTo(0f, tween(RESET_DURATION_MS))
         traceProgress.snapTo(0f)
@@ -112,13 +134,11 @@ fun TutorialOverlay(
         fingerOffsetY.snapTo(0f)
         delay(RESET_DURATION_MS.toLong())
 
-        // Phase 2: Retrace fail - trace 2 edges, then go back
+        // 3. Mistake two: going back over a line that is already drawn.
         phase = TutorialPhase.RETRACE_SETUP
         visitedEdgeCount = 0
         traceProgress.animateTo(0.67f, tween(RETRACE_SETUP_DURATION_MS, easing = LinearEasing))
         visitedEdgeCount = 2
-
-        // Now retrace (finger goes backward)
         phase = TutorialPhase.RETRACE_FAIL
         isRetracing = true
         traceProgress.animateTo(0.5f, tween(RETRACE_FAIL_DURATION_MS, easing = LinearEasing))
@@ -126,7 +146,6 @@ fun TutorialOverlay(
         phase = TutorialPhase.RETRACE_DISPLAY
         delay(FAIL_DISPLAY_DURATION_MS.toLong())
 
-        // Reset 2
         phase = TutorialPhase.RESET_2
         isRetracing = false
         errorFlashAlpha.animateTo(0f, tween(RESET_DURATION_MS))
@@ -134,30 +153,35 @@ fun TutorialOverlay(
         visitedEdgeCount = 0
         delay(RESET_DURATION_MS.toLong())
 
-        // Phase 3: Success trace
-        phase = TutorialPhase.SUCCESS_TRACE
+        // 4. The goal once more, so the last thing seen is the right way.
+        phase = TutorialPhase.SUCCESS_TRACE_AGAIN
         traceProgress.animateTo(1f, tween(SUCCESS_TRACE_DURATION_MS, easing = LinearEasing))
-        delay(400)
+        phase = TutorialPhase.SUCCESS_DISPLAY_AGAIN
+        delay(SUCCESS_DISPLAY_DURATION_MS.toLong())
 
-        // Fade out
         phase = TutorialPhase.FADE_OUT
         overlayAlpha.animateTo(0f, tween(FADE_OUT_DURATION_MS))
         onDismiss()
     }
 
     val instructionText = when (phase) {
-        TutorialPhase.LIFT_FAIL_TRACE -> "Watch closely..."
-        TutorialPhase.LIFT_FAIL_DISPLAY -> "Don't lift your finger!"
+        TutorialPhase.SUCCESS_TRACE -> "Draw the whole shape\nin one stroke"
+        TutorialPhase.SUCCESS_DISPLAY -> "\u2713 Every line drawn!"
+        TutorialPhase.RESET_0 -> ""
+        TutorialPhase.LIFT_FAIL_TRACE -> "Two things to avoid..."
+        TutorialPhase.LIFT_FAIL_DISPLAY -> "\u2717 Don't lift your finger\nbefore you finish"
         TutorialPhase.RESET_1 -> ""
-        TutorialPhase.RETRACE_SETUP -> "Watch closely..."
+        TutorialPhase.RETRACE_SETUP -> "One more thing..."
         TutorialPhase.RETRACE_FAIL -> ""
-        TutorialPhase.RETRACE_DISPLAY -> "Don't retrace a line!"
+        TutorialPhase.RETRACE_DISPLAY -> "\u2717 Don't go over\na line twice"
         TutorialPhase.RESET_2 -> ""
-        TutorialPhase.SUCCESS_TRACE -> "Trace every line\nin one stroke"
+        TutorialPhase.SUCCESS_TRACE_AGAIN -> "Like this: one stroke,\nevery line"
+        TutorialPhase.SUCCESS_DISPLAY_AGAIN -> "\u2713 Perfect. Your turn!"
         TutorialPhase.FADE_OUT -> ""
     }
 
     val isErrorPhase = phase == TutorialPhase.LIFT_FAIL_DISPLAY || phase == TutorialPhase.RETRACE_DISPLAY
+    val isSuccessPhase = phase == TutorialPhase.SUCCESS_DISPLAY || phase == TutorialPhase.SUCCESS_DISPLAY_AGAIN
 
     Box(
         modifier = Modifier
@@ -329,6 +353,7 @@ fun TutorialOverlay(
                 }
 
                 val color = when {
+                    isSuccessPhase -> Success
                     isCurrent -> NodeCurrent
                     isVisited -> NodeCurrent.copy(alpha = 0.6f)
                     else -> NodeDefault
@@ -341,8 +366,23 @@ fun TutorialOverlay(
                 )
             }
 
+            // A tick in the middle of the finished shape
+            if (isSuccessPhase) {
+                val centre = Offset(pixelNodes.sumOf { it.x.toDouble() }.toFloat() / 3f, pixelNodes.sumOf { it.y.toDouble() }.toFloat() / 3f + side * 0.05f)
+                val r = side * 0.11f
+                drawCircle(color = Success.copy(alpha = 0.2f), radius = r * 1.4f, center = centre)
+                drawCircle(color = Success, radius = r, center = centre)
+                val tick = Path().apply {
+                    moveTo(centre.x - r * 0.45f, centre.y + r * 0.02f)
+                    lineTo(centre.x - r * 0.1f, centre.y + r * 0.38f)
+                    lineTo(centre.x + r * 0.5f, centre.y - r * 0.35f)
+                }
+                drawPath(path = tick, color = DarkSurface, style = Stroke(width = r * 0.22f, cap = StrokeCap.Round, join = StrokeJoin.Round))
+            }
+
             // Draw finger icon (circle + tail) following the cursor
-            val showFinger = phase != TutorialPhase.RESET_1 &&
+            val showFinger = phase != TutorialPhase.RESET_0 &&
+                             phase != TutorialPhase.RESET_1 &&
                              phase != TutorialPhase.RESET_2 &&
                              phase != TutorialPhase.FADE_OUT &&
                              progress < 1f
@@ -373,7 +413,11 @@ fun TutorialOverlay(
 
         // Instruction text
         if (instructionText.isNotEmpty()) {
-            val textColor = if (isErrorPhase) Error else TextSecondary
+            val textColor = when {
+                isErrorPhase -> Error
+                isSuccessPhase -> Success
+                else -> TextSecondary
+            }
             Text(
                 text = instructionText,
                 color = textColor,

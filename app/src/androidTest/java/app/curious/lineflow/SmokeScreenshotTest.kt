@@ -96,7 +96,7 @@ class SmokeScreenshotTest {
     private companion object {
         const val TIMEOUT_MS = 15_000L
         const val SHORT_TIMEOUT_MS = 2_000L
-        // DOTALL because one tutorial string ("Trace every line\nin one stroke") spans two lines.
-        val TUTORIAL_TEXT: Pattern = Pattern.compile("(Watch closely|Don't |Trace every line).*", Pattern.DOTALL)
+        // DOTALL because several tutorial strings span two lines.
+        val TUTORIAL_TEXT: Pattern = Pattern.compile("(Draw the whole shape|Every line drawn|Two things|One more|Don't |Like this|Perfect).*", Pattern.DOTALL)
     }
 }
