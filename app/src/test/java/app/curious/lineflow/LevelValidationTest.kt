@@ -40,6 +40,11 @@ class LevelValidationTest {
         const val MIN_CROSSING_NODE_DISTANCE_DP = 36f
         const val MIN_EDGE_ANGLE_DEGREES = 30.0
 
+        // Tall phones stretch squat levels vertically (see layoutNodes); angles
+        // may close up a little there. Visual only: touch rules ignore angles.
+        const val TALL_PLAY_ASPECT = 2.1f
+        const val MIN_EDGE_ANGLE_STRETCHED_DEGREES = 23.5
+
         // Same slack as the Python checker: exact 30-degree layouts land a hair under after rounding.
         const val ANGLE_TOLERANCE_DEGREES = 0.5
     }
@@ -228,23 +233,38 @@ class LevelValidationTest {
     @Test
     fun linesLeavingADotAreVisuallySeparate() {
         LevelManager.levels.forEach { level ->
-            val pts = level.layoutOnSmallPhone()
-            level.nodes.forEach { node ->
-                val here = pts.getValue(node.id)
-                val angles = level.edges
-                    .filter { it.containsNode(node.id) }
-                    .map { edge -> if (edge.node1Id == node.id) edge.node2Id else edge.node1Id }
-                    .map { other -> Math.toDegrees(atan2((pts.getValue(other).y - here.y).toDouble(), (pts.getValue(other).x - here.x).toDouble())) }
-                    .sorted()
-                if (angles.size < 2) return@forEach
-                for (i in angles.indices) {
-                    var separation = angles[(i + 1) % angles.size] - angles[i]
-                    if (separation <= 0) separation += 360.0
-                    assertTrue(
-                        "Level ${level.id} (${level.name}): lines at dot ${node.id} are only ${"%.1f".format(separation)} degrees apart",
-                        separation >= MIN_EDGE_ANGLE_DEGREES - ANGLE_TOLERANCE_DEGREES,
-                    )
-                }
+            assertMinimumAngle(level, level.layoutOnSmallPhone(), MIN_EDGE_ANGLE_DEGREES, "")
+        }
+    }
+
+    @Test
+    fun linesStayVisuallySeparateWhenStretchedForATallScreen() {
+        // A canvas tall enough that every squat level receives the full stretch it
+        // would get on the tallest phones (same model as the Python checker).
+        val span = SMALL_CANVAS_WIDTH_DP - 2 * CONTENT_MARGIN_DP
+        val tallCanvas = Size(SMALL_CANVAS_WIDTH_DP, span * TALL_PLAY_ASPECT + 2 * CONTENT_MARGIN_DP)
+        LevelManager.levels.forEach { level ->
+            val pts = layoutNodes(level.nodes, tallCanvas, CONTENT_MARGIN_DP, maxStretch = MAX_VERTICAL_STRETCH)
+            assertMinimumAngle(level, pts, MIN_EDGE_ANGLE_STRETCHED_DEGREES, " when stretched")
+        }
+    }
+
+    private fun assertMinimumAngle(level: Level, pts: Map<Int, Offset>, minimum: Double, label: String) {
+        level.nodes.forEach { node ->
+            val here = pts.getValue(node.id)
+            val angles = level.edges
+                .filter { it.containsNode(node.id) }
+                .map { edge -> if (edge.node1Id == node.id) edge.node2Id else edge.node1Id }
+                .map { other -> Math.toDegrees(atan2((pts.getValue(other).y - here.y).toDouble(), (pts.getValue(other).x - here.x).toDouble())) }
+                .sorted()
+            if (angles.size < 2) return@forEach
+            for (i in angles.indices) {
+                var separation = angles[(i + 1) % angles.size] - angles[i]
+                if (separation <= 0) separation += 360.0
+                assertTrue(
+                    "Level ${level.id} (${level.name}): lines at dot ${node.id} are only ${"%.1f".format(separation)} degrees apart$label",
+                    separation >= minimum - ANGLE_TOLERANCE_DEGREES,
+                )
             }
         }
     }

@@ -44,7 +44,8 @@ Thanks for your interest in contributing! This guide will help you get set up.
 
 `app/src/main/java/app/curious/lineflow/Graph.kt` is generated; do not edit
 it by hand. The levels live in `.scripts/leveldesign/catalog.py`, and the
-toolkit around it checks every level the way the game plays it:
+toolkit around it (Python 3.9 or newer) checks every level the way the game
+plays it:
 
 ```bash
 # Verify all 50 levels and print the difficulty table
