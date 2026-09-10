@@ -528,6 +528,13 @@ class PlayfieldLayoutTest {
     }
 
     @Test
+    fun absurdlyNarrowWindowsNeverGetBottomSpace() {
+        // Narrower than the content margins (a tiny split-screen pane): the width term
+        // clamps to zero, so nothing is taken from an already squeezed play area.
+        assertEquals(0.dp, PlayfieldSpec.balancingBottomSpace(screenWidth = 60.dp, screenHeight = 200.dp))
+    }
+
+    @Test
     fun shortScreensKeepTheirPlayHeight() {
         // A short 16:9 phone has no slack: nothing is taken from the drawing.
         val short = PlayfieldSpec.balancingBottomSpace(screenWidth = 360.dp, screenHeight = 530.dp)

@@ -122,7 +122,7 @@ object PlayfieldSpec {
      */
     fun balancingBottomSpace(screenWidth: Dp, screenHeight: Dp): Dp {
         val chrome = topBarHeight + statusStripHeight
-        val minPlayHeight = (screenWidth - contentMargin * 2) * MIN_PLAY_ASPECT
+        val minPlayHeight = (screenWidth - contentMargin * 2).coerceAtLeast(0.dp) * MIN_PLAY_ASPECT
         val slack = screenHeight - chrome - bottomMargin - minPlayHeight
         return (chrome - bottomMargin).coerceIn(0.dp, slack.coerceAtLeast(0.dp))
     }
