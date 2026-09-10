@@ -476,66 +476,66 @@ fun OneLineDrawGame(
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             val bottomSpace = PlayfieldSpec.balancingBottomSpace(maxWidth, maxHeight)
             Column(modifier = Modifier.fillMaxSize()) {
-            TopBar(
-                level = level,
-                hintRevealIndex = hintRevealIndex,
-                hintBounce = hintBounce.value,
-                onBack = onBackToLevelSelect,
-                onHint = {
-                    val maxIndex = level.hints.steps.lastIndex
-                    if (hintRevealIndex < maxIndex) {
-                        hintRevealIndex += 1
-                        if (hintRevealIndex == 0) {
-                            hintsUsedThisAttempt = true
+                TopBar(
+                    level = level,
+                    hintRevealIndex = hintRevealIndex,
+                    hintBounce = hintBounce.value,
+                    onBack = onBackToLevelSelect,
+                    onHint = {
+                        val maxIndex = level.hints.steps.lastIndex
+                        if (hintRevealIndex < maxIndex) {
+                            hintRevealIndex += 1
+                            if (hintRevealIndex == 0) {
+                                hintsUsedThisAttempt = true
+                            }
+                            if (hintRevealIndex == maxIndex) {
+                                progressRepository.markHintUsed(level.id, hintRevealIndex + 1)
+                            }
+                        } else {
+                            hintRevealIndex = -1
                         }
-                        if (hintRevealIndex == maxIndex) {
-                            progressRepository.markHintUsed(level.id, hintRevealIndex + 1)
-                        }
-                    } else {
+                    },
+                )
+
+                StatusStrip(
+                    gameState = gameState,
+                    hintText = currentHintStep?.text,
+                    visitedEdgeCount = visitedEdgeCount,
+                    onRetry = { restart() },
+                )
+
+                Playfield(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(bottom = PlayfieldSpec.bottomMargin),
+                    gameState = gameState,
+                    level = level,
+                    currentHintStep = currentHintStep,
+                    hintAlpha = hintAlpha,
+                    currentNodeGlow = currentNodeGlow,
+                    nodeScale = nodeScaleAnimatable.value,
+                    snapRingRadius = snapRingRadius.value,
+                    snapRingAlpha = snapRingAlpha.value,
+                    onStrokeStart = { nodeId ->
+                        // Hide the hint while drawing, but keep counting it as used: a
+                        // stroke drawn right after reading a hint should not earn three stars.
                         hintRevealIndex = -1
-                    }
-                },
-            )
+                        gameState = gameState.reset().copy(currentStartNodeId = nodeId, currentNodeId = nodeId)
+                        vibrateTick()
+                    },
+                    onStrokeMove = { nodeId ->
+                        val next = gameState.moveTo(nodeId)
+                        if (next !== gameState) {
+                            gameState = next
+                            if (!next.isGameOver) vibrateTick()
+                        }
+                    },
+                    onStrokeEnd = { gameState = gameState.liftFinger() },
+                )
 
-            StatusStrip(
-                gameState = gameState,
-                hintText = currentHintStep?.text,
-                visitedEdgeCount = visitedEdgeCount,
-                onRetry = { restart() },
-            )
-
-            Playfield(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .padding(bottom = PlayfieldSpec.bottomMargin),
-                gameState = gameState,
-                level = level,
-                currentHintStep = currentHintStep,
-                hintAlpha = hintAlpha,
-                currentNodeGlow = currentNodeGlow,
-                nodeScale = nodeScaleAnimatable.value,
-                snapRingRadius = snapRingRadius.value,
-                snapRingAlpha = snapRingAlpha.value,
-                onStrokeStart = { nodeId ->
-                    // Hide the hint while drawing, but keep counting it as used: a
-                    // stroke drawn right after reading a hint should not earn three stars.
-                    hintRevealIndex = -1
-                    gameState = gameState.reset().copy(currentStartNodeId = nodeId, currentNodeId = nodeId)
-                    vibrateTick()
-                },
-                onStrokeMove = { nodeId ->
-                    val next = gameState.moveTo(nodeId)
-                    if (next !== gameState) {
-                        gameState = next
-                        if (!next.isGameOver) vibrateTick()
-                    }
-                },
-                onStrokeEnd = { gameState = gameState.liftFinger() },
-            )
-
-            Spacer(Modifier.height(bottomSpace))
-            }
+                Spacer(Modifier.height(bottomSpace))
+                }
         }
 
         // Red flash overlay on loss
