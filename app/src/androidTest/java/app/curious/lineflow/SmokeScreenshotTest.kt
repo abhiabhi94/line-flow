@@ -96,7 +96,11 @@ class SmokeScreenshotTest {
     private companion object {
         const val TIMEOUT_MS = 15_000L
         const val SHORT_TIMEOUT_MS = 2_000L
-        // DOTALL because several tutorial strings span two lines.
-        val TUTORIAL_TEXT: Pattern = Pattern.compile("(Draw the whole shape|Every line drawn|Two things|One more|Don't |Like this|Perfect).*", Pattern.DOTALL)
+        // Matches every tutorial phase: some strings start with a tick or cross, and
+        // several span two lines (hence DOTALL).
+        val TUTORIAL_TEXT: Pattern = Pattern.compile(
+            "(?:[\u2713\u2717]\\s*)?(Draw the whole shape|Every line drawn|Two things|One more|Don't |Like this|Perfect).*",
+            Pattern.DOTALL,
+        )
     }
 }
