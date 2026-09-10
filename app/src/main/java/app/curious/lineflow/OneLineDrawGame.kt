@@ -552,9 +552,8 @@ fun OneLineDrawGame(
 
         // Win overlay
         if (showOverlay && gameState.isLevelComplete) {
-            remember(gameState.currentLevelId) {
+            LaunchedEffect(gameState.currentLevelId) {
                 progressRepository.markLevelCompleted(gameState.currentLevelId)
-                true
             }
 
             val isLastLevel = LevelManager.getNextLevel(gameState.currentLevelId) == null
