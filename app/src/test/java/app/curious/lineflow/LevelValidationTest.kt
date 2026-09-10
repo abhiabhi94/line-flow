@@ -136,9 +136,8 @@ class LevelValidationTest {
     @Test
     fun everyLevelHasAVerifiedOneStrokeSolutionFromTheHintedEdge() {
         LevelManager.levels.forEach { level ->
-            val firstEdge = level.hints.firstEdge
-            assertNotNull("Level ${level.id}: hint must name a first edge", firstEdge)
-            val trail = EulerSolver.trail(level, firstEdge!!.first, firstEdge.second)
+            val firstEdge = checkNotNull(level.hints.firstEdge) { "Level ${level.id}: hint must name a first edge" }
+            val trail = EulerSolver.trail(level, firstEdge.first, firstEdge.second)
             assertNotNull(
                 "Level ${level.id} (${level.name}) cannot be drawn in one stroke starting ${firstEdge.first}->${firstEdge.second}",
                 trail,
@@ -167,9 +166,10 @@ class LevelValidationTest {
                 expected,
                 level.hints.validStartNodeIds.toSet(),
             )
+            val firstEdge = checkNotNull(level.hints.firstEdge) { "Level ${level.id}: hint must name a first edge" }
             assertTrue(
-                "Level ${level.id}: hinted first edge must leave a valid start",
-                level.hints.firstEdge!!.first in level.hints.validStartNodeIds,
+                "Level ${level.id}: hinted first edge ${firstEdge.first}->${firstEdge.second} must leave one of the valid starts $expected",
+                firstEdge.first in expected,
             )
         }
     }
