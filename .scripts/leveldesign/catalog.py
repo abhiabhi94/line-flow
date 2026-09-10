@@ -345,8 +345,10 @@ def build() -> list[LevelSpec]:
     add(L("The Keep", *keep(),
           "Corner braces, a diamond in the courtyard. The odd dots are halfway up the walls."))
 
-    add(L("The Citadel", *braced_grid(4, 5, 1.0, 1.1),
-          "Forty-three lines. Odd dots at top-right and bottom-left. Keep the middle for last.",
+    n1, e1 = braced_grid(4, 3)
+    n2, e2 = braced_grid(4, 3, mirror=True)
+    add(L("The Twin Citadels", n1 + shift(n2, 0, 2.9), e1 + [(a + 12, b + 12) for a, b in e2] + [(8, 15)],
+          "Forty-seven lines, two citadels, one bridge. Sweep a whole citadel before you cross.",
           start=3, first=2))
 
     n1, e1 = pyramid(4, 1.0)
