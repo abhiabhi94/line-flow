@@ -225,6 +225,43 @@ fun nodeAt(pixelNodes: Map<Int, Offset>, position: Offset, hitRadius: Float): In
         ?.takeIf { (_, center) -> (center - position).getDistance() <= hitRadius }
         ?.key
 
+/**
+ * The part of a line the finger has traced so far: from the current dot to
+ * the finger's projection onto the best-fitting unvisited line leaving that
+ * dot. Null when the finger is not following any line (more than [tolerance]
+ * pixels away from all of them, or behind the dot). Purely visual: a line
+ * only counts once the finger reaches the dot at its end.
+ */
+fun partialLine(
+    pixelNodes: Map<Int, Offset>,
+    edges: List<Edge>,
+    currentNodeId: Int,
+    finger: Offset,
+    tolerance: Float,
+): Pair<Offset, Offset>? {
+    val from = pixelNodes[currentNodeId] ?: return null
+    var best: Pair<Offset, Offset>? = null
+    var bestDistance = tolerance
+    edges.forEach { edge ->
+        if (edge.isVisited || !edge.containsNode(currentNodeId)) return@forEach
+        val otherId = if (edge.node1Id == currentNodeId) edge.node2Id else edge.node1Id
+        val to = pixelNodes[otherId] ?: return@forEach
+        val dir = to - from
+        val lengthSquared = dir.x * dir.x + dir.y * dir.y
+        if (lengthSquared == 0f) return@forEach
+        val t = ((finger.x - from.x) * dir.x + (finger.y - from.y) * dir.y) / lengthSquared
+        if (t <= 0f) return@forEach
+        val clamped = min(t, 1f)
+        val projection = Offset(from.x + dir.x * clamped, from.y + dir.y * clamped)
+        val distance = (finger - projection).getDistance()
+        if (distance < bestDistance) {
+            bestDistance = distance
+            best = from to projection
+        }
+    }
+    return best
+}
+
 @Composable
 fun OneLineDrawGame(
     modifier: Modifier = Modifier,
@@ -785,6 +822,8 @@ private fun Playfield(
     }
 
     var canvasSize by remember { mutableStateOf(IntSize.Zero) }
+    // Where the tracked finger is right now, for drawing the line as it is traced.
+    var fingerPosition by remember { mutableStateOf<Offset?>(null) }
     val pixelNodes = remember(level.nodes, canvasSize) {
         layoutNodes(
             nodes = level.nodes,
@@ -805,6 +844,7 @@ private fun Playfield(
                         val down = awaitFirstDown(requireUnconsumed = false)
                         val startNode = nodeAt(pixelNodes, down.position, hitRadiusPx) ?: continue
                         down.consume()
+                        fingerPosition = down.position
                         onStrokeStart(startNode)
 
                         // ... and is followed by that same finger only.
@@ -814,10 +854,12 @@ private fun Playfield(
                             val change = event.changes.firstOrNull { it.id == down.id }
                             if (change == null || !change.pressed) {
                                 change?.consume()
+                                fingerPosition = null
                                 onStrokeEnd()
                                 ended = true
                             } else {
                                 change.consume()
+                                fingerPosition = change.position
                                 val node = nodeAt(pixelNodes, change.position, hitRadiusPx)
                                 if (node != null) {
                                     onStrokeMove(node)
@@ -839,6 +881,19 @@ private fun Playfield(
                 color = EdgeVisited.copy(alpha = 0.18f),
                 start = pixelNodes.getValue(edge.node1Id),
                 end = pixelNodes.getValue(edge.node2Id),
+                strokeWidth = visitedStrokeWidth * 2f,
+                cap = StrokeCap.Round,
+            )
+        }
+
+        // The line being traced right now, growing from the current dot toward the finger.
+        val tracing = fingerPosition?.takeIf { gameState.currentNodeId != null && !gameState.isGameOver && !gameState.isLevelComplete }
+            ?.let { finger -> partialLine(pixelNodes, gameState.level.edges, gameState.currentNodeId!!, finger, hitRadiusPx) }
+        tracing?.let { (from, to) ->
+            drawLine(
+                color = EdgeVisited.copy(alpha = 0.18f),
+                start = from,
+                end = to,
                 strokeWidth = visitedStrokeWidth * 2f,
                 cap = StrokeCap.Round,
             )
@@ -870,6 +925,16 @@ private fun Playfield(
                 strokeWidth = strokeWidth,
                 cap = StrokeCap.Round,
                 pathEffect = if (isMissing) missingDash else null,
+            )
+        }
+
+        tracing?.let { (from, to) ->
+            drawLine(
+                color = EdgeVisited,
+                start = from,
+                end = to,
+                strokeWidth = visitedStrokeWidth,
+                cap = StrokeCap.Round,
             )
         }
 

@@ -371,6 +371,30 @@ class LevelValidationTest {
         assertEquals(null, nodeAt(pts, Offset(200f, 100f), 32f))
     }
 
+    @Test
+    fun partialLineFollowsTheLineTheFingerIsTracing() {
+        val level = LevelManager.getLevel(2)!! // The Square
+        val pts = mapOf(0 to Offset(0f, 0f), 1 to Offset(200f, 0f), 2 to Offset(200f, 200f), 3 to Offset(0f, 200f))
+        val edges = level.edges
+        // Halfway along the top line, slightly off it: draw from dot 0 to the projection.
+        val along = partialLine(pts, edges, 0, Offset(100f, 8f), tolerance = 32f)
+        assertNotNull(along)
+        assertEquals(Offset(0f, 0f), along!!.first)
+        assertEquals(100f, along.second.x, 0.01f)
+        assertEquals(0f, along.second.y, 0.01f)
+        // Past the far dot: the line is capped at the dot.
+        val past = partialLine(pts, edges, 0, Offset(220f, 0f), tolerance = 32f)
+        assertEquals(200f, past!!.second.x, 0.01f)
+        // Cutting the corner diagonally: too far from both lines, nothing is drawn.
+        assertEquals(null, partialLine(pts, edges, 0, Offset(100f, 100f), tolerance = 32f))
+        // Behind the dot: nothing is drawn.
+        assertEquals(null, partialLine(pts, edges, 0, Offset(-40f, 0f), tolerance = 32f))
+        // A visited line is never previewed again.
+        val visited = edges.map { if (it.containsNode(0) && it.containsNode(1)) it.copy(isVisited = true) else it }
+        assertEquals(null, partialLine(pts, visited, 0, Offset(100f, 8f), tolerance = 32f))
+        assertNotNull(partialLine(pts, visited, 0, Offset(8f, 100f), tolerance = 32f))
+    }
+
     // ------------------------------------------------------------------
     // Geometry helpers
     // ------------------------------------------------------------------
