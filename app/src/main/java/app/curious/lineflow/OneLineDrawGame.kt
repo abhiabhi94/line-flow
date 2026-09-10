@@ -518,8 +518,9 @@ fun OneLineDrawGame(
                 snapRingRadius = snapRingRadius.value,
                 snapRingAlpha = snapRingAlpha.value,
                 onStrokeStart = { nodeId ->
+                    // Hide the hint while drawing, but keep counting it as used: a
+                    // stroke drawn right after reading a hint should not earn three stars.
                     hintRevealIndex = -1
-                    hintsUsedThisAttempt = false
                     gameState = gameState.reset().copy(currentStartNodeId = nodeId, currentNodeId = nodeId)
                     vibrateTick()
                 },
