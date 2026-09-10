@@ -36,16 +36,15 @@ def main() -> int:
     bad = 0
     prev_key = None
     print(f"{'#':>2} {'name':18} {'n':>2} {'e':>2} odd deg  fail  score  aspect  dp/unit")
-    prev_score = -1.0
+    prev_edges = 0
     for lv in levels:
         problems = check(lv)
         m = metrics(lv)
         score = difficulty_score(m)
-        # Each level should be at least as hard as the one before (small tolerance
-        # for Monte-Carlo noise in the failure rate).
-        if score < prev_score - 0.03:
-            problems.append(f"easier than previous level (score {score:.2f} < {prev_score:.2f})")
-        prev_score = max(prev_score, score)
+        # Never fewer lines than the level before: that is the drop players notice.
+        if m["edges"] < prev_edges:
+            problems.append(f"fewer lines than the previous level ({m['edges']} < {prev_edges})")
+        prev_edges = m["edges"]
         flag = ""
         if problems:
             bad += 1

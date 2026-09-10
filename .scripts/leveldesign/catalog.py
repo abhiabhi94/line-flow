@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import math
 
-from geometry import LevelSpec
+from geometry import LevelSpec, random_walk_failure_rate
 from shapes import (
     braced_grid, chain, cycle, dedupe, grid, hexagon_with_triangle, merge, pentacle,
     pyramid, ring, shift, star_ring, zigzag_rings,
@@ -354,6 +354,10 @@ def build() -> list[LevelSpec]:
     add(L("The Monument", n1 + shift(n2, -1.5, 3.6), e1 + [(a + 10, b + 10) for a, b in e2] + [(6, 13)],
           "A pyramid on a plinth, joined by one line. Finish the top before you descend."))
 
+    # Players feel difficulty mostly as "how many lines", then as "how easy it
+    # is to get stuck", so that is the order: line count first, failure rate
+    # to break ties. The chapters above describe the ideas, not the numbering.
+    levels.sort(key=lambda lv: (len(lv.edges), random_walk_failure_rate(lv)))
     for i, lv in enumerate(levels, start=1):
         lv.id = i
     return levels

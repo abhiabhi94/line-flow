@@ -71,6 +71,7 @@ import app.curious.lineflow.ui.theme.DarkBackground
 import app.curious.lineflow.ui.theme.DarkSurface
 import app.curious.lineflow.ui.theme.DarkSurfaceVariant
 import app.curious.lineflow.ui.theme.EdgeDefault
+import app.curious.lineflow.ui.theme.EdgeMissing
 import app.curious.lineflow.ui.theme.EdgeVisited
 import app.curious.lineflow.ui.theme.Error
 import app.curious.lineflow.ui.theme.HintCyan
@@ -166,10 +167,15 @@ data class GameState(
 
 /**
  * Maps a level's normalized node positions into a play area of [size] pixels,
- * scaling uniformly (no distortion) and centring the drawing, with [margin]
- * pixels kept free on every side so the outermost dots are fully touchable.
+ * centred, with [margin] pixels kept free on every side so the outermost dots
+ * are fully touchable. The drawing is scaled uniformly to fit; when the play
+ * area is taller than the drawing (a tall phone showing a squat level) the
+ * drawing is additionally stretched vertically, up to [maxStretch], so the
+ * spare height spreads the dots out instead of staying empty. Stretching only
+ * ever increases distances between dots and lines, so the touch guarantees
+ * from the level checker still hold.
  */
-fun layoutNodes(nodes: List<Node>, size: Size, margin: Float): Map<Int, Offset> {
+fun layoutNodes(nodes: List<Node>, size: Size, margin: Float, maxStretch: Float = MAX_VERTICAL_STRETCH): Map<Int, Offset> {
     if (nodes.isEmpty()) return emptyMap()
     val minX = nodes.minOf { it.position.x }
     val maxX = nodes.maxOf { it.position.x }
@@ -179,16 +185,20 @@ fun layoutNodes(nodes: List<Node>, size: Size, margin: Float): Map<Int, Offset> 
     val contentHeight = (maxY - minY).coerceAtLeast(1e-4f)
     val availableWidth = (size.width - 2 * margin).coerceAtLeast(1f)
     val availableHeight = (size.height - 2 * margin).coerceAtLeast(1f)
-    val scale = min(availableWidth / contentWidth, availableHeight / contentHeight)
-    val offsetX = (size.width - contentWidth * scale) / 2f
-    val offsetY = (size.height - contentHeight * scale) / 2f
+    val scaleX = min(availableWidth / contentWidth, availableHeight / contentHeight)
+    val scaleY = min(availableHeight / contentHeight, scaleX * maxStretch)
+    val offsetX = (size.width - contentWidth * scaleX) / 2f
+    val offsetY = (size.height - contentHeight * scaleY) / 2f
     return nodes.associate { node ->
         node.id to Offset(
-            offsetX + (node.position.x - minX) * scale,
-            offsetY + (node.position.y - minY) * scale,
+            offsetX + (node.position.x - minX) * scaleX,
+            offsetY + (node.position.y - minY) * scaleY,
         )
     }
 }
+
+/** How far a squat level may be stretched vertically to use a tall screen. */
+const val MAX_VERTICAL_STRETCH = 1.3f
 
 /** The dot under [position], if any is within [hitRadius]. */
 fun nodeAt(pixelNodes: Map<Int, Offset>, position: Offset, hitRadius: Float): Int? =
@@ -648,8 +658,9 @@ private fun StatusStrip(
     ) {
         when {
             gameState.isGameOver && !gameState.isLevelComplete -> {
+                val remaining = gameState.level.edges.count { !it.isVisited }
                 val errorMessage = when (gameState.gameOverReason) {
-                    GameOverReason.LIFTED_FINGER -> "Lifted too early"
+                    GameOverReason.LIFTED_FINGER -> "Figure incomplete · $remaining ${if (remaining == 1) "line" else "lines"} left"
                     GameOverReason.RETRACED_EDGE -> "That line was already drawn"
                     GameOverReason.NO_LINE -> "No line between those dots"
                     null -> "Try again"
@@ -792,26 +803,16 @@ private fun Playfield(
     ) {
         if (pixelNodes.isEmpty()) return@Canvas
 
-        // Glow pass for visited edges (drawn first, behind everything)
+        val showRemaining = gameState.isGameOver && !gameState.isLevelComplete
+
+        // Soft glow behind visited edges (drawn first, behind everything)
         gameState.level.edges.forEach { edge ->
             if (!edge.isVisited) return@forEach
-            val startOff = pixelNodes.getValue(edge.node1Id)
-            val endOff = pixelNodes.getValue(edge.node2Id)
-
-            // Outer glow
             drawLine(
-                color = EdgeVisited.copy(alpha = 0.15f),
-                start = startOff,
-                end = endOff,
-                strokeWidth = visitedStrokeWidth * 4f,
-                cap = StrokeCap.Round,
-            )
-            // Inner glow
-            drawLine(
-                color = EdgeVisited.copy(alpha = 0.3f),
-                start = startOff,
-                end = endOff,
-                strokeWidth = visitedStrokeWidth * 2.2f,
+                color = EdgeVisited.copy(alpha = 0.18f),
+                start = pixelNodes.getValue(edge.node1Id),
+                end = pixelNodes.getValue(edge.node2Id),
+                strokeWidth = visitedStrokeWidth * 2f,
                 cap = StrokeCap.Round,
             )
         }
@@ -829,9 +830,10 @@ private fun Playfield(
             val color = when {
                 isFailedEdge -> Error
                 edge.isVisited -> EdgeVisited
+                showRemaining -> EdgeMissing
                 else -> EdgeDefault
             }
-            val strokeWidth = if (edge.isVisited || isFailedEdge) visitedStrokeWidth else defaultStrokeWidth
+            val strokeWidth = if (edge.isVisited || isFailedEdge || showRemaining) visitedStrokeWidth else defaultStrokeWidth
 
             drawLine(
                 color = color,

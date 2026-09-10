@@ -27,6 +27,9 @@ MIN_NODE_DISTANCE_DP = 72.0        # two hit circles never overlap (+8dp slack)
 MIN_NODE_EDGE_DISTANCE_DP = 44.0   # tracing a line never brushes another dot
 MIN_CROSSING_NODE_DISTANCE_DP = 44.0
 MIN_EDGE_ANGLE_DEG = 30.0          # lines leaving a dot are visually distinct
+MAX_VERTICAL_STRETCH = 1.3         # tall phones stretch squat levels up to this
+TALL_PLAY_ASPECT = 2.1             # play-area height/width on the tallest phones
+MIN_EDGE_ANGLE_STRETCHED_DEG = 23.5  # visual-only: touch rules do not depend on angles
 
 Point = tuple[float, float]
 
@@ -270,18 +273,22 @@ def check(spec: LevelSpec) -> list[str]:
             d = point_segment_distance(pts[k], pts[a], pts[b]) * s
             if d < MIN_NODE_EDGE_DISTANCE_DP:
                 problems.append(f"node {k} is {d:.0f}dp from line {a}-{b}")
-    for v in range(n):
-        angles = sorted(
-            math.degrees(math.atan2(pts[w][1] - pts[v][1], pts[w][0] - pts[v][0])) for w in adj[v]
-        )
-        if len(angles) < 2:
-            continue
-        for i in range(len(angles)):
-            sep = angles[(i + 1) % len(angles)] - angles[i]
-            if sep <= 0:
-                sep += 360
-            if sep < MIN_EDGE_ANGLE_DEG - 0.5:  # tolerate float noise on exact 30s
-                problems.append(f"node {v}: lines only {sep:.0f} deg apart")
+    x0, y0, x1, y1 = spec.bbox()
+    aspect = (y1 - y0) / max(x1 - x0, 1e-6)
+    real_stretch = max(1.0, min(MAX_VERTICAL_STRETCH, TALL_PLAY_ASPECT / max(aspect, 1e-6)))
+    for stretch, min_angle, label in ((1.0, MIN_EDGE_ANGLE_DEG, ""), (real_stretch, MIN_EDGE_ANGLE_STRETCHED_DEG, " when stretched")):
+        for v in range(n):
+            angles = sorted(
+                math.degrees(math.atan2((pts[w][1] - pts[v][1]) * stretch, pts[w][0] - pts[v][0])) for w in adj[v]
+            )
+            if len(angles) < 2:
+                continue
+            for i in range(len(angles)):
+                sep = angles[(i + 1) % len(angles)] - angles[i]
+                if sep <= 0:
+                    sep += 360
+                if sep < min_angle - 0.5:  # tolerate float noise on exact 30s
+                    problems.append(f"node {v}: lines only {sep:.0f} deg apart{label}")
     crossings = 0
     for (a, b), (c, d) in itertools.combinations(spec.edges, 2):
         if len({a, b, c, d}) < 4:

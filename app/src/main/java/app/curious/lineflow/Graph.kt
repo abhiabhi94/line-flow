@@ -140,10 +140,35 @@ object LevelManager {
             ),
         ),
 
-        // Level 5: The Window - 6 dots, 7 lines, path 1->4
-        // One solution: 1-0-3-4-5-2-1-4
+        // Level 5: The Bow Tie - 5 dots, 6 lines, circuit
+        // One solution: 0-1-2-3-4-2-0
         Level(
             id = 5,
+            name = "The Bow Tie",
+            nodes = listOf(
+                Node(0, Offset(0.000f, 0.000f)),
+                Node(1, Offset(0.000f, 0.714f)),
+                Node(2, Offset(0.500f, 0.357f)),
+                Node(3, Offset(1.000f, 0.000f)),
+                Node(4, Offset(1.000f, 0.714f)),
+            ),
+            edges = listOf(
+                Edge(0, 1), Edge(0, 2), Edge(1, 2), Edge(2, 3), Edge(2, 4), Edge(3, 4),
+            ),
+            hints = LevelHints(
+                validStartNodeIds = listOf(0, 1, 2, 3, 4),
+                firstEdge = Pair(0, 1),
+                steps = listOf(
+                    HintStep(text = "The middle dot is visited twice. Finish one wing before the other."),
+                    HintStep(text = "Every dot works as a start. Try the top-left one. From the top-left dot, head down first.", showValidStarts = true, showFirstEdge = true),
+                ),
+            ),
+        ),
+
+        // Level 6: The Window - 6 dots, 7 lines, path 1->4
+        // One solution: 1-0-3-4-5-2-1-4
+        Level(
+            id = 6,
             name = "The Window",
             nodes = listOf(
                 Node(0, Offset(0.000f, 0.000f)),
@@ -167,10 +192,10 @@ object LevelManager {
             ),
         ),
 
-        // Level 6: The Fan - 5 dots, 7 lines, path 2->4
+        // Level 7: The Fan - 5 dots, 7 lines, path 2->4
         // One solution: 2-0-1-2-4-1-3-4
         Level(
-            id = 6,
+            id = 7,
             name = "The Fan",
             nodes = listOf(
                 Node(0, Offset(0.500f, 0.000f)),
@@ -193,10 +218,10 @@ object LevelManager {
             ),
         ),
 
-        // Level 7: The Envelope - 5 dots, 8 lines, path 2->3
+        // Level 8: The Envelope - 5 dots, 8 lines, path 2->3
         // One solution: 3-2-1-0-3-1-4-0-2
         Level(
-            id = 7,
+            id = 8,
             name = "The Envelope",
             nodes = listOf(
                 Node(0, Offset(0.000f, 0.333f)),
@@ -219,61 +244,10 @@ object LevelManager {
             ),
         ),
 
-        // Level 8: The Bow Tie - 5 dots, 6 lines, circuit
-        // One solution: 0-1-2-3-4-2-0
-        Level(
-            id = 8,
-            name = "The Bow Tie",
-            nodes = listOf(
-                Node(0, Offset(0.000f, 0.000f)),
-                Node(1, Offset(0.000f, 0.714f)),
-                Node(2, Offset(0.500f, 0.357f)),
-                Node(3, Offset(1.000f, 0.000f)),
-                Node(4, Offset(1.000f, 0.714f)),
-            ),
-            edges = listOf(
-                Edge(0, 1), Edge(0, 2), Edge(1, 2), Edge(2, 3), Edge(2, 4), Edge(3, 4),
-            ),
-            hints = LevelHints(
-                validStartNodeIds = listOf(0, 1, 2, 3, 4),
-                firstEdge = Pair(0, 1),
-                steps = listOf(
-                    HintStep(text = "The middle dot is visited twice. Finish one wing before the other."),
-                    HintStep(text = "Every dot works as a start. Try the top-left one. From the top-left dot, head down first.", showValidStarts = true, showFirstEdge = true),
-                ),
-            ),
-        ),
-
-        // Level 9: The Pentacle - 5 dots, 10 lines, circuit
-        // One solution: 0-1-2-3-4-0-2-4-1-3-0
-        Level(
-            id = 9,
-            name = "The Pentacle",
-            nodes = listOf(
-                Node(0, Offset(0.500f, 0.000f)),
-                Node(1, Offset(1.000f, 0.363f)),
-                Node(2, Offset(0.809f, 0.951f)),
-                Node(3, Offset(0.191f, 0.951f)),
-                Node(4, Offset(0.000f, 0.363f)),
-            ),
-            edges = listOf(
-                Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4), Edge(4, 0), Edge(0, 2),
-                Edge(1, 3), Edge(2, 4), Edge(3, 0), Edge(4, 1),
-            ),
-            hints = LevelHints(
-                validStartNodeIds = listOf(0, 1, 2, 3, 4),
-                firstEdge = Pair(0, 1),
-                steps = listOf(
-                    HintStep(text = "A star inside a ring. Every point has four lines, so start anywhere."),
-                    HintStep(text = "Every dot works as a start. Try the top one. From the top dot, head down-right first.", showValidStarts = true, showFirstEdge = true),
-                ),
-            ),
-        ),
-
-        // Level 10: The Hexagon - 6 dots, 9 lines, circuit
+        // Level 9: The Hexagon - 6 dots, 9 lines, circuit
         // One solution: 0-1-2-3-4-5-0-2-4-0
         Level(
-            id = 10,
+            id = 9,
             name = "The Hexagon",
             nodes = listOf(
                 Node(0, Offset(0.433f, 0.000f)),
@@ -297,69 +271,36 @@ object LevelManager {
             ),
         ),
 
-        // Level 11: The Gem - 8 dots, 13 lines, path 2->5
-        // One solution: 2-0-1-2-4-6-2-5-3-1-5-6-7-5
+        // Level 10: The Pentacle - 5 dots, 10 lines, circuit
+        // One solution: 0-1-2-3-4-0-2-4-1-3-0
         Level(
-            id = 11,
-            name = "The Gem",
+            id = 10,
+            name = "The Pentacle",
             nodes = listOf(
-                Node(0, Offset(0.425f, 0.000f)),
-                Node(1, Offset(0.200f, 0.225f)),
-                Node(2, Offset(0.650f, 0.225f)),
-                Node(3, Offset(0.000f, 0.500f)),
-                Node(4, Offset(0.850f, 0.500f)),
-                Node(5, Offset(0.200f, 0.775f)),
-                Node(6, Offset(0.650f, 0.775f)),
-                Node(7, Offset(0.425f, 1.000f)),
+                Node(0, Offset(0.500f, 0.000f)),
+                Node(1, Offset(1.000f, 0.363f)),
+                Node(2, Offset(0.809f, 0.951f)),
+                Node(3, Offset(0.191f, 0.951f)),
+                Node(4, Offset(0.000f, 0.363f)),
             ),
             edges = listOf(
-                Edge(0, 1), Edge(0, 2), Edge(1, 2), Edge(1, 3), Edge(3, 5), Edge(1, 5),
-                Edge(2, 4), Edge(4, 6), Edge(2, 6), Edge(5, 6), Edge(5, 7), Edge(6, 7),
-                Edge(2, 5),
+                Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4), Edge(4, 0), Edge(0, 2),
+                Edge(1, 3), Edge(2, 4), Edge(3, 0), Edge(4, 1),
             ),
             hints = LevelHints(
-                validStartNodeIds = listOf(2, 5),
-                firstEdge = Pair(2, 0),
-                steps = listOf(
-                    HintStep(text = "One long facet cuts across the gem. Its two ends are your start and finish."),
-                    HintStep(text = "Start at the top-right dot; you will finish at the bottom-left one.", showValidStarts = true),
-                    HintStep(text = "From the top-right dot, head up-left first.", showValidStarts = true, showFirstEdge = true),
-                ),
-            ),
-        ),
-
-        // Level 12: The Hexagram - 6 dots, 12 lines, circuit
-        // One solution: 0-1-2-3-4-5-3-1-5-0-2-4-0
-        Level(
-            id = 12,
-            name = "The Hexagram",
-            nodes = listOf(
-                Node(0, Offset(0.433f, 0.000f)),
-                Node(1, Offset(0.866f, 0.250f)),
-                Node(2, Offset(0.866f, 0.750f)),
-                Node(3, Offset(0.433f, 1.000f)),
-                Node(4, Offset(0.000f, 0.750f)),
-                Node(5, Offset(0.000f, 0.250f)),
-            ),
-            edges = listOf(
-                Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4), Edge(4, 5), Edge(5, 0),
-                Edge(0, 2), Edge(1, 3), Edge(2, 4), Edge(3, 5), Edge(4, 0), Edge(5, 1),
-            ),
-            hints = LevelHints(
-                validStartNodeIds = listOf(0, 1, 2, 3, 4, 5),
+                validStartNodeIds = listOf(0, 1, 2, 3, 4),
                 firstEdge = Pair(0, 1),
                 steps = listOf(
-                    HintStep(text = "Two triangles and a ring. Cross the middle freely; only dots count."),
-                    HintStep(text = "Every dot works as a start. Try the top one.", showValidStarts = true),
-                    HintStep(text = "From the top dot, head down-right first.", showValidStarts = true, showFirstEdge = true),
+                    HintStep(text = "A star inside a ring. Every point has four lines, so start anywhere."),
+                    HintStep(text = "Every dot works as a start. Try the top one. From the top dot, head down-right first.", showValidStarts = true, showFirstEdge = true),
                 ),
             ),
         ),
 
-        // Level 13: The Shield - 7 dots, 11 lines, path 1->2
+        // Level 11: The Shield - 7 dots, 11 lines, path 1->2
         // One solution: 1-0-2-4-5-1-3-6-4-3-5-2
         Level(
-            id = 13,
+            id = 11,
             name = "The Shield",
             nodes = listOf(
                 Node(0, Offset(0.417f, 0.000f)),
@@ -385,10 +326,10 @@ object LevelManager {
             ),
         ),
 
-        // Level 14: The Sailboat - 8 dots, 11 lines, path 1->2
+        // Level 12: The Sailboat - 8 dots, 11 lines, path 1->2
         // One solution: 1-0-4-3-2-1-4-6-5-7-4-2
         Level(
-            id = 14,
+            id = 12,
             name = "The Sailboat",
             nodes = listOf(
                 Node(0, Offset(0.000f, 0.500f)),
@@ -411,6 +352,65 @@ object LevelManager {
                     HintStep(text = "The two hull dots have three lines each. Sail from one to the other."),
                     HintStep(text = "Start at the bottom-left dot; you will finish at the bottom-right one.", showValidStarts = true),
                     HintStep(text = "From the bottom-left dot, head up-left first.", showValidStarts = true, showFirstEdge = true),
+                ),
+            ),
+        ),
+
+        // Level 13: The Hexagram - 6 dots, 12 lines, circuit
+        // One solution: 0-1-2-3-4-5-3-1-5-0-2-4-0
+        Level(
+            id = 13,
+            name = "The Hexagram",
+            nodes = listOf(
+                Node(0, Offset(0.433f, 0.000f)),
+                Node(1, Offset(0.866f, 0.250f)),
+                Node(2, Offset(0.866f, 0.750f)),
+                Node(3, Offset(0.433f, 1.000f)),
+                Node(4, Offset(0.000f, 0.750f)),
+                Node(5, Offset(0.000f, 0.250f)),
+            ),
+            edges = listOf(
+                Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4), Edge(4, 5), Edge(5, 0),
+                Edge(0, 2), Edge(1, 3), Edge(2, 4), Edge(3, 5), Edge(4, 0), Edge(5, 1),
+            ),
+            hints = LevelHints(
+                validStartNodeIds = listOf(0, 1, 2, 3, 4, 5),
+                firstEdge = Pair(0, 1),
+                steps = listOf(
+                    HintStep(text = "Two triangles and a ring. Cross the middle freely; only dots count."),
+                    HintStep(text = "Every dot works as a start. Try the top one.", showValidStarts = true),
+                    HintStep(text = "From the top dot, head down-right first.", showValidStarts = true, showFirstEdge = true),
+                ),
+            ),
+        ),
+
+        // Level 14: The Gem - 8 dots, 13 lines, path 2->5
+        // One solution: 2-0-1-2-4-6-2-5-3-1-5-6-7-5
+        Level(
+            id = 14,
+            name = "The Gem",
+            nodes = listOf(
+                Node(0, Offset(0.425f, 0.000f)),
+                Node(1, Offset(0.200f, 0.225f)),
+                Node(2, Offset(0.650f, 0.225f)),
+                Node(3, Offset(0.000f, 0.500f)),
+                Node(4, Offset(0.850f, 0.500f)),
+                Node(5, Offset(0.200f, 0.775f)),
+                Node(6, Offset(0.650f, 0.775f)),
+                Node(7, Offset(0.425f, 1.000f)),
+            ),
+            edges = listOf(
+                Edge(0, 1), Edge(0, 2), Edge(1, 2), Edge(1, 3), Edge(3, 5), Edge(1, 5),
+                Edge(2, 4), Edge(4, 6), Edge(2, 6), Edge(5, 6), Edge(5, 7), Edge(6, 7),
+                Edge(2, 5),
+            ),
+            hints = LevelHints(
+                validStartNodeIds = listOf(2, 5),
+                firstEdge = Pair(2, 0),
+                steps = listOf(
+                    HintStep(text = "One long facet cuts across the gem. Its two ends are your start and finish."),
+                    HintStep(text = "Start at the top-right dot; you will finish at the bottom-left one.", showValidStarts = true),
+                    HintStep(text = "From the top-right dot, head up-left first.", showValidStarts = true, showFirstEdge = true),
                 ),
             ),
         ),
@@ -446,10 +446,43 @@ object LevelManager {
             ),
         ),
 
-        // Level 16: The Twin Envelopes - 8 dots, 14 lines, path 3->5
-        // One solution: 3-0-1-2-5-4-3-1-6-0-4-2-7-1-5
+        // Level 16: The Necklace - 10 dots, 13 lines, path 4->5
+        // One solution: 4-3-1-0-2-3-5-6-7-9-8-6-4-5
         Level(
             id = 16,
+            name = "The Necklace",
+            nodes = listOf(
+                Node(0, Offset(0.167f, 0.000f)),
+                Node(1, Offset(0.000f, 0.167f)),
+                Node(2, Offset(0.333f, 0.167f)),
+                Node(3, Offset(0.167f, 0.333f)),
+                Node(4, Offset(0.000f, 0.500f)),
+                Node(5, Offset(0.333f, 0.500f)),
+                Node(6, Offset(0.167f, 0.667f)),
+                Node(7, Offset(0.000f, 0.833f)),
+                Node(8, Offset(0.333f, 0.833f)),
+                Node(9, Offset(0.167f, 1.000f)),
+            ),
+            edges = listOf(
+                Edge(0, 1), Edge(1, 3), Edge(3, 2), Edge(2, 0), Edge(3, 4), Edge(4, 6),
+                Edge(6, 5), Edge(5, 3), Edge(6, 7), Edge(7, 9), Edge(9, 8), Edge(8, 6),
+                Edge(4, 5),
+            ),
+            hints = LevelHints(
+                validStartNodeIds = listOf(4, 5),
+                firstEdge = Pair(4, 3),
+                steps = listOf(
+                    HintStep(text = "Each shared dot is a door. Close a diamond before you walk through it."),
+                    HintStep(text = "Start at the left dot; you will finish at the right one.", showValidStarts = true),
+                    HintStep(text = "From the left dot, head up-right first.", showValidStarts = true, showFirstEdge = true),
+                ),
+            ),
+        ),
+
+        // Level 17: The Twin Envelopes - 8 dots, 14 lines, path 3->5
+        // One solution: 3-0-1-2-5-4-3-1-6-0-4-2-7-1-5
+        Level(
+            id = 17,
             name = "The Twin Envelopes",
             nodes = listOf(
                 Node(0, Offset(0.000f, 0.250f)),
@@ -477,10 +510,10 @@ object LevelManager {
             ),
         ),
 
-        // Level 17: The Octagram - 8 dots, 16 lines, circuit
+        // Level 18: The Octagram - 8 dots, 16 lines, circuit
         // One solution: 0-1-2-3-4-5-6-7-0-3-6-1-4-7-2-5-0
         Level(
-            id = 17,
+            id = 18,
             name = "The Octagram",
             nodes = listOf(
                 Node(0, Offset(0.500f, 0.000f)),
@@ -504,38 +537,6 @@ object LevelManager {
                     HintStep(text = "Eight points and a star of long chords. All even: any start works."),
                     HintStep(text = "Every dot works as a start. Try the top one.", showValidStarts = true),
                     HintStep(text = "From the top dot, head down-right first.", showValidStarts = true, showFirstEdge = true),
-                ),
-            ),
-        ),
-
-        // Level 18: The Hourglass Star - 8 dots, 19 lines, path 2->3
-        // One solution: 2-0-1-2-3-4-0-3-1-4-2-7-5-6-3-5-2-6-7-3
-        Level(
-            id = 18,
-            name = "The Hourglass Star",
-            nodes = listOf(
-                Node(0, Offset(0.263f, 0.000f)),
-                Node(1, Offset(0.526f, 0.191f)),
-                Node(2, Offset(0.425f, 0.500f)),
-                Node(3, Offset(0.100f, 0.500f)),
-                Node(4, Offset(0.000f, 0.191f)),
-                Node(5, Offset(0.263f, 1.000f)),
-                Node(6, Offset(0.000f, 0.809f)),
-                Node(7, Offset(0.526f, 0.809f)),
-            ),
-            edges = listOf(
-                Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4), Edge(4, 0), Edge(0, 2),
-                Edge(1, 3), Edge(2, 4), Edge(3, 0), Edge(4, 1), Edge(5, 6), Edge(6, 3),
-                Edge(2, 7), Edge(7, 5), Edge(5, 3), Edge(6, 2), Edge(3, 7), Edge(2, 5),
-                Edge(7, 6),
-            ),
-            hints = LevelHints(
-                validStartNodeIds = listOf(2, 3),
-                firstEdge = Pair(2, 0),
-                steps = listOf(
-                    HintStep(text = "Two stars share an edge. The dots on that edge carry seven lines: start on one."),
-                    HintStep(text = "Start at the right dot; you will finish at the left one.", showValidStarts = true),
-                    HintStep(text = "From the right dot, head up first.", showValidStarts = true, showFirstEdge = true),
                 ),
             ),
         ),
@@ -608,43 +609,109 @@ object LevelManager {
             ),
         ),
 
-        // Level 21: The Necklace - 10 dots, 13 lines, path 4->5
-        // One solution: 4-3-1-0-2-3-5-6-7-9-8-6-4-5
+        // Level 21: The Pyramid - 10 dots, 18 lines, circuit
+        // One solution: 0-1-2-4-1-3-4-5-8-4-7-3-6-7-8-9-5-2-0
         Level(
             id = 21,
-            name = "The Necklace",
+            name = "The Pyramid",
             nodes = listOf(
-                Node(0, Offset(0.167f, 0.000f)),
-                Node(1, Offset(0.000f, 0.167f)),
-                Node(2, Offset(0.333f, 0.167f)),
-                Node(3, Offset(0.167f, 0.333f)),
-                Node(4, Offset(0.000f, 0.500f)),
-                Node(5, Offset(0.333f, 0.500f)),
-                Node(6, Offset(0.167f, 0.667f)),
-                Node(7, Offset(0.000f, 0.833f)),
-                Node(8, Offset(0.333f, 0.833f)),
-                Node(9, Offset(0.167f, 1.000f)),
+                Node(0, Offset(0.500f, 0.000f)),
+                Node(1, Offset(0.333f, 0.290f)),
+                Node(2, Offset(0.667f, 0.290f)),
+                Node(3, Offset(0.167f, 0.580f)),
+                Node(4, Offset(0.500f, 0.580f)),
+                Node(5, Offset(0.833f, 0.580f)),
+                Node(6, Offset(0.000f, 0.870f)),
+                Node(7, Offset(0.333f, 0.870f)),
+                Node(8, Offset(0.667f, 0.870f)),
+                Node(9, Offset(1.000f, 0.870f)),
             ),
             edges = listOf(
-                Edge(0, 1), Edge(1, 3), Edge(3, 2), Edge(2, 0), Edge(3, 4), Edge(4, 6),
-                Edge(6, 5), Edge(5, 3), Edge(6, 7), Edge(7, 9), Edge(9, 8), Edge(8, 6),
-                Edge(4, 5),
+                Edge(0, 1), Edge(0, 2), Edge(1, 2), Edge(1, 3), Edge(1, 4), Edge(2, 4),
+                Edge(2, 5), Edge(3, 4), Edge(3, 6), Edge(3, 7), Edge(4, 5), Edge(4, 7),
+                Edge(4, 8), Edge(5, 8), Edge(5, 9), Edge(6, 7), Edge(7, 8), Edge(8, 9),
             ),
             hints = LevelHints(
-                validStartNodeIds = listOf(4, 5),
-                firstEdge = Pair(4, 3),
+                validStartNodeIds = listOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9),
+                firstEdge = Pair(0, 1),
                 steps = listOf(
-                    HintStep(text = "Each shared dot is a door. Close a diamond before you walk through it."),
-                    HintStep(text = "Start at the left dot; you will finish at the right one.", showValidStarts = true),
-                    HintStep(text = "From the left dot, head up-right first.", showValidStarts = true, showFirstEdge = true),
+                    HintStep(text = "Ten dots, all even. The middle rows carry six lines each; do not strand them."),
+                    HintStep(text = "Every dot works as a start. Try the top one.", showValidStarts = true),
+                    HintStep(text = "From the top dot, head down-left first.", showValidStarts = true, showFirstEdge = true),
                 ),
             ),
         ),
 
-        // Level 22: The Wheel - 10 dots, 20 lines, circuit
-        // One solution: 0-1-2-3-4-0-5-6-7-8-9-5-1-6-2-7-3-8-4-9-0
+        // Level 22: The Hourglass - 11 dots, 18 lines, circuit
+        // One solution: 0-1-2-3-6-7-8-9-10-8-6-10-3-4-5-0-2-4-0
         Level(
             id = 22,
+            name = "The Hourglass",
+            nodes = listOf(
+                Node(0, Offset(0.216f, 0.000f)),
+                Node(1, Offset(0.433f, 0.125f)),
+                Node(2, Offset(0.433f, 0.375f)),
+                Node(3, Offset(0.216f, 0.500f)),
+                Node(4, Offset(0.000f, 0.375f)),
+                Node(5, Offset(0.000f, 0.125f)),
+                Node(6, Offset(0.433f, 0.625f)),
+                Node(7, Offset(0.433f, 0.875f)),
+                Node(8, Offset(0.216f, 1.000f)),
+                Node(9, Offset(0.000f, 0.875f)),
+                Node(10, Offset(0.000f, 0.625f)),
+            ),
+            edges = listOf(
+                Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4), Edge(4, 5), Edge(5, 0),
+                Edge(0, 2), Edge(2, 4), Edge(4, 0), Edge(3, 6), Edge(6, 7), Edge(7, 8),
+                Edge(8, 9), Edge(9, 10), Edge(10, 3), Edge(6, 8), Edge(8, 10), Edge(10, 6),
+            ),
+            hints = LevelHints(
+                validStartNodeIds = listOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
+                firstEdge = Pair(0, 1),
+                steps = listOf(
+                    HintStep(text = "Two hexagons share one dot. Whatever you leave behind on one side is lost."),
+                    HintStep(text = "Every dot works as a start. Try the top one.", showValidStarts = true),
+                    HintStep(text = "From the top dot, head down-right first.", showValidStarts = true, showFirstEdge = true),
+                ),
+            ),
+        ),
+
+        // Level 23: The Hourglass Star - 8 dots, 19 lines, path 2->3
+        // One solution: 2-0-1-2-3-4-0-3-1-4-2-7-5-6-3-5-2-6-7-3
+        Level(
+            id = 23,
+            name = "The Hourglass Star",
+            nodes = listOf(
+                Node(0, Offset(0.263f, 0.000f)),
+                Node(1, Offset(0.526f, 0.191f)),
+                Node(2, Offset(0.425f, 0.500f)),
+                Node(3, Offset(0.100f, 0.500f)),
+                Node(4, Offset(0.000f, 0.191f)),
+                Node(5, Offset(0.263f, 1.000f)),
+                Node(6, Offset(0.000f, 0.809f)),
+                Node(7, Offset(0.526f, 0.809f)),
+            ),
+            edges = listOf(
+                Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4), Edge(4, 0), Edge(0, 2),
+                Edge(1, 3), Edge(2, 4), Edge(3, 0), Edge(4, 1), Edge(5, 6), Edge(6, 3),
+                Edge(2, 7), Edge(7, 5), Edge(5, 3), Edge(6, 2), Edge(3, 7), Edge(2, 5),
+                Edge(7, 6),
+            ),
+            hints = LevelHints(
+                validStartNodeIds = listOf(2, 3),
+                firstEdge = Pair(2, 0),
+                steps = listOf(
+                    HintStep(text = "Two stars share an edge. The dots on that edge carry seven lines: start on one."),
+                    HintStep(text = "Start at the right dot; you will finish at the left one.", showValidStarts = true),
+                    HintStep(text = "From the right dot, head up first.", showValidStarts = true, showFirstEdge = true),
+                ),
+            ),
+        ),
+
+        // Level 24: The Wheel - 10 dots, 20 lines, circuit
+        // One solution: 0-1-2-3-4-0-5-6-7-8-9-5-1-6-2-7-3-8-4-9-0
+        Level(
+            id = 24,
             name = "The Wheel",
             nodes = listOf(
                 Node(0, Offset(0.500f, 0.000f)),
@@ -675,43 +742,10 @@ object LevelManager {
             ),
         ),
 
-        // Level 23: The Pyramid - 10 dots, 18 lines, circuit
-        // One solution: 0-1-2-4-1-3-4-5-8-4-7-3-6-7-8-9-5-2-0
-        Level(
-            id = 23,
-            name = "The Pyramid",
-            nodes = listOf(
-                Node(0, Offset(0.500f, 0.000f)),
-                Node(1, Offset(0.333f, 0.290f)),
-                Node(2, Offset(0.667f, 0.290f)),
-                Node(3, Offset(0.167f, 0.580f)),
-                Node(4, Offset(0.500f, 0.580f)),
-                Node(5, Offset(0.833f, 0.580f)),
-                Node(6, Offset(0.000f, 0.870f)),
-                Node(7, Offset(0.333f, 0.870f)),
-                Node(8, Offset(0.667f, 0.870f)),
-                Node(9, Offset(1.000f, 0.870f)),
-            ),
-            edges = listOf(
-                Edge(0, 1), Edge(0, 2), Edge(1, 2), Edge(1, 3), Edge(1, 4), Edge(2, 4),
-                Edge(2, 5), Edge(3, 4), Edge(3, 6), Edge(3, 7), Edge(4, 5), Edge(4, 7),
-                Edge(4, 8), Edge(5, 8), Edge(5, 9), Edge(6, 7), Edge(7, 8), Edge(8, 9),
-            ),
-            hints = LevelHints(
-                validStartNodeIds = listOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9),
-                firstEdge = Pair(0, 1),
-                steps = listOf(
-                    HintStep(text = "Ten dots, all even. The middle rows carry six lines each; do not strand them."),
-                    HintStep(text = "Every dot works as a start. Try the top one.", showValidStarts = true),
-                    HintStep(text = "From the top dot, head down-left first.", showValidStarts = true, showFirstEdge = true),
-                ),
-            ),
-        ),
-
-        // Level 24: The Star Fort - 10 dots, 20 lines, circuit
+        // Level 25: The Star Fort - 10 dots, 20 lines, circuit
         // One solution: 0-1-2-3-4-0-2-4-1-3-0-5-1-6-2-7-3-8-4-9-0
         Level(
-            id = 24,
+            id = 25,
             name = "The Star Fort",
             nodes = listOf(
                 Node(0, Offset(0.500f, 0.097f)),
@@ -742,10 +776,10 @@ object LevelManager {
             ),
         ),
 
-        // Level 25: The Butterfly - 9 dots, 20 lines, circuit
+        // Level 26: The Butterfly - 9 dots, 20 lines, circuit
         // One solution: 0-1-2-3-4-0-2-4-1-3-0-5-6-7-8-0-6-8-5-7-0
         Level(
-            id = 25,
+            id = 26,
             name = "The Butterfly",
             nodes = listOf(
                 Node(0, Offset(0.500f, 0.263f)),
@@ -775,10 +809,10 @@ object LevelManager {
             ),
         ),
 
-        // Level 26: The Hex Fort - 12 dots, 21 lines, circuit
+        // Level 27: The Hex Fort - 12 dots, 21 lines, circuit
         // One solution: 0-1-2-3-4-5-0-2-4-0-6-1-7-2-8-3-9-4-10-5-11-0
         Level(
-            id = 26,
+            id = 27,
             name = "The Hex Fort",
             nodes = listOf(
                 Node(0, Offset(0.500f, 0.100f)),
@@ -811,46 +845,44 @@ object LevelManager {
             ),
         ),
 
-        // Level 27: The Snowflake - 12 dots, 24 lines, circuit
-        // One solution: 0-1-2-3-4-5-0-6-7-8-9-10-11-6-1-7-2-8-3-9-4-10-5-11-0
+        // Level 28: The Dumbbell - 10 dots, 21 lines, path 2->8
+        // One solution: 2-0-1-2-3-4-0-3-1-4-2-8-7-6-5-9-8-6-9-7-5-8
         Level(
-            id = 27,
-            name = "The Snowflake",
+            id = 28,
+            name = "The Dumbbell",
             nodes = listOf(
-                Node(0, Offset(0.433f, 0.000f)),
-                Node(1, Offset(0.866f, 0.250f)),
-                Node(2, Offset(0.866f, 0.750f)),
-                Node(3, Offset(0.433f, 1.000f)),
-                Node(4, Offset(0.000f, 0.750f)),
-                Node(5, Offset(0.000f, 0.250f)),
-                Node(6, Offset(0.553f, 0.292f)),
-                Node(7, Offset(0.673f, 0.500f)),
-                Node(8, Offset(0.553f, 0.708f)),
-                Node(9, Offset(0.313f, 0.708f)),
-                Node(10, Offset(0.193f, 0.500f)),
-                Node(11, Offset(0.313f, 0.292f)),
+                Node(0, Offset(0.165f, 0.000f)),
+                Node(1, Offset(0.329f, 0.120f)),
+                Node(2, Offset(0.266f, 0.313f)),
+                Node(3, Offset(0.063f, 0.313f)),
+                Node(4, Offset(0.000f, 0.120f)),
+                Node(5, Offset(0.165f, 1.000f)),
+                Node(6, Offset(0.000f, 0.880f)),
+                Node(7, Offset(0.063f, 0.687f)),
+                Node(8, Offset(0.266f, 0.687f)),
+                Node(9, Offset(0.329f, 0.880f)),
             ),
             edges = listOf(
-                Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4), Edge(4, 5), Edge(5, 0),
-                Edge(6, 7), Edge(7, 8), Edge(8, 9), Edge(9, 10), Edge(10, 11), Edge(11, 6),
-                Edge(0, 6), Edge(0, 11), Edge(1, 7), Edge(1, 6), Edge(2, 8), Edge(2, 7),
-                Edge(3, 9), Edge(3, 8), Edge(4, 10), Edge(4, 9), Edge(5, 11), Edge(5, 10),
+                Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4), Edge(4, 0), Edge(0, 2),
+                Edge(1, 3), Edge(2, 4), Edge(3, 0), Edge(4, 1), Edge(5, 6), Edge(6, 7),
+                Edge(7, 8), Edge(8, 9), Edge(9, 5), Edge(5, 7), Edge(6, 8), Edge(7, 9),
+                Edge(8, 5), Edge(9, 6), Edge(2, 8),
             ),
             hints = LevelHints(
-                validStartNodeIds = listOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11),
-                firstEdge = Pair(0, 1),
+                validStartNodeIds = listOf(2, 8),
+                firstEdge = Pair(2, 0),
                 steps = listOf(
-                    HintStep(text = "Six-fold symmetry, all even. Sweep in wedges, not in circles."),
-                    HintStep(text = "Every dot works as a start. Try the top one.", showValidStarts = true),
-                    HintStep(text = "From the top dot, head down-right first.", showValidStarts = true, showFirstEdge = true),
+                    HintStep(text = "Two stars, one bar. Cross the bar exactly once, with nothing left behind."),
+                    HintStep(text = "Start at the top-right dot; you will finish at the bottom-right one.", showValidStarts = true),
+                    HintStep(text = "From the top-right dot, head up first.", showValidStarts = true, showFirstEdge = true),
                 ),
             ),
         ),
 
-        // Level 28: The Serpent - 12 dots, 23 lines, path 2->9
+        // Level 29: The Serpent - 12 dots, 23 lines, path 2->9
         // One solution: 2-1-0-3-1-4-2-5-4-3-6-4-7-5-8-7-6-9-7-10-8-11-10-9
         Level(
-            id = 28,
+            id = 29,
             name = "The Serpent",
             nodes = listOf(
                 Node(0, Offset(0.000f, 0.000f)),
@@ -883,10 +915,10 @@ object LevelManager {
             ),
         ),
 
-        // Level 29: The Rocket - 12 dots, 23 lines, path 3->9
+        // Level 30: The Rocket - 12 dots, 23 lines, path 3->9
         // One solution: 3-1-0-2-1-4-2-5-4-3-6-4-7-5-8-7-6-9-7-10-8-11-10-9
         Level(
-            id = 29,
+            id = 30,
             name = "The Rocket",
             nodes = listOf(
                 Node(0, Offset(0.267f, 0.000f)),
@@ -919,115 +951,164 @@ object LevelManager {
             ),
         ),
 
-        // Level 30: The Hourglass - 11 dots, 18 lines, circuit
-        // One solution: 0-1-2-3-6-7-8-9-10-8-6-10-3-4-5-0-2-4-0
+        // Level 31: The Snowflake - 12 dots, 24 lines, circuit
+        // One solution: 0-1-2-3-4-5-0-6-7-8-9-10-11-6-1-7-2-8-3-9-4-10-5-11-0
         Level(
-            id = 30,
-            name = "The Hourglass",
+            id = 31,
+            name = "The Snowflake",
             nodes = listOf(
-                Node(0, Offset(0.216f, 0.000f)),
-                Node(1, Offset(0.433f, 0.125f)),
-                Node(2, Offset(0.433f, 0.375f)),
-                Node(3, Offset(0.216f, 0.500f)),
-                Node(4, Offset(0.000f, 0.375f)),
-                Node(5, Offset(0.000f, 0.125f)),
-                Node(6, Offset(0.433f, 0.625f)),
-                Node(7, Offset(0.433f, 0.875f)),
-                Node(8, Offset(0.216f, 1.000f)),
-                Node(9, Offset(0.000f, 0.875f)),
-                Node(10, Offset(0.000f, 0.625f)),
+                Node(0, Offset(0.433f, 0.000f)),
+                Node(1, Offset(0.866f, 0.250f)),
+                Node(2, Offset(0.866f, 0.750f)),
+                Node(3, Offset(0.433f, 1.000f)),
+                Node(4, Offset(0.000f, 0.750f)),
+                Node(5, Offset(0.000f, 0.250f)),
+                Node(6, Offset(0.553f, 0.292f)),
+                Node(7, Offset(0.673f, 0.500f)),
+                Node(8, Offset(0.553f, 0.708f)),
+                Node(9, Offset(0.313f, 0.708f)),
+                Node(10, Offset(0.193f, 0.500f)),
+                Node(11, Offset(0.313f, 0.292f)),
             ),
             edges = listOf(
                 Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4), Edge(4, 5), Edge(5, 0),
-                Edge(0, 2), Edge(2, 4), Edge(4, 0), Edge(3, 6), Edge(6, 7), Edge(7, 8),
-                Edge(8, 9), Edge(9, 10), Edge(10, 3), Edge(6, 8), Edge(8, 10), Edge(10, 6),
+                Edge(6, 7), Edge(7, 8), Edge(8, 9), Edge(9, 10), Edge(10, 11), Edge(11, 6),
+                Edge(0, 6), Edge(0, 11), Edge(1, 7), Edge(1, 6), Edge(2, 8), Edge(2, 7),
+                Edge(3, 9), Edge(3, 8), Edge(4, 10), Edge(4, 9), Edge(5, 11), Edge(5, 10),
             ),
             hints = LevelHints(
-                validStartNodeIds = listOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
+                validStartNodeIds = listOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11),
                 firstEdge = Pair(0, 1),
                 steps = listOf(
-                    HintStep(text = "Two hexagons share one dot. Whatever you leave behind on one side is lost."),
+                    HintStep(text = "Six-fold symmetry, all even. Sweep in wedges, not in circles."),
                     HintStep(text = "Every dot works as a start. Try the top one.", showValidStarts = true),
                     HintStep(text = "From the top dot, head down-right first.", showValidStarts = true, showFirstEdge = true),
                 ),
             ),
         ),
 
-        // Level 31: The Dumbbell - 10 dots, 21 lines, path 2->8
-        // One solution: 2-0-1-2-3-4-0-3-1-4-2-8-7-6-5-9-8-6-9-7-5-8
-        Level(
-            id = 31,
-            name = "The Dumbbell",
-            nodes = listOf(
-                Node(0, Offset(0.165f, 0.000f)),
-                Node(1, Offset(0.329f, 0.120f)),
-                Node(2, Offset(0.266f, 0.313f)),
-                Node(3, Offset(0.063f, 0.313f)),
-                Node(4, Offset(0.000f, 0.120f)),
-                Node(5, Offset(0.165f, 1.000f)),
-                Node(6, Offset(0.000f, 0.880f)),
-                Node(7, Offset(0.063f, 0.687f)),
-                Node(8, Offset(0.266f, 0.687f)),
-                Node(9, Offset(0.329f, 0.880f)),
-            ),
-            edges = listOf(
-                Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4), Edge(4, 0), Edge(0, 2),
-                Edge(1, 3), Edge(2, 4), Edge(3, 0), Edge(4, 1), Edge(5, 6), Edge(6, 7),
-                Edge(7, 8), Edge(8, 9), Edge(9, 5), Edge(5, 7), Edge(6, 8), Edge(7, 9),
-                Edge(8, 5), Edge(9, 6), Edge(2, 8),
-            ),
-            hints = LevelHints(
-                validStartNodeIds = listOf(2, 8),
-                firstEdge = Pair(2, 0),
-                steps = listOf(
-                    HintStep(text = "Two stars, one bar. Cross the bar exactly once, with nothing left behind."),
-                    HintStep(text = "Start at the top-right dot; you will finish at the bottom-right one.", showValidStarts = true),
-                    HintStep(text = "From the top-right dot, head up first.", showValidStarts = true, showFirstEdge = true),
-                ),
-            ),
-        ),
-
-        // Level 32: The Constellation - 12 dots, 29 lines, path 2->3
-        // One solution: 2-0-1-2-3-4-0-3-1-4-2-7-5-6-3-5-8-9-10-11-5-9-11-8-10-5-2-6-7-3
+        // Level 32: The Lantern - 15 dots, 26 lines, path 2->13
+        // One solution: 2-1-0-3-1-4-2-5-4-3-6-4-7-5-8-7-6-13-12-11-10-9-14-12-10-14-13
         Level(
             id = 32,
-            name = "The Constellation",
+            name = "The Lantern",
             nodes = listOf(
-                Node(0, Offset(0.175f, 0.000f)),
-                Node(1, Offset(0.351f, 0.127f)),
-                Node(2, Offset(0.284f, 0.333f)),
-                Node(3, Offset(0.067f, 0.333f)),
-                Node(4, Offset(0.000f, 0.127f)),
-                Node(5, Offset(0.175f, 0.667f)),
-                Node(6, Offset(0.000f, 0.539f)),
-                Node(7, Offset(0.351f, 0.539f)),
-                Node(8, Offset(0.351f, 0.794f)),
-                Node(9, Offset(0.284f, 1.000f)),
-                Node(10, Offset(0.067f, 1.000f)),
-                Node(11, Offset(0.000f, 0.794f)),
+                Node(0, Offset(0.125f, 0.000f)),
+                Node(1, Offset(0.333f, 0.000f)),
+                Node(2, Offset(0.541f, 0.000f)),
+                Node(3, Offset(0.125f, 0.208f)),
+                Node(4, Offset(0.333f, 0.208f)),
+                Node(5, Offset(0.541f, 0.208f)),
+                Node(6, Offset(0.125f, 0.416f)),
+                Node(7, Offset(0.333f, 0.416f)),
+                Node(8, Offset(0.541f, 0.416f)),
+                Node(9, Offset(0.458f, 0.802f)),
+                Node(10, Offset(0.343f, 1.000f)),
+                Node(11, Offset(0.114f, 1.000f)),
+                Node(12, Offset(0.000f, 0.802f)),
+                Node(13, Offset(0.114f, 0.604f)),
+                Node(14, Offset(0.343f, 0.604f)),
+            ),
+            edges = listOf(
+                Edge(0, 1), Edge(0, 3), Edge(3, 1), Edge(1, 2), Edge(1, 4), Edge(4, 2),
+                Edge(2, 5), Edge(3, 4), Edge(3, 6), Edge(6, 4), Edge(4, 5), Edge(4, 7),
+                Edge(7, 5), Edge(5, 8), Edge(6, 7), Edge(7, 8), Edge(9, 10), Edge(10, 11),
+                Edge(11, 12), Edge(12, 13), Edge(13, 14), Edge(14, 9), Edge(10, 12), Edge(12, 14),
+                Edge(14, 10), Edge(6, 13),
+            ),
+            hints = LevelHints(
+                validStartNodeIds = listOf(2, 13),
+                firstEdge = Pair(2, 1),
+                steps = listOf(
+                    HintStep(text = "A grid above a hexagon, tied by one line. The line is a one-way door."),
+                    HintStep(text = "Start at the top-right dot; you will finish at the left one.", showValidStarts = true),
+                    HintStep(text = "From the top-right dot, head left first.", showValidStarts = true, showFirstEdge = true),
+                ),
+            ),
+        ),
+
+        // Level 33: The Anchor - 14 dots, 27 lines, path 2->9
+        // One solution: 2-1-0-3-1-4-2-5-4-3-6-4-7-5-8-7-6-9-10-11-12-13-9-11-13-10-12-9
+        Level(
+            id = 33,
+            name = "The Anchor",
+            nodes = listOf(
+                Node(0, Offset(0.000f, 0.000f)),
+                Node(1, Offset(0.226f, 0.000f)),
+                Node(2, Offset(0.452f, 0.000f)),
+                Node(3, Offset(0.000f, 0.226f)),
+                Node(4, Offset(0.226f, 0.226f)),
+                Node(5, Offset(0.452f, 0.226f)),
+                Node(6, Offset(0.000f, 0.452f)),
+                Node(7, Offset(0.226f, 0.452f)),
+                Node(8, Offset(0.452f, 0.452f)),
+                Node(9, Offset(0.226f, 0.632f)),
+                Node(10, Offset(0.419f, 0.773f)),
+                Node(11, Offset(0.345f, 1.000f)),
+                Node(12, Offset(0.106f, 1.000f)),
+                Node(13, Offset(0.033f, 0.773f)),
+            ),
+            edges = listOf(
+                Edge(0, 1), Edge(0, 3), Edge(3, 1), Edge(1, 2), Edge(1, 4), Edge(4, 2),
+                Edge(2, 5), Edge(3, 4), Edge(3, 6), Edge(6, 4), Edge(4, 5), Edge(4, 7),
+                Edge(7, 5), Edge(5, 8), Edge(6, 7), Edge(7, 8), Edge(9, 10), Edge(10, 11),
+                Edge(11, 12), Edge(12, 13), Edge(13, 9), Edge(9, 11), Edge(10, 12), Edge(11, 13),
+                Edge(12, 9), Edge(13, 10), Edge(6, 9),
+            ),
+            hints = LevelHints(
+                validStartNodeIds = listOf(2, 9),
+                firstEdge = Pair(2, 1),
+                steps = listOf(
+                    HintStep(text = "A grid hangs from a star by one line. Cross it once and never come back."),
+                    HintStep(text = "Start at the top-right dot; you will finish at the center one.", showValidStarts = true),
+                    HintStep(text = "From the top-right dot, head left first.", showValidStarts = true, showFirstEdge = true),
+                ),
+            ),
+        ),
+
+        // Level 34: The Balloon - 14 dots, 27 lines, path 2->11
+        // One solution: 2-0-1-2-3-4-0-3-1-4-2-7-6-5-8-6-9-7-10-9-8-11-9-12-10-13-12-11
+        Level(
+            id = 34,
+            name = "The Balloon",
+            nodes = listOf(
+                Node(0, Offset(0.220f, 0.000f)),
+                Node(1, Offset(0.397f, 0.129f)),
+                Node(2, Offset(0.330f, 0.338f)),
+                Node(3, Offset(0.110f, 0.338f)),
+                Node(4, Offset(0.042f, 0.129f)),
+                Node(5, Offset(0.000f, 0.560f)),
+                Node(6, Offset(0.220f, 0.560f)),
+                Node(7, Offset(0.440f, 0.560f)),
+                Node(8, Offset(0.000f, 0.780f)),
+                Node(9, Offset(0.220f, 0.780f)),
+                Node(10, Offset(0.440f, 0.780f)),
+                Node(11, Offset(0.000f, 1.000f)),
+                Node(12, Offset(0.220f, 1.000f)),
+                Node(13, Offset(0.440f, 1.000f)),
             ),
             edges = listOf(
                 Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4), Edge(4, 0), Edge(0, 2),
-                Edge(1, 3), Edge(2, 4), Edge(3, 0), Edge(4, 1), Edge(5, 6), Edge(6, 3),
-                Edge(2, 7), Edge(7, 5), Edge(5, 3), Edge(6, 2), Edge(3, 7), Edge(2, 5),
-                Edge(7, 6), Edge(5, 8), Edge(8, 9), Edge(9, 10), Edge(10, 11), Edge(11, 5),
-                Edge(5, 9), Edge(8, 10), Edge(9, 11), Edge(10, 5), Edge(11, 8),
+                Edge(1, 3), Edge(2, 4), Edge(3, 0), Edge(4, 1), Edge(5, 6), Edge(5, 8),
+                Edge(8, 6), Edge(6, 7), Edge(6, 9), Edge(9, 7), Edge(7, 10), Edge(8, 9),
+                Edge(8, 11), Edge(11, 9), Edge(9, 10), Edge(9, 12), Edge(12, 10), Edge(10, 13),
+                Edge(11, 12), Edge(12, 13), Edge(2, 7),
             ),
             hints = LevelHints(
-                validStartNodeIds = listOf(2, 3),
+                validStartNodeIds = listOf(2, 11),
                 firstEdge = Pair(2, 0),
                 steps = listOf(
-                    HintStep(text = "Three stars in a column. The bottom star hangs from a single dot."),
-                    HintStep(text = "Start at the top-right dot; you will finish at the top-left one.", showValidStarts = true),
+                    HintStep(text = "A star tied to a basket by one string. Cross the string exactly once."),
+                    HintStep(text = "Start at the top-right dot; you will finish at the bottom-left one.", showValidStarts = true),
                     HintStep(text = "From the top-right dot, head up first.", showValidStarts = true, showFirstEdge = true),
                 ),
             ),
         ),
 
-        // Level 33: The Sunflower - 14 dots, 28 lines, circuit
+        // Level 35: The Sunflower - 14 dots, 28 lines, circuit
         // One solution: 0-1-2-3-4-5-6-0-7-8-9-10-11-12-13-7-1-8-2-9-3-10-4-11-5-12-6-13-0
         Level(
-            id = 33,
+            id = 35,
             name = "The Sunflower",
             nodes = listOf(
                 Node(0, Offset(0.500f, 0.000f)),
@@ -1063,10 +1144,47 @@ object LevelManager {
             ),
         ),
 
-        // Level 34: The Fortress - 16 dots, 29 lines, path 5->10
+        // Level 36: The Constellation - 12 dots, 29 lines, path 2->3
+        // One solution: 2-0-1-2-3-4-0-3-1-4-2-7-5-6-3-5-8-9-10-11-5-9-11-8-10-5-2-6-7-3
+        Level(
+            id = 36,
+            name = "The Constellation",
+            nodes = listOf(
+                Node(0, Offset(0.175f, 0.000f)),
+                Node(1, Offset(0.351f, 0.127f)),
+                Node(2, Offset(0.284f, 0.333f)),
+                Node(3, Offset(0.067f, 0.333f)),
+                Node(4, Offset(0.000f, 0.127f)),
+                Node(5, Offset(0.175f, 0.667f)),
+                Node(6, Offset(0.000f, 0.539f)),
+                Node(7, Offset(0.351f, 0.539f)),
+                Node(8, Offset(0.351f, 0.794f)),
+                Node(9, Offset(0.284f, 1.000f)),
+                Node(10, Offset(0.067f, 1.000f)),
+                Node(11, Offset(0.000f, 0.794f)),
+            ),
+            edges = listOf(
+                Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4), Edge(4, 0), Edge(0, 2),
+                Edge(1, 3), Edge(2, 4), Edge(3, 0), Edge(4, 1), Edge(5, 6), Edge(6, 3),
+                Edge(2, 7), Edge(7, 5), Edge(5, 3), Edge(6, 2), Edge(3, 7), Edge(2, 5),
+                Edge(7, 6), Edge(5, 8), Edge(8, 9), Edge(9, 10), Edge(10, 11), Edge(11, 5),
+                Edge(5, 9), Edge(8, 10), Edge(9, 11), Edge(10, 5), Edge(11, 8),
+            ),
+            hints = LevelHints(
+                validStartNodeIds = listOf(2, 3),
+                firstEdge = Pair(2, 0),
+                steps = listOf(
+                    HintStep(text = "Three stars in a column. The bottom star hangs from a single dot."),
+                    HintStep(text = "Start at the top-right dot; you will finish at the top-left one.", showValidStarts = true),
+                    HintStep(text = "From the top-right dot, head up first.", showValidStarts = true, showFirstEdge = true),
+                ),
+            ),
+        ),
+
+        // Level 37: The Fortress - 16 dots, 29 lines, path 5->10
         // One solution: 5-1-0-4-5-6-2-1-4-8-9-5-10-6-7-3-2-7-11-10-9-13-12-8-13-14-15-11-14-10
         Level(
-            id = 34,
+            id = 37,
             name = "The Fortress",
             nodes = listOf(
                 Node(0, Offset(0.000f, 0.000f)),
@@ -1104,10 +1222,10 @@ object LevelManager {
             ),
         ),
 
-        // Level 35: The Tower - 15 dots, 30 lines, path 2->12
+        // Level 38: The Tower - 15 dots, 30 lines, path 2->12
         // One solution: 2-1-0-3-1-4-2-5-4-3-6-4-7-5-8-7-6-9-7-10-8-11-10-9-12-10-13-11-14-13-12
         Level(
-            id = 35,
+            id = 38,
             name = "The Tower",
             nodes = listOf(
                 Node(0, Offset(0.000f, 0.000f)),
@@ -1139,124 +1257,6 @@ object LevelManager {
                 steps = listOf(
                     HintStep(text = "Five storeys of braces. Odd dots at top-right and bottom-left."),
                     HintStep(text = "Start at the top-right dot; you will finish at the bottom-left one.", showValidStarts = true),
-                    HintStep(text = "From the top-right dot, head left first.", showValidStarts = true, showFirstEdge = true),
-                ),
-            ),
-        ),
-
-        // Level 36: The Balloon - 14 dots, 27 lines, path 2->11
-        // One solution: 2-0-1-2-3-4-0-3-1-4-2-7-6-5-8-6-9-7-10-9-8-11-9-12-10-13-12-11
-        Level(
-            id = 36,
-            name = "The Balloon",
-            nodes = listOf(
-                Node(0, Offset(0.220f, 0.000f)),
-                Node(1, Offset(0.397f, 0.129f)),
-                Node(2, Offset(0.330f, 0.338f)),
-                Node(3, Offset(0.110f, 0.338f)),
-                Node(4, Offset(0.042f, 0.129f)),
-                Node(5, Offset(0.000f, 0.560f)),
-                Node(6, Offset(0.220f, 0.560f)),
-                Node(7, Offset(0.440f, 0.560f)),
-                Node(8, Offset(0.000f, 0.780f)),
-                Node(9, Offset(0.220f, 0.780f)),
-                Node(10, Offset(0.440f, 0.780f)),
-                Node(11, Offset(0.000f, 1.000f)),
-                Node(12, Offset(0.220f, 1.000f)),
-                Node(13, Offset(0.440f, 1.000f)),
-            ),
-            edges = listOf(
-                Edge(0, 1), Edge(1, 2), Edge(2, 3), Edge(3, 4), Edge(4, 0), Edge(0, 2),
-                Edge(1, 3), Edge(2, 4), Edge(3, 0), Edge(4, 1), Edge(5, 6), Edge(5, 8),
-                Edge(8, 6), Edge(6, 7), Edge(6, 9), Edge(9, 7), Edge(7, 10), Edge(8, 9),
-                Edge(8, 11), Edge(11, 9), Edge(9, 10), Edge(9, 12), Edge(12, 10), Edge(10, 13),
-                Edge(11, 12), Edge(12, 13), Edge(2, 7),
-            ),
-            hints = LevelHints(
-                validStartNodeIds = listOf(2, 11),
-                firstEdge = Pair(2, 0),
-                steps = listOf(
-                    HintStep(text = "A star tied to a basket by one string. Cross the string exactly once."),
-                    HintStep(text = "Start at the top-right dot; you will finish at the bottom-left one.", showValidStarts = true),
-                    HintStep(text = "From the top-right dot, head up first.", showValidStarts = true, showFirstEdge = true),
-                ),
-            ),
-        ),
-
-        // Level 37: The Anchor - 14 dots, 27 lines, path 2->9
-        // One solution: 2-1-0-3-1-4-2-5-4-3-6-4-7-5-8-7-6-9-10-11-12-13-9-11-13-10-12-9
-        Level(
-            id = 37,
-            name = "The Anchor",
-            nodes = listOf(
-                Node(0, Offset(0.000f, 0.000f)),
-                Node(1, Offset(0.226f, 0.000f)),
-                Node(2, Offset(0.452f, 0.000f)),
-                Node(3, Offset(0.000f, 0.226f)),
-                Node(4, Offset(0.226f, 0.226f)),
-                Node(5, Offset(0.452f, 0.226f)),
-                Node(6, Offset(0.000f, 0.452f)),
-                Node(7, Offset(0.226f, 0.452f)),
-                Node(8, Offset(0.452f, 0.452f)),
-                Node(9, Offset(0.226f, 0.632f)),
-                Node(10, Offset(0.419f, 0.773f)),
-                Node(11, Offset(0.345f, 1.000f)),
-                Node(12, Offset(0.106f, 1.000f)),
-                Node(13, Offset(0.033f, 0.773f)),
-            ),
-            edges = listOf(
-                Edge(0, 1), Edge(0, 3), Edge(3, 1), Edge(1, 2), Edge(1, 4), Edge(4, 2),
-                Edge(2, 5), Edge(3, 4), Edge(3, 6), Edge(6, 4), Edge(4, 5), Edge(4, 7),
-                Edge(7, 5), Edge(5, 8), Edge(6, 7), Edge(7, 8), Edge(9, 10), Edge(10, 11),
-                Edge(11, 12), Edge(12, 13), Edge(13, 9), Edge(9, 11), Edge(10, 12), Edge(11, 13),
-                Edge(12, 9), Edge(13, 10), Edge(6, 9),
-            ),
-            hints = LevelHints(
-                validStartNodeIds = listOf(2, 9),
-                firstEdge = Pair(2, 1),
-                steps = listOf(
-                    HintStep(text = "A grid hangs from a star by one line. Cross it once and never come back."),
-                    HintStep(text = "Start at the top-right dot; you will finish at the center one.", showValidStarts = true),
-                    HintStep(text = "From the top-right dot, head left first.", showValidStarts = true, showFirstEdge = true),
-                ),
-            ),
-        ),
-
-        // Level 38: The Lantern - 15 dots, 26 lines, path 2->13
-        // One solution: 2-1-0-3-1-4-2-5-4-3-6-4-7-5-8-7-6-13-12-11-10-9-14-12-10-14-13
-        Level(
-            id = 38,
-            name = "The Lantern",
-            nodes = listOf(
-                Node(0, Offset(0.125f, 0.000f)),
-                Node(1, Offset(0.333f, 0.000f)),
-                Node(2, Offset(0.541f, 0.000f)),
-                Node(3, Offset(0.125f, 0.208f)),
-                Node(4, Offset(0.333f, 0.208f)),
-                Node(5, Offset(0.541f, 0.208f)),
-                Node(6, Offset(0.125f, 0.416f)),
-                Node(7, Offset(0.333f, 0.416f)),
-                Node(8, Offset(0.541f, 0.416f)),
-                Node(9, Offset(0.458f, 0.802f)),
-                Node(10, Offset(0.343f, 1.000f)),
-                Node(11, Offset(0.114f, 1.000f)),
-                Node(12, Offset(0.000f, 0.802f)),
-                Node(13, Offset(0.114f, 0.604f)),
-                Node(14, Offset(0.343f, 0.604f)),
-            ),
-            edges = listOf(
-                Edge(0, 1), Edge(0, 3), Edge(3, 1), Edge(1, 2), Edge(1, 4), Edge(4, 2),
-                Edge(2, 5), Edge(3, 4), Edge(3, 6), Edge(6, 4), Edge(4, 5), Edge(4, 7),
-                Edge(7, 5), Edge(5, 8), Edge(6, 7), Edge(7, 8), Edge(9, 10), Edge(10, 11),
-                Edge(11, 12), Edge(12, 13), Edge(13, 14), Edge(14, 9), Edge(10, 12), Edge(12, 14),
-                Edge(14, 10), Edge(6, 13),
-            ),
-            hints = LevelHints(
-                validStartNodeIds = listOf(2, 13),
-                firstEdge = Pair(2, 1),
-                steps = listOf(
-                    HintStep(text = "A grid above a hexagon, tied by one line. The line is a one-way door."),
-                    HintStep(text = "Start at the top-right dot; you will finish at the left one.", showValidStarts = true),
                     HintStep(text = "From the top-right dot, head left first.", showValidStarts = true, showFirstEdge = true),
                 ),
             ),
@@ -1344,10 +1344,53 @@ object LevelManager {
             ),
         ),
 
-        // Level 41: The Diamond - 16 dots, 33 lines, path 6->9
-        // One solution: 6-3-1-0-2-1-4-2-5-4-3-7-4-8-5-9-8-7-6-13-11-10-12-11-14-12-15-14-13-7-14-8-15-9
+        // Level 41: The Bow Tie Grid - 17 dots, 32 lines, path 2->14
+        // One solution: 2-1-0-3-1-4-2-5-4-3-6-4-7-5-8-7-6-10-9-11-10-12-6-13-12-11-14-12-15-13-16-15-14
         Level(
             id = 41,
+            name = "The Bow Tie Grid",
+            nodes = listOf(
+                Node(0, Offset(0.500f, 0.000f)),
+                Node(1, Offset(0.750f, 0.000f)),
+                Node(2, Offset(1.000f, 0.000f)),
+                Node(3, Offset(0.500f, 0.250f)),
+                Node(4, Offset(0.750f, 0.250f)),
+                Node(5, Offset(1.000f, 0.250f)),
+                Node(6, Offset(0.500f, 0.500f)),
+                Node(7, Offset(0.750f, 0.500f)),
+                Node(8, Offset(1.000f, 0.500f)),
+                Node(9, Offset(0.000f, 0.500f)),
+                Node(10, Offset(0.250f, 0.500f)),
+                Node(11, Offset(0.000f, 0.750f)),
+                Node(12, Offset(0.250f, 0.750f)),
+                Node(13, Offset(0.500f, 0.750f)),
+                Node(14, Offset(0.000f, 1.000f)),
+                Node(15, Offset(0.250f, 1.000f)),
+                Node(16, Offset(0.500f, 1.000f)),
+            ),
+            edges = listOf(
+                Edge(0, 1), Edge(0, 3), Edge(3, 1), Edge(1, 2), Edge(1, 4), Edge(4, 2),
+                Edge(2, 5), Edge(3, 4), Edge(3, 6), Edge(6, 4), Edge(4, 5), Edge(4, 7),
+                Edge(7, 5), Edge(5, 8), Edge(6, 7), Edge(7, 8), Edge(9, 10), Edge(9, 11),
+                Edge(11, 10), Edge(10, 6), Edge(10, 12), Edge(12, 6), Edge(6, 13), Edge(11, 12),
+                Edge(11, 14), Edge(14, 12), Edge(12, 13), Edge(12, 15), Edge(15, 13), Edge(13, 16),
+                Edge(14, 15), Edge(15, 16),
+            ),
+            hints = LevelHints(
+                validStartNodeIds = listOf(2, 14),
+                firstEdge = Pair(2, 1),
+                steps = listOf(
+                    HintStep(text = "Two grids pinched at a single dot. That dot is the only door between them."),
+                    HintStep(text = "Start at the top-right dot; you will finish at the bottom-left one.", showValidStarts = true),
+                    HintStep(text = "From the top-right dot, head left first.", showValidStarts = true, showFirstEdge = true),
+                ),
+            ),
+        ),
+
+        // Level 42: The Diamond - 16 dots, 33 lines, path 6->9
+        // One solution: 6-3-1-0-2-1-4-2-5-4-3-7-4-8-5-9-8-7-6-13-11-10-12-11-14-12-15-14-13-7-14-8-15-9
+        Level(
+            id = 42,
             name = "The Diamond",
             nodes = listOf(
                 Node(0, Offset(0.287f, 0.000f)),
@@ -1386,10 +1429,10 @@ object LevelManager {
             ),
         ),
 
-        // Level 42: The Net - 16 dots, 33 lines, path 3->12
+        // Level 43: The Net - 16 dots, 33 lines, path 3->12
         // One solution: 3-2-1-0-4-1-5-2-6-3-7-6-5-4-8-5-9-6-10-7-11-10-9-8-12-9-13-10-14-11-15-14-13-12
         Level(
-            id = 42,
+            id = 43,
             name = "The Net",
             nodes = listOf(
                 Node(0, Offset(0.000f, 0.000f)),
@@ -1422,49 +1465,6 @@ object LevelManager {
                 firstEdge = Pair(3, 2),
                 steps = listOf(
                     HintStep(text = "Thirty-three lines. Odd dots at two corners; the inside can strand you."),
-                    HintStep(text = "Start at the top-right dot; you will finish at the bottom-left one.", showValidStarts = true),
-                    HintStep(text = "From the top-right dot, head left first.", showValidStarts = true, showFirstEdge = true),
-                ),
-            ),
-        ),
-
-        // Level 43: The Bow Tie Grid - 17 dots, 32 lines, path 2->14
-        // One solution: 2-1-0-3-1-4-2-5-4-3-6-4-7-5-8-7-6-10-9-11-10-12-6-13-12-11-14-12-15-13-16-15-14
-        Level(
-            id = 43,
-            name = "The Bow Tie Grid",
-            nodes = listOf(
-                Node(0, Offset(0.500f, 0.000f)),
-                Node(1, Offset(0.750f, 0.000f)),
-                Node(2, Offset(1.000f, 0.000f)),
-                Node(3, Offset(0.500f, 0.250f)),
-                Node(4, Offset(0.750f, 0.250f)),
-                Node(5, Offset(1.000f, 0.250f)),
-                Node(6, Offset(0.500f, 0.500f)),
-                Node(7, Offset(0.750f, 0.500f)),
-                Node(8, Offset(1.000f, 0.500f)),
-                Node(9, Offset(0.000f, 0.500f)),
-                Node(10, Offset(0.250f, 0.500f)),
-                Node(11, Offset(0.000f, 0.750f)),
-                Node(12, Offset(0.250f, 0.750f)),
-                Node(13, Offset(0.500f, 0.750f)),
-                Node(14, Offset(0.000f, 1.000f)),
-                Node(15, Offset(0.250f, 1.000f)),
-                Node(16, Offset(0.500f, 1.000f)),
-            ),
-            edges = listOf(
-                Edge(0, 1), Edge(0, 3), Edge(3, 1), Edge(1, 2), Edge(1, 4), Edge(4, 2),
-                Edge(2, 5), Edge(3, 4), Edge(3, 6), Edge(6, 4), Edge(4, 5), Edge(4, 7),
-                Edge(7, 5), Edge(5, 8), Edge(6, 7), Edge(7, 8), Edge(9, 10), Edge(9, 11),
-                Edge(11, 10), Edge(10, 6), Edge(10, 12), Edge(12, 6), Edge(6, 13), Edge(11, 12),
-                Edge(11, 14), Edge(14, 12), Edge(12, 13), Edge(12, 15), Edge(15, 13), Edge(13, 16),
-                Edge(14, 15), Edge(15, 16),
-            ),
-            hints = LevelHints(
-                validStartNodeIds = listOf(2, 14),
-                firstEdge = Pair(2, 1),
-                steps = listOf(
-                    HintStep(text = "Two grids pinched at a single dot. That dot is the only door between them."),
                     HintStep(text = "Start at the top-right dot; you will finish at the bottom-left one.", showValidStarts = true),
                     HintStep(text = "From the top-right dot, head left first.", showValidStarts = true, showFirstEdge = true),
                 ),
@@ -1603,57 +1603,10 @@ object LevelManager {
             ),
         ),
 
-        // Level 47: The Spire - 20 dots, 41 lines, path 6->13
-        // One solution: 6-2-1-0-4-1-5-2-3-7-6-5-4-8-5-9-6-10-7-11-10-9-8-12-9-13-10-14-11-15-14-13-12-16-17-14-18-15-19-18-17-13
-        Level(
-            id = 47,
-            name = "The Spire",
-            nodes = listOf(
-                Node(0, Offset(0.000f, 0.000f)),
-                Node(1, Offset(0.227f, 0.000f)),
-                Node(2, Offset(0.455f, 0.000f)),
-                Node(3, Offset(0.682f, 0.000f)),
-                Node(4, Offset(0.000f, 0.250f)),
-                Node(5, Offset(0.227f, 0.250f)),
-                Node(6, Offset(0.455f, 0.250f)),
-                Node(7, Offset(0.682f, 0.250f)),
-                Node(8, Offset(0.000f, 0.500f)),
-                Node(9, Offset(0.227f, 0.500f)),
-                Node(10, Offset(0.455f, 0.500f)),
-                Node(11, Offset(0.682f, 0.500f)),
-                Node(12, Offset(0.000f, 0.750f)),
-                Node(13, Offset(0.227f, 0.750f)),
-                Node(14, Offset(0.455f, 0.750f)),
-                Node(15, Offset(0.682f, 0.750f)),
-                Node(16, Offset(0.000f, 1.000f)),
-                Node(17, Offset(0.227f, 1.000f)),
-                Node(18, Offset(0.455f, 1.000f)),
-                Node(19, Offset(0.682f, 1.000f)),
-            ),
-            edges = listOf(
-                Edge(0, 1), Edge(0, 4), Edge(4, 1), Edge(1, 2), Edge(1, 5), Edge(5, 2),
-                Edge(2, 3), Edge(2, 6), Edge(3, 7), Edge(4, 5), Edge(4, 8), Edge(8, 5),
-                Edge(5, 6), Edge(5, 9), Edge(9, 6), Edge(6, 7), Edge(6, 10), Edge(10, 7),
-                Edge(7, 11), Edge(8, 9), Edge(8, 12), Edge(12, 9), Edge(9, 10), Edge(9, 13),
-                Edge(13, 10), Edge(10, 11), Edge(10, 14), Edge(14, 11), Edge(11, 15), Edge(12, 13),
-                Edge(12, 16), Edge(13, 14), Edge(13, 17), Edge(17, 14), Edge(14, 15), Edge(14, 18),
-                Edge(18, 15), Edge(15, 19), Edge(16, 17), Edge(17, 18), Edge(18, 19),
-            ),
-            hints = LevelHints(
-                validStartNodeIds = listOf(6, 13),
-                firstEdge = Pair(6, 2),
-                steps = listOf(
-                    HintStep(text = "Twenty dots. The odd dots have moved one step inside; find them first."),
-                    HintStep(text = "Start at the top-right dot; you will finish at the bottom-left one.", showValidStarts = true),
-                    HintStep(text = "From the top-right dot, head up first.", showValidStarts = true, showFirstEdge = true),
-                ),
-            ),
-        ),
-
-        // Level 48: The Keep - 20 dots, 39 lines, path 8->11
+        // Level 47: The Keep - 20 dots, 39 lines, path 8->11
         // One solution: 8-4-0-1-2-3-7-6-2-7-11-10-6-5-1-4-5-9-8-12-13-9-10-14-13-17-16-12-17-18-14-15-19-18-15-11-6-9-14-11
         Level(
-            id = 48,
+            id = 47,
             name = "The Keep",
             nodes = listOf(
                 Node(0, Offset(0.000f, 0.000f)),
@@ -1697,11 +1650,11 @@ object LevelManager {
             ),
         ),
 
-        // Level 49: The Citadel - 20 dots, 43 lines, path 3->16
-        // One solution: 3-2-1-0-4-1-5-2-6-3-7-6-5-4-8-5-9-6-10-7-11-10-9-8-12-9-13-10-14-11-15-14-13-12-16-13-17-14-18-15-19-18-17-16
+        // Level 48: The Spire - 20 dots, 41 lines, path 6->13
+        // One solution: 6-2-1-0-4-1-5-2-3-7-6-5-4-8-5-9-6-10-7-11-10-9-8-12-9-13-10-14-11-15-14-13-12-16-17-14-18-15-19-18-17-13
         Level(
-            id = 49,
-            name = "The Citadel",
+            id = 48,
+            name = "The Spire",
             nodes = listOf(
                 Node(0, Offset(0.000f, 0.000f)),
                 Node(1, Offset(0.227f, 0.000f)),
@@ -1726,29 +1679,28 @@ object LevelManager {
             ),
             edges = listOf(
                 Edge(0, 1), Edge(0, 4), Edge(4, 1), Edge(1, 2), Edge(1, 5), Edge(5, 2),
-                Edge(2, 3), Edge(2, 6), Edge(6, 3), Edge(3, 7), Edge(4, 5), Edge(4, 8),
-                Edge(8, 5), Edge(5, 6), Edge(5, 9), Edge(9, 6), Edge(6, 7), Edge(6, 10),
-                Edge(10, 7), Edge(7, 11), Edge(8, 9), Edge(8, 12), Edge(12, 9), Edge(9, 10),
-                Edge(9, 13), Edge(13, 10), Edge(10, 11), Edge(10, 14), Edge(14, 11), Edge(11, 15),
-                Edge(12, 13), Edge(12, 16), Edge(16, 13), Edge(13, 14), Edge(13, 17), Edge(17, 14),
-                Edge(14, 15), Edge(14, 18), Edge(18, 15), Edge(15, 19), Edge(16, 17), Edge(17, 18),
-                Edge(18, 19),
+                Edge(2, 3), Edge(2, 6), Edge(3, 7), Edge(4, 5), Edge(4, 8), Edge(8, 5),
+                Edge(5, 6), Edge(5, 9), Edge(9, 6), Edge(6, 7), Edge(6, 10), Edge(10, 7),
+                Edge(7, 11), Edge(8, 9), Edge(8, 12), Edge(12, 9), Edge(9, 10), Edge(9, 13),
+                Edge(13, 10), Edge(10, 11), Edge(10, 14), Edge(14, 11), Edge(11, 15), Edge(12, 13),
+                Edge(12, 16), Edge(13, 14), Edge(13, 17), Edge(17, 14), Edge(14, 15), Edge(14, 18),
+                Edge(18, 15), Edge(15, 19), Edge(16, 17), Edge(17, 18), Edge(18, 19),
             ),
             hints = LevelHints(
-                validStartNodeIds = listOf(3, 16),
-                firstEdge = Pair(3, 2),
+                validStartNodeIds = listOf(6, 13),
+                firstEdge = Pair(6, 2),
                 steps = listOf(
-                    HintStep(text = "Forty-three lines. Odd dots at top-right and bottom-left. Keep the middle for last."),
+                    HintStep(text = "Twenty dots. The odd dots have moved one step inside; find them first."),
                     HintStep(text = "Start at the top-right dot; you will finish at the bottom-left one.", showValidStarts = true),
-                    HintStep(text = "From the top-right dot, head left first.", showValidStarts = true, showFirstEdge = true),
+                    HintStep(text = "From the top-right dot, head up first.", showValidStarts = true, showFirstEdge = true),
                 ),
             ),
         ),
 
-        // Level 50: The Monument - 22 dots, 42 lines, path 6->18
+        // Level 49: The Monument - 22 dots, 42 lines, path 6->18
         // One solution: 6-3-1-0-2-1-4-2-5-4-3-7-4-8-5-9-8-7-6-13-12-11-10-14-11-15-12-16-13-17-16-15-14-18-15-19-16-20-17-21-20-19-18
         Level(
-            id = 50,
+            id = 49,
             name = "The Monument",
             nodes = listOf(
                 Node(0, Offset(0.268f, 0.000f)),
@@ -1790,6 +1742,54 @@ object LevelManager {
                     HintStep(text = "A pyramid on a plinth, joined by one line. Finish the top before you descend."),
                     HintStep(text = "Start at the left dot; you will finish at the bottom-right one.", showValidStarts = true),
                     HintStep(text = "From the left dot, head up-right first.", showValidStarts = true, showFirstEdge = true),
+                ),
+            ),
+        ),
+
+        // Level 50: The Citadel - 20 dots, 43 lines, path 3->16
+        // One solution: 3-2-1-0-4-1-5-2-6-3-7-6-5-4-8-5-9-6-10-7-11-10-9-8-12-9-13-10-14-11-15-14-13-12-16-13-17-14-18-15-19-18-17-16
+        Level(
+            id = 50,
+            name = "The Citadel",
+            nodes = listOf(
+                Node(0, Offset(0.000f, 0.000f)),
+                Node(1, Offset(0.227f, 0.000f)),
+                Node(2, Offset(0.455f, 0.000f)),
+                Node(3, Offset(0.682f, 0.000f)),
+                Node(4, Offset(0.000f, 0.250f)),
+                Node(5, Offset(0.227f, 0.250f)),
+                Node(6, Offset(0.455f, 0.250f)),
+                Node(7, Offset(0.682f, 0.250f)),
+                Node(8, Offset(0.000f, 0.500f)),
+                Node(9, Offset(0.227f, 0.500f)),
+                Node(10, Offset(0.455f, 0.500f)),
+                Node(11, Offset(0.682f, 0.500f)),
+                Node(12, Offset(0.000f, 0.750f)),
+                Node(13, Offset(0.227f, 0.750f)),
+                Node(14, Offset(0.455f, 0.750f)),
+                Node(15, Offset(0.682f, 0.750f)),
+                Node(16, Offset(0.000f, 1.000f)),
+                Node(17, Offset(0.227f, 1.000f)),
+                Node(18, Offset(0.455f, 1.000f)),
+                Node(19, Offset(0.682f, 1.000f)),
+            ),
+            edges = listOf(
+                Edge(0, 1), Edge(0, 4), Edge(4, 1), Edge(1, 2), Edge(1, 5), Edge(5, 2),
+                Edge(2, 3), Edge(2, 6), Edge(6, 3), Edge(3, 7), Edge(4, 5), Edge(4, 8),
+                Edge(8, 5), Edge(5, 6), Edge(5, 9), Edge(9, 6), Edge(6, 7), Edge(6, 10),
+                Edge(10, 7), Edge(7, 11), Edge(8, 9), Edge(8, 12), Edge(12, 9), Edge(9, 10),
+                Edge(9, 13), Edge(13, 10), Edge(10, 11), Edge(10, 14), Edge(14, 11), Edge(11, 15),
+                Edge(12, 13), Edge(12, 16), Edge(16, 13), Edge(13, 14), Edge(13, 17), Edge(17, 14),
+                Edge(14, 15), Edge(14, 18), Edge(18, 15), Edge(15, 19), Edge(16, 17), Edge(17, 18),
+                Edge(18, 19),
+            ),
+            hints = LevelHints(
+                validStartNodeIds = listOf(3, 16),
+                firstEdge = Pair(3, 2),
+                steps = listOf(
+                    HintStep(text = "Forty-three lines. Odd dots at top-right and bottom-left. Keep the middle for last."),
+                    HintStep(text = "Start at the top-right dot; you will finish at the bottom-left one.", showValidStarts = true),
+                    HintStep(text = "From the top-right dot, head left first.", showValidStarts = true, showFirstEdge = true),
                 ),
             ),
         ),

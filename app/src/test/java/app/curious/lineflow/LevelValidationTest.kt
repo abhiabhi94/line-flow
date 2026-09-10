@@ -47,9 +47,13 @@ class LevelValidationTest {
 
     private fun Level.oddNodes(): Set<Int> = degrees().filterValues { it % 2 != 0 }.keys
 
-    /** Dots in dp on the smallest supported play area (same maths as layoutNodes). */
+    /**
+     * Dots in dp on the smallest supported play area, without the vertical
+     * stretch (stretching only ever moves dots further apart, so this is the
+     * conservative case for every distance check).
+     */
     private fun Level.layoutOnSmallPhone(): Map<Int, Offset> =
-        layoutNodes(nodes, Size(PLAY_WIDTH_DP + 2 * HIT_RADIUS_DP, PLAY_HEIGHT_DP + 2 * HIT_RADIUS_DP), HIT_RADIUS_DP)
+        layoutNodes(nodes, Size(PLAY_WIDTH_DP + 2 * HIT_RADIUS_DP, PLAY_HEIGHT_DP + 2 * HIT_RADIUS_DP), HIT_RADIUS_DP, maxStretch = 1f)
 
     // ------------------------------------------------------------------
     // Graph structure
@@ -260,11 +264,30 @@ class LevelValidationTest {
     }
 
     @Test
+    fun tallScreensStretchSquatLevelsOnlyUpToTheCap() {
+        val square = LevelManager.getLevel(2)!! // The Square, aspect 1.0
+        val margin = 20f
+        // Play area twice as tall as wide: the square is stretched by the cap, not to fill.
+        val tall = layoutNodes(square.nodes, Size(300f, 600f), margin).values
+        val width = tall.maxOf { it.x } - tall.minOf { it.x }
+        val height = tall.maxOf { it.y } - tall.minOf { it.y }
+        assertEquals(260f, width, 0.5f)
+        assertEquals(260f * MAX_VERTICAL_STRETCH, height, 0.5f)
+        // Play area only slightly taller: stretched just enough to fill it.
+        val slight = layoutNodes(square.nodes, Size(300f, 330f), margin).values
+        assertEquals(290f, slight.maxOf { it.y } - slight.minOf { it.y }, 0.5f)
+        // Wide play area: never stretched horizontally.
+        val wide = layoutNodes(square.nodes, Size(600f, 300f), margin).values
+        assertEquals(260f, wide.maxOf { it.x } - wide.minOf { it.x }, 0.5f)
+        assertEquals(260f, wide.maxOf { it.y } - wide.minOf { it.y }, 0.5f)
+    }
+
+    @Test
     fun layoutFillsTheAvailableAreaAndStaysCentred() {
         val size = Size(600f, 900f)
         val margin = 40f
         LevelManager.levels.forEach { level ->
-            val pts = layoutNodes(level.nodes, size, margin).values
+            val pts = layoutNodes(level.nodes, size, margin, maxStretch = 1f).values
             val minX = pts.minOf { it.x }
             val maxX = pts.maxOf { it.x }
             val minY = pts.minOf { it.y }
@@ -284,16 +307,17 @@ class LevelValidationTest {
     // ------------------------------------------------------------------
 
     @Test
-    fun firstLevelsAreTinyAndTheGameKeepsGrowing() {
+    fun firstLevelsAreTinyAndNoLevelHasFewerLinesThanTheOneBefore() {
         val levels = LevelManager.levels
         (0 until 5).forEach { i ->
             assertTrue("Level ${i + 1} should have at most 7 lines", levels[i].edges.size <= 7)
         }
         assertTrue("Last level should be the biggest stroke", levels.last().edges.size >= 40)
-        // Line counts rise in broad strokes: every ten levels ask for more than the ten before.
-        val chapterAverages = levels.chunked(10).map { chapter -> chapter.map { it.edges.size }.average() }
-        chapterAverages.zipWithNext().forEach { (before, after) ->
-            assertTrue("Each chapter should have more lines on average ($chapterAverages)", after > before)
+        levels.zipWithNext().forEach { (before, after) ->
+            assertTrue(
+                "Level ${after.id} (${after.edges.size} lines) is smaller than level ${before.id} (${before.edges.size} lines)",
+                after.edges.size >= before.edges.size,
+            )
         }
     }
 
