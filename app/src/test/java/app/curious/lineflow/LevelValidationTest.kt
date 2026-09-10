@@ -34,7 +34,10 @@ class LevelValidationTest {
         const val MIN_NODE_DISTANCE_DP = 72f
         const val MIN_NODE_EDGE_DISTANCE_DP = 44f
         const val MIN_CROSSING_NODE_DISTANCE_DP = 44f
-        const val MIN_EDGE_ANGLE_DEGREES = 29.5
+        const val MIN_EDGE_ANGLE_DEGREES = 30.0
+
+        // Same slack as the Python checker: exact 30-degree layouts land a hair under after rounding.
+        const val ANGLE_TOLERANCE_DEGREES = 0.5
     }
 
     private fun Level.degrees(): Map<Int, Int> {
@@ -235,7 +238,7 @@ class LevelValidationTest {
                     if (separation <= 0) separation += 360.0
                     assertTrue(
                         "Level ${level.id} (${level.name}): lines at dot ${node.id} are only ${"%.1f".format(separation)} degrees apart",
-                        separation >= MIN_EDGE_ANGLE_DEGREES,
+                        separation >= MIN_EDGE_ANGLE_DEGREES - ANGLE_TOLERANCE_DEGREES,
                     )
                 }
             }
