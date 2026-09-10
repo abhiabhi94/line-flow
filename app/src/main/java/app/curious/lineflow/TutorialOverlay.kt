@@ -368,7 +368,11 @@ fun TutorialOverlay(
 
             // A tick in the middle of the finished shape
             if (isSuccessPhase) {
-                val centre = Offset(pixelNodes.sumOf { it.x.toDouble() }.toFloat() / 3f, pixelNodes.sumOf { it.y.toDouble() }.toFloat() / 3f + side * 0.05f)
+                val nodeCount = pixelNodes.size.toFloat()
+                val centre = Offset(
+                    pixelNodes.sumOf { it.x.toDouble() }.toFloat() / nodeCount,
+                    pixelNodes.sumOf { it.y.toDouble() }.toFloat() / nodeCount + side * 0.05f,
+                )
                 val r = side * 0.11f
                 drawCircle(color = Success.copy(alpha = 0.2f), radius = r * 1.4f, center = centre)
                 drawCircle(color = Success, radius = r, center = centre)
