@@ -1,4 +1,4 @@
-"""The 50 LineFlow levels, designed by hand.
+"""The 60 LineFlow levels, designed by hand.
 
 Design rules of thumb (all enforced by geometry.check):
   * on the smallest phone, dots >= 56dp apart and >= 36dp from lines they are not on
@@ -18,6 +18,7 @@ one is a little harder than the last.
  21-30  Order matters   shared dots and bridges: finish a region before leaving
  31-40  Deep water      dense shapes, several regions, long strokes
  41-50  Mastery         everything at once
+ 51-60  Beyond          bigger walls, hidden odd dots, one-way bridges
 """
 from __future__ import annotations
 
@@ -98,6 +99,37 @@ def keep():
     edges += [(idx(0, 1), idx(1, 0)), (idx(2, 0), idx(3, 1)), (idx(0, 3), idx(1, 4)), (idx(2, 4), idx(3, 3))]
     edges += [(idx(1, 2), idx(2, 1)), (idx(2, 1), idx(3, 2)), (idx(2, 3), idx(3, 2)), (idx(1, 2), idx(2, 3))]
     return nodes, edges
+
+
+def courtyard():
+    """5x5 braced walls with the centre dot removed; one chord crosses the
+    courtyard so the two dots beside it are the odd ones."""
+    nodes, edges = braced_grid(5, 5, 1.0, 1.15, skip=((3, 0), (0, 3)))
+    centre = 12
+    edges = [(a, b) for a, b in edges if centre not in (a, b)] + [(7, 17)]
+    keep = [i for i in range(len(nodes)) if i != centre]
+    remap = {old: new for new, old in enumerate(keep)}
+    return [nodes[i] for i in keep], [(remap[a], remap[b]) for a, b in edges]
+
+
+def great_fortress():
+    """5x5 walls, corner braces, two brace paths across the top-left and
+    bottom-right corners, and a bar through the courtyard."""
+    nodes, edges, idx = plain_grid(5, 5, 1.0, 1.15)
+    edges += [(idx(1, 0), idx(0, 1)), (idx(3, 0), idx(4, 1)), (idx(0, 3), idx(1, 4)), (idx(3, 4), idx(4, 3))]
+    edges += [(idx(2, 0), idx(1, 1)), (idx(1, 1), idx(0, 2)), (idx(2, 4), idx(3, 3)), (idx(3, 3), idx(4, 2))]
+    edges += [(idx(1, 1), idx(2, 2)), (idx(2, 2), idx(3, 3))]
+    return nodes, edges
+
+
+def trellis(cols, rows, sy, parity=0):
+    """Plain grid with an X in every other cell (checkerboard).
+
+    `parity` picks which colour of the checkerboard is crossed."""
+    cells = [(c, r) for c in range(cols - 1) for r in range(rows - 1)]
+    crossed = [(c, r) for c, r in cells if (c + r) % 2 == parity]
+    plain = [cell for cell in cells if cell not in crossed]
+    return braced_grid(cols, rows, 1.0, sy, skip=plain, falling=crossed)
 
 
 def build() -> list[LevelSpec]:
@@ -355,6 +387,49 @@ def build() -> list[LevelSpec]:
     n2, e2 = braced_grid(4, 3, 1.0, 1.0, mirror=True)
     add(L("The Monument", n1 + shift(n2, -1.5, 3.6), e1 + [(a + 10, b + 10) for a, b in e2] + [(6, 13)],
           "A pyramid on a plinth, joined by one line. Finish the top before you descend."))
+
+    # ------------------------------------------------------------------
+    # Chapter 6 - Beyond (51-60)
+    # ------------------------------------------------------------------
+    add(L("The Courtyard", *courtyard(),
+          "Walls around an empty courtyard. The two dots beside the chord are the odd ones."))
+
+    add(L("The Great Fortress", *great_fortress(),
+          "Corner braces and a bar through the courtyard. The odd dots sit inside the walls."))
+
+    add(L("The Watchtower", *braced_grid(4, 6, 1.0, 0.9),
+          "Six storeys of braces. Top-right and bottom-left are the odd dots.",
+          start=3, first=2))
+
+    add(L("The Trellis Tower", *trellis(4, 6, 0.9, parity=1),
+          "Seven crossed cells, all even. Cross freely, but never leave a storey half done.",
+          allow_crossings=True, start=0, first=1))
+
+    add(L("The Trellis", *trellis(5, 5, 1.15),
+          "Every other cell is crossed. The odd dots are the two corners with a cross.",
+          allow_crossings=True))
+
+    add(L("The Cathedral", *merge(
+        [pyramid(5, 1.0), (shift(grid(5, 3, 1.0, 1.0), -2.0, 4 * 0.87), braced_grid(5, 3, 1.0, 1.0)[1])],
+        [((0, 10 + i), (1, i)) for i in range(5)]),
+          "A pyramid on a braced nave. One odd dot hides where the roof meets the wall."))
+
+    n1, e1 = braced_grid(5, 3, 1.0, 0.9)
+    n2, e2 = braced_grid(5, 3, 1.0, 0.9, mirror=True)
+    add(L("The Twin Nets", n1 + shift(n2, 0, 2.7), e1 + [(a + 15, b + 15) for a, b in e2] + [(10, 19)],
+          "Two nets and one thread between them. Empty a net completely before you cross.",
+          start=4, first=3))
+
+    add(L("The Great Tower", *braced_grid(5, 6, 1.0, 0.9, skip=((3, 0), (2, 1), (0, 4))),
+          "Thirty dots. Three braces are missing, and that moves the odd dots deep inside."))
+
+    add(L("The Grand Trellis", *trellis(5, 6, 0.9),
+          "Ten crossed cells. Both odd dots are on the left wall; the crossings hide them.",
+          allow_crossings=True))
+
+    add(L("The Grand Citadel", *braced_grid(5, 6, 1.0, 0.9),
+          "Sixty-nine lines, all braces. Odd dots at top-right and bottom-left; never strand a storey.",
+          start=4, first=3))
 
     # Players feel difficulty mostly as "how many lines", then as "how easy it
     # is to get stuck", so that is the order: line count first, failure rate

@@ -22,7 +22,7 @@ import kotlin.math.min
 class LevelValidationTest {
 
     companion object {
-        const val EXPECTED_LEVELS = 50
+        const val EXPECTED_LEVELS = 60
 
         // The canvas on the smallest phone we support: 360x640dp with a status
         // bar and 3-button navigation, once the top bar, status strip and

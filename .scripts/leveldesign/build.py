@@ -54,8 +54,8 @@ def main() -> int:
         print(f"{lv.id:>2} {lv.name:18} {m['nodes']:>2} {m['edges']:>2} {m['odd']:>3} {m['max_deg']:>3} "
               f"{m['fail_rate']:5.2f} {score:6.2f} {m['aspect']:7.2f} {m['scale_dp']:8.0f}{flag}")
     print(f"\n{len(levels)} levels, {bad} with problems")
-    if len(levels) != 50:
-        print("expected exactly 50 levels")
+    if len(levels) != 60:
+        print("expected exactly 60 levels")
         bad += 1
 
     if args.png:

@@ -48,7 +48,7 @@ toolkit around it (Python 3.9 or newer) checks every level the way the game
 plays it:
 
 ```bash
-# Verify all 50 levels and print the difficulty table
+# Verify all 60 levels and print the difficulty table
 python3 .scripts/leveldesign/build.py
 
 # Also render preview sheets (needs Pillow: pip install pillow)
