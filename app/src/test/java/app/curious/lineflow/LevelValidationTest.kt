@@ -52,8 +52,12 @@ class LevelValidationTest {
     private fun Level.degrees(): Map<Int, Int> {
         val degree = nodes.associate { it.id to 0 }.toMutableMap()
         edges.forEach { edge ->
-            degree[edge.node1Id] = degree.getValue(edge.node1Id) + 1
-            degree[edge.node2Id] = degree.getValue(edge.node2Id) + 1
+            listOf(edge.node1Id, edge.node2Id).forEach { nodeId ->
+                val current = checkNotNull(degree[nodeId]) {
+                    "Level $id ($name): line ${edge.node1Id}->${edge.node2Id} names unknown dot $nodeId"
+                }
+                degree[nodeId] = current + 1
+            }
         }
         return degree
     }
