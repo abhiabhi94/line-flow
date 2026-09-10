@@ -94,7 +94,7 @@ fun TutorialOverlay(
 ) {
     val edgeCount = DEMO_EDGE_PATH.size - 1 // 3 edges
 
-    var phase by remember { mutableStateOf(TutorialPhase.LIFT_FAIL_TRACE) }
+    var phase by remember { mutableStateOf(TutorialPhase.SUCCESS_TRACE) }
     val traceProgress = remember { Animatable(0f) }
     val fingerAlpha = remember { Animatable(1f) }
     val fingerOffsetY = remember { Animatable(0f) }
