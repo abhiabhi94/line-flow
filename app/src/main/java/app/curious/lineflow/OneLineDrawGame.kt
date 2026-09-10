@@ -409,13 +409,13 @@ fun OneLineDrawGame(
 
     // Snap ring effect on new edge visited
     val visitedEdgeCount = gameState.level.edges.count { it.isVisited }
-    val snapRingRadius = remember { Animatable(0f) }
+    val snapRingProgress = remember { Animatable(0f) }
     val snapRingAlpha = remember { Animatable(0f) }
     LaunchedEffect(visitedEdgeCount) {
         if (visitedEdgeCount > 0 && gameState.currentNodeId != null) {
             launch {
-                snapRingRadius.snapTo(0f)
-                snapRingRadius.animateTo(1f, tween(300))
+                snapRingProgress.snapTo(0f)
+                snapRingProgress.animateTo(1f, tween(300))
             }
             launch {
                 snapRingAlpha.snapTo(0.8f)
@@ -515,7 +515,7 @@ fun OneLineDrawGame(
                     hintAlpha = hintAlpha,
                     currentNodeGlow = currentNodeGlow,
                     nodeScale = nodeScaleAnimatable.value,
-                    snapRingProgress = snapRingRadius.value,
+                    snapRingProgress = snapRingProgress.value,
                     snapRingAlpha = snapRingAlpha.value,
                     onStrokeStart = { nodeId ->
                         // Hide the hint while drawing, but keep counting it as used: a
