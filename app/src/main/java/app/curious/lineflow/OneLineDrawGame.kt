@@ -535,7 +535,7 @@ fun OneLineDrawGame(
                 )
 
                 Spacer(Modifier.height(bottomSpace))
-                }
+            }
         }
 
         // Red flash overlay on loss
