@@ -923,7 +923,9 @@ private fun Playfield(
     ) {
         if (pixelNodes.isEmpty()) return@Canvas
 
-        val showRemaining = gameState.isGameOver && !gameState.isLevelComplete
+        // Dashed "remaining" lines only make sense when the player lifted early;
+        // a retrace or a wrong dot is a single-line mistake, so keep the rest as-is.
+        val showRemaining = gameState.isGameOver && gameState.gameOverReason == GameOverReason.LIFTED_FINGER
 
         // Soft glow behind visited edges (drawn first, behind everything)
         gameState.level.edges.forEach { edge ->
