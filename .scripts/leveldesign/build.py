@@ -22,7 +22,10 @@ GRAPH_KT = os.path.join(ROOT, "app", "src", "main", "java", "app", "curious", "l
 
 
 def difficulty_score(m: dict) -> float:
-    """Lines to draw plus how often a careless stroke gets stuck."""
+    """Random-walk failure rate plus line count scaled so 40 lines add 1.0.
+
+    Only used for the printed table; ordering itself is done in the catalog.
+    """
     return m["fail_rate"] + m["edges"] / 40.0
 
 
@@ -34,7 +37,6 @@ def main() -> int:
 
     levels = build()
     bad = 0
-    prev_key = None
     print(f"{'#':>2} {'name':18} {'n':>2} {'e':>2} odd deg  fail  score  aspect  dp/unit")
     prev_edges = 0
     for lv in levels:
