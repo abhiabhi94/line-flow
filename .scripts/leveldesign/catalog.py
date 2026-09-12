@@ -18,7 +18,7 @@ one is a little harder than the last.
  21-30  Order matters   shared dots and bridges: finish a region before leaving
  31-40  Deep water      dense shapes, several regions, long strokes
  41-50  Mastery         everything at once
- 51-60  Beyond          bigger walls, hidden odd dots, one-way bridges
+ 51-60  Beyond          bigger walls, hidden odd dots, one-way bridges, courts and doors
 """
 from __future__ import annotations
 
@@ -110,6 +110,26 @@ def courtyard():
     keep = [i for i in range(len(nodes)) if i != centre]
     remap = {old: new for new, old in enumerate(keep)}
     return [nodes[i] for i in keep], [(remap[a], remap[b]) for a, b in edges]
+
+
+def cloister():
+    """Three courts on a 6x6 lattice, joined into a ring by three single doors:
+    a tall court on the left, two square courts on the right. A court you pass
+    through has to be drawn in one visit from its entry door to its exit door,
+    so leaving early strands it, and the mistake only shows much later. Both
+    odd dots sit inside the left court. Dot pitch is the 56dp minimum on the
+    smallest phone, so the level is as dense as the rules allow."""
+    nodes, edges, idx = plain_grid(6, 6, 1.0, 64 / 56)
+    walls = [((1, 1), (2, 1)), ((1, 2), (2, 2)), ((1, 3), (2, 3)), ((1, 4), (2, 4)),
+             ((2, 2), (2, 3)), ((4, 2), (4, 3)), ((5, 2), (5, 3))]
+    removed = {frozenset((idx(*a), idx(*b))) for a, b in walls}
+    edges = [e for e in edges if frozenset(e) not in removed]
+    braces = [((0, 1), (1, 0)), ((0, 2), (1, 1)), ((0, 2), (1, 3)), ((0, 3), (1, 2)), ((0, 3), (1, 4)),
+              ((0, 4), (1, 5)), ((2, 0), (3, 1)), ((2, 1), (3, 2)), ((2, 4), (3, 3)), ((2, 5), (3, 4)),
+              ((3, 0), (4, 1)), ((3, 1), (4, 2)), ((3, 2), (4, 1)), ((3, 3), (4, 4)), ((3, 4), (4, 5)),
+              ((3, 5), (4, 4)), ((4, 0), (5, 1)), ((4, 3), (5, 4))]
+    edges += [(idx(*a), idx(*b)) for a, b in braces]
+    return nodes, edges
 
 
 def great_fortress():
@@ -427,9 +447,10 @@ def build() -> list[LevelSpec]:
           "Ten crossed cells. Both odd dots are on the left wall; the crossings hide them.",
           allow_crossings=True))
 
-    add(L("The Grand Citadel", *braced_grid(5, 6, 1.0, 0.9),
-          "Sixty-nine lines, all braces. Odd dots at top-right and bottom-left; never strand a storey.",
-          start=4, first=3))
+    add(L("The Cloister", *cloister(),
+          "Three courts, three doors. A court you pass through must be drawn in one visit, "
+          "so choose its way out before you step in. Both odd dots are in the left court.",
+          allow_crossings=True))
 
     # Players feel difficulty mostly as "how many lines", then as "how easy it
     # is to get stuck", so that is the order: line count first, failure rate
