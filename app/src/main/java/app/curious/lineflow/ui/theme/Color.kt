@@ -40,6 +40,7 @@ val BorderAccent = Color(0x80FFC847)
 // Game canvas
 val EdgeDefault = Color(0xFF4A3F6B)
 val EdgeVisited = Color(0xFFFF6BED)
+val EdgeMissing = Color(0xFFFFFFFF) // lines still to draw (dashed), shown only when the finger lifts early
 val NodeDefault = Color(0xFF6C5CE7)
 val NodeStart = Color(0xFFFFD93D)
 val NodeCurrent = Color(0xFF00F5D4)

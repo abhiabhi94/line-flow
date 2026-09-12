@@ -65,11 +65,11 @@ class SmokeScreenshotTest {
         device.waitForIdle()
         snap("03_game_level_1")
 
-        // Ask for a hint; the first hint for level 1 explains it is a circuit.
+        // Ask for a hint; the first hint for level 1 explains it is a loop.
         tap("💡")
         assertNotNull(
             "Hint text did not appear",
-            device.wait(Until.findObject(By.textStartsWith("This is a circuit")), TIMEOUT_MS),
+            device.wait(Until.findObject(By.textStartsWith("A loop can be drawn")), TIMEOUT_MS),
         )
         snap("04_game_level_1_hint")
 
@@ -96,7 +96,11 @@ class SmokeScreenshotTest {
     private companion object {
         const val TIMEOUT_MS = 15_000L
         const val SHORT_TIMEOUT_MS = 2_000L
-        // DOTALL because one tutorial string ("Trace every line\nin one stroke") spans two lines.
-        val TUTORIAL_TEXT: Pattern = Pattern.compile("(Watch closely|Don't |Trace every line).*", Pattern.DOTALL)
+        // Matches every tutorial phase: some strings start with a tick or cross, and
+        // several span two lines (hence DOTALL).
+        val TUTORIAL_TEXT: Pattern = Pattern.compile(
+            "(?:[\u2713\u2717]\\s*)?(Draw the whole shape|Every line drawn|Two things|One more|Don't |Like this|Perfect).*",
+            Pattern.DOTALL,
+        )
     }
 }

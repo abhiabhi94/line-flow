@@ -37,8 +37,48 @@ Thanks for your interest in contributing! This guide will help you get set up.
 ./gradlew test
 
 # Run a specific test class
-./gradlew testDebugUnitTest --tests "com.example.lineflow.LevelValidationTest"
+./gradlew testDebugUnitTest --tests "app.curious.lineflow.LevelValidationTest"
 ```
+
+## Designing Levels
+
+`app/src/main/java/app/curious/lineflow/Graph.kt` is generated; do not edit
+it by hand. The levels live in `.scripts/leveldesign/catalog.py`, and the
+toolkit around it (Python 3.9 or newer) checks every level the way the game
+plays it:
+
+```bash
+# Verify all 60 levels and print the difficulty table
+python3 .scripts/leveldesign/build.py
+
+# Also render preview sheets (needs Pillow: pip install pillow)
+python3 .scripts/leveldesign/build.py --png /tmp/levels
+
+# Regenerate Graph.kt (refuses if any level has a problem)
+python3 .scripts/leveldesign/build.py --write
+```
+
+Each level must be connected with 0 or 2 odd dots, have a solution found by
+Hierholzer's algorithm and replayed line by line, and fit the smallest phone
+we support. That phone is 360x640dp with a status bar and 3-button
+navigation; after the top bar, status strip and bottom margin the canvas is
+360x400dp, and dot centres keep a 40dp content margin inside it, so they
+span 280x320dp. The game never reserves centring space below the drawing
+at the expense of that canvas (`PlayfieldSpec.minPlayHeight`). All spacing
+numbers are measured on it: dots at
+least 56dp apart, no dot within 36dp of a line it is not on, and lines at
+least 30 degrees apart at every dot. The game shrinks its touch radius on
+cramped screens so hit circles never overlap; those numbers guarantee it
+never drops below 25dp, and it stays at the full 32dp on phones about 410dp
+wide or more. `geometry.py` and `LevelValidationTest` share these constants. Levels are ordered
+by a difficulty score (lines drawn plus the share of random strokes that get
+stuck), and the build fails if a level is easier than the one before it.
+A level's id is its position in that order, and saved progress is keyed by
+id, so a change that reorders the catalog moves players' completed and
+unlocked levels with the positions, not the figures. Treat the printed
+difficulty table as part of the review for any catalog change.
+Hint text is derived from the geometry, so it always names the right dot and
+direction. The same rules are enforced again by `LevelValidationTest`.
 
 ## Code Style
 

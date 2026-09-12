@@ -188,3 +188,4 @@ tags
 
 # Signing config (contains passwords)
 keystore.properties
+__pycache__/

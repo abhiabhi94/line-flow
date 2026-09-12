@@ -114,6 +114,7 @@ class MainActivity : ComponentActivity() {
                                     currentScreen = Screen.Settings
                                 },
                                 onLevelSelected = { levelId ->
+                                    progressRepository.setLastPlayedLevelId(levelId)
                                     currentScreen = Screen.Game(levelId)
                                 }
                             )
@@ -140,6 +141,7 @@ class MainActivity : ComponentActivity() {
                                     currentScreen = Screen.LevelSelect
                                 },
                                 onNextLevel = { nextLevelId ->
+                                    progressRepository.setLastPlayedLevelId(nextLevelId)
                                     currentScreen = Screen.Game(nextLevelId)
                                 }
                             )

@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
@@ -96,6 +97,8 @@ fun SettingsIconButton(onClick: () -> Unit) {
     }
 }
 
+private const val LEVEL_GRID_COLUMNS = 3
+
 @Composable
 fun LevelSelectScreen(
     modifier: Modifier = Modifier,
@@ -106,6 +109,16 @@ fun LevelSelectScreen(
     onLevelSelected: (Int) -> Unit
 ) {
     val completedLevels = remember { mutableStateOf(progressRepository.getCompletedLevelIds()) }
+    // Land near the level that was played last, with the row above it visible for context.
+    val firstVisibleIndex = remember {
+        val lastPlayedIndex = LevelManager.levels.indexOfFirst { it.id == progressRepository.getLastPlayedLevelId() }
+        if (lastPlayedIndex < 0) {
+            0 // unknown or stale level id: start at the top
+        } else {
+            (((lastPlayedIndex / LEVEL_GRID_COLUMNS) - 1) * LEVEL_GRID_COLUMNS).coerceAtLeast(0)
+        }
+    }
+    val gridState = rememberLazyGridState(initialFirstVisibleItemIndex = firstVisibleIndex)
     val totalLevels = LevelManager.levels.size
     val completedCount = completedLevels.value.size
 
@@ -170,7 +183,8 @@ fun LevelSelectScreen(
         Spacer(Modifier.height(28.dp))
 
         LazyVerticalGrid(
-            columns = GridCells.Fixed(3),
+            state = gridState,
+            columns = GridCells.Fixed(LEVEL_GRID_COLUMNS),
             contentPadding = PaddingValues(horizontal = 20.dp, vertical = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)

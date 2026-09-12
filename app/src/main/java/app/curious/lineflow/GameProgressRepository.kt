@@ -55,6 +55,12 @@ class GameProgressRepository(context: Context) {
         return prefs.getInt("$KEY_HINT_DEPTH_PREFIX$levelId", 0)
     }
 
+    fun getLastPlayedLevelId(): Int = prefs.getInt(KEY_LAST_PLAYED, 1)
+
+    fun setLastPlayedLevelId(levelId: Int) {
+        prefs.edit().putInt(KEY_LAST_PLAYED, levelId).apply()
+    }
+
     fun hasSeenTutorial(): Boolean {
         return prefs.getBoolean(KEY_TUTORIAL_SEEN, false)
     }
@@ -84,6 +90,7 @@ class GameProgressRepository(context: Context) {
         private const val KEY_COMPLETED_LEVELS = "completed_levels"
         private const val KEY_HINTS_USED = "hints_used"
         private const val KEY_TUTORIAL_SEEN = "tutorial_seen"
+        private const val KEY_LAST_PLAYED = "last_played_level"
         private const val KEY_HINT_DEPTH_PREFIX = "hint_depth_"
         private const val KEY_MUSIC_ENABLED = "music_enabled"
         private const val KEY_VIBRATION_ENABLED = "vibration_enabled"
