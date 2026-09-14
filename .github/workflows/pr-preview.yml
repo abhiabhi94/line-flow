@@ -1,0 +1,55 @@
+name: PR preview
+
+# Deploys the browser build of every pull request to
+# https://<owner>.github.io/<repo>/pr-preview/pr-<number>/ and posts (and
+# keeps updated) a comment on the PR with the link, so reviewers can play the
+# change without building anything. The preview is removed when the PR is
+# closed. Previews live in the pr-preview/ folder of the gh-pages branch,
+# next to the main site that pages.yml deploys to the branch root.
+#
+# Previews for PRs from forks are not supported (no write token).
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, closed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+# One deploy per PR at a time; pushes to gh-pages from other PRs / main are
+# rebased, not force-pushed, so they do not clobber each other.
+concurrency:
+  group: preview-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  preview:
+    name: Deploy web preview
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        if: github.event.action != 'closed'
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Build web distribution
+        if: github.event.action != 'closed'
+        run: |
+          chmod +x gradlew
+          ./gradlew :web:wasmJsBrowserDistribution --console=plain
+          touch web/build/dist/wasmJs/productionExecutable/.nojekyll
+
+      - name: Deploy preview (or remove it when the PR is closed)
+        uses: rossjrw/pr-preview-action@v1
+        with:
+          source-dir: web/build/dist/wasmJs/productionExecutable
+          preview-branch: gh-pages
+          umbrella-dir: pr-preview
+          action: auto

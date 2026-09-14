@@ -29,7 +29,8 @@ script and uploads the screenshots as an artifact.
 | `tool/screenshot.mjs` | The driver: static server + emoji-font mirror + Playwright walk + smoke gate. |
 | `shared/.../UiProbe.kt` + `web/.../Main.kt` | The app's side of the driver: `Modifier.probe(tag)` records widget bounds, `window.lineflowProbe.bounds(tag)` exposes them (Compose paints to a canvas, so there is no DOM to query). |
 | `.github/actions/web-smoke/action.yml` | Composite action: build web, run the driver, upload `shots/`. Used by the `smoke` job in `ci.yml`. |
-| `.github/workflows/pages.yml` | Deploys the browser build to GitHub Pages on every push to `main`. |
+| `.github/workflows/pages.yml` | Deploys the browser build to the root of the `gh-pages` branch on every push to `main` (GitHub Pages serves that branch). |
+| `.github/workflows/pr-preview.yml` | Deploys each PR's browser build to `pr-preview/pr-<n>/` on `gh-pages` and comments the link; `ci.yml` adds a sticky comment with the debug APK artifact. |
 | `.github/workflows/pr-review.yml` | Short caller of the account-wide reusable PR-Agent review in `abhiabhi94/.github`. Identical in every repo. |
 | `build.gradle.kts` (root) | Pins the Kotlin/Wasm tooling's `karma` to the npm registry release: the default is a GitHub tarball, which the cloud egress proxy blocks. |
 | `.editorconfig` | ktlint code style (`android_studio`), Composable naming exemption, and `ktlint = disabled` for the generated `Graph.kt`. |
@@ -59,8 +60,10 @@ script and uploads the screenshots as an artifact.
    secret to that repo. Keep the guidelines in `AGENTS.md` (with a "Code
    review" section) and make `CLAUDE.md` a shim whose first line is
    `@AGENTS.md`.
-7. One-time repo setting for Pages: Settings → Pages → Source = "GitHub
-   Actions".
+7. One-time repo settings: Settings → Pages → Source = "Deploy from a
+   branch", branch `gh-pages` / root (the first `pages.yml` run creates the
+   branch); Settings → Actions → General → Workflow permissions = "Read and
+   write" so the preview and Pages jobs can push to it.
 
 ## Gotchas worth remembering
 

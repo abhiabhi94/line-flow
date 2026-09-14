@@ -113,11 +113,17 @@ release build is unsigned. Never commit keystores or `keystore.properties`.
 ## Continuous integration
 
 - `ci.yml`: unit tests + debug APK (uploaded as `lineflow-debug-apk`, 14
-  days) and the web smoke job (`screenshots` artifact).
+  days, and linked in a sticky comment on PRs) and the web smoke job
+  (`screenshots` artifact).
 - `lint.yml`: Android Lint, ktlint, detekt.
 - `emulator-smoke.yml`: instrumented tests + emulator screenshots.
-- `pages.yml`: GitHub Pages deploy of the browser build from `main`
-  (repo setting Settings → Pages → Source = "GitHub Actions", once).
+- `pages.yml`: GitHub Pages deploy of the browser build from `main` to the
+  root of the `gh-pages` branch (repo setting Settings → Pages → Source =
+  "Deploy from a branch", `gh-pages` / root, once).
+- `pr-preview.yml`: deploys every PR's browser build to
+  `pr-preview/pr-<n>/` on `gh-pages` and comments the link on the PR;
+  removed when the PR closes. Together with the APK comment from `ci.yml`,
+  reviewers can play both builds of a PR without building anything.
 - `pr-review.yml`: thin caller of the account-wide PR-Agent review in
   `abhiabhi94/.github`; needs the `OPENROUTER_API_KEY` repository secret.
   Comment `/review`, `/improve`, `/describe` or `/ask <question>` on a PR to

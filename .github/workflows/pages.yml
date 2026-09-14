@@ -1,8 +1,12 @@
 name: Deploy web app to GitHub Pages
 
 # Publishes the browser build of the app to the repo's GitHub Pages site on
-# every push to main. One-time setup in the repo: Settings -> Pages ->
-# Build and deployment -> Source: "GitHub Actions".
+# every push to main. The build is committed to the root of the gh-pages
+# branch; pull-request previews (pr-preview.yml) live in pr-preview/ on the
+# same branch and are left alone here.
+#
+# One-time setup in the repo: Settings -> Pages -> Build and deployment ->
+# Source: "Deploy from a branch", Branch: gh-pages / (root).
 #
 # The site is served at https://<owner>.github.io/<repo>/; the distribution
 # only uses relative URLs, so no base href is needed and the workflow ports
@@ -14,9 +18,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 # One deployment at a time; don't cancel a deploy that is mid-flight.
 concurrency:
@@ -24,8 +26,8 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
-    name: Build web app
+  deploy:
+    name: Build and deploy web app
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -42,20 +44,14 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew :web:wasmJsBrowserDistribution --console=plain
+          touch web/build/dist/wasmJs/productionExecutable/.nojekyll
 
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Deploy to the gh-pages branch
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
-          path: web/build/dist/wasmJs/productionExecutable
-
-  deploy:
-    name: Deploy to GitHub Pages
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy
-        id: deployment
-        uses: actions/deploy-pages@v4
+          folder: web/build/dist/wasmJs/productionExecutable
+          branch: gh-pages
+          clean: true
+          clean-exclude: pr-preview/
+          # Rebase onto concurrent preview deploys instead of overwriting them.
+          force: false

@@ -5,8 +5,8 @@ A relaxing puzzle game where you draw a continuous line through all the edges of
 [![CI](https://github.com/abhiabhi94/line-flow/actions/workflows/ci.yml/badge.svg)](https://github.com/abhiabhi94/line-flow/actions/workflows/ci.yml)
 
 **Play in the browser:** https://abhiabhi94.github.io/line-flow/ (deployed from
-`main` by GitHub Actions). The Android app is the same code, built with
-Compose Multiplatform.
+`main` by GitHub Actions; every pull request gets its own preview link and a
+debug APK). The Android app is the same code, built with Compose Multiplatform.
 
 ## About
 

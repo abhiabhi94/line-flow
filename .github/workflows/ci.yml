@@ -14,6 +14,9 @@ jobs:
   test:
     name: Unit tests & debug APK
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write # the debug APK comment on PRs
 
     steps:
       - name: Checkout code
@@ -39,11 +42,25 @@ jobs:
       # Debug = "app.curious.lineflow.debug", every level unlocked, installable
       # next to the Play build; a testable build of any push or PR.
       - name: Upload debug APK
+        id: apk
         uses: actions/upload-artifact@v4
         with:
           name: lineflow-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
           retention-days: 14
+
+      # One comment per PR, updated on every push, so the latest APK is one
+      # click away for reviewers. (The web preview link is posted by
+      # pr-preview.yml.)
+      - name: Comment the APK link on the PR
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v3
+        with:
+          header: debug-apk
+          message: |
+            📱 **Debug APK** for ${{ github.event.pull_request.head.sha }}: [download `lineflow-debug-apk`](${{ steps.apk.outputs.artifact-url }}) (zip; sign-in required, kept 14 days).
+
+            Installs next to the Play build as `app.curious.lineflow.debug` with every level unlocked.
 
       - name: Upload build reports
         uses: actions/upload-artifact@v4
