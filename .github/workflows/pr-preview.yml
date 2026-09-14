@@ -44,7 +44,6 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew :web:wasmJsBrowserDistribution --console=plain
-          touch web/build/dist/wasmJs/productionExecutable/.nojekyll
 
       - name: Deploy preview (or remove it when the PR is closed)
         uses: rossjrw/pr-preview-action@v1

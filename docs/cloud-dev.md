@@ -60,10 +60,13 @@ script and uploads the screenshots as an artifact.
    secret to that repo. Keep the guidelines in `AGENTS.md` (with a "Code
    review" section) and make `CLAUDE.md` a shim whose first line is
    `@AGENTS.md`.
-7. One-time repo settings: Settings → Pages → Source = "Deploy from a
-   branch", branch `gh-pages` / root (the first `pages.yml` run creates the
-   branch); Settings → Actions → General → Workflow permissions = "Read and
-   write" so the preview and Pages jobs can push to it.
+7. One-time repo settings, in this order: Settings → Actions → General →
+   Workflow permissions = "Read and write" so the preview and Pages jobs can
+   push; then, once the first `pages.yml` or `pr-preview.yml` run has
+   created the branch, Settings → Pages → Source = "Deploy from a branch",
+   branch `gh-pages` / root. If the site already hosts static pages (this
+   repo: the privacy policy in `docs/`), have `pages.yml` copy them into the
+   deploy folder, otherwise their URLs go dead when the source changes.
 
 ## Gotchas worth remembering
 

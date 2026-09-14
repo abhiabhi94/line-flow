@@ -119,7 +119,9 @@ release build is unsigned. Never commit keystores or `keystore.properties`.
 - `emulator-smoke.yml`: instrumented tests + emulator screenshots.
 - `pages.yml`: GitHub Pages deploy of the browser build from `main` to the
   root of the `gh-pages` branch (repo setting Settings → Pages → Source =
-  "Deploy from a branch", `gh-pages` / root, once).
+  "Deploy from a branch", `gh-pages` / root, once). It also copies
+  `docs/privacy-policy.md` there so the Play Store's policy URL
+  (`/privacy-policy`, rendered by Jekyll) keeps working.
 - `pr-preview.yml`: deploys every PR's browser build to
   `pr-preview/pr-<n>/` on `gh-pages` and comments the link on the PR;
   removed when the PR closes. Together with the APK comment from `ci.yml`,

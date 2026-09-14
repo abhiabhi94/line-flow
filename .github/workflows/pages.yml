@@ -5,8 +5,15 @@ name: Deploy web app to GitHub Pages
 # branch; pull-request previews (pr-preview.yml) live in pr-preview/ on the
 # same branch and are left alone here.
 #
+# The site also hosts docs/privacy-policy.md (linked from the Play Store
+# listing) at /privacy-policy, as it did when Pages was served from /docs.
+# The file is copied next to the build and Jekyll, which stays enabled on
+# the branch (no .nojekyll), renders it; the build itself has no front
+# matter or underscore-prefixed files, so Jekyll copies it untouched.
+#
 # One-time setup in the repo: Settings -> Pages -> Build and deployment ->
-# Source: "Deploy from a branch", Branch: gh-pages / (root).
+# Source: "Deploy from a branch", Branch: gh-pages / (root). The branch is
+# created by the first run of this workflow (or of pr-preview.yml).
 #
 # The site is served at https://<owner>.github.io/<repo>/; the distribution
 # only uses relative URLs, so no base href is needed and the workflow ports
@@ -44,7 +51,9 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew :web:wasmJsBrowserDistribution --console=plain
-          touch web/build/dist/wasmJs/productionExecutable/.nojekyll
+
+      - name: Add the privacy policy to the site
+        run: cp docs/privacy-policy.md web/build/dist/wasmJs/productionExecutable/
 
       - name: Deploy to the gh-pages branch
         uses: JamesIves/github-pages-deploy-action@v4
