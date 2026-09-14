@@ -58,6 +58,9 @@ const scale = Number(args.scale ?? 2);
 const port = Number(args.port ?? 0);
 const strict = !args['no-strict'];
 const viewport = parseViewport(args.viewport);
+if (args.completed === true) {
+  throw new Error('--completed expects level ids ("1,3-5"), or "none"');
+}
 const completed = args.completed === undefined
   ? levels.map((id) => id - 1).filter((id) => id >= 1)
   : args.completed === 'none' ? [] : parseIds(args.completed);
@@ -319,13 +322,16 @@ function parseArgs(argv) {
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     if (!arg.startsWith('--')) continue;
-    const key = arg.slice(2);
+    const eq = arg.indexOf('=');
+    const key = eq === -1 ? arg.slice(2) : arg.slice(2, eq);
     const next = argv[i + 1];
-    if (next !== undefined && !next.startsWith('--')) {
-      out[key] = next;
+    if (eq !== -1) {
+      out[key] = arg.slice(eq + 1); // --flag=value
+    } else if (next !== undefined && !next.startsWith('--')) {
+      out[key] = next; // --flag value
       i += 1;
     } else {
-      out[key] = true;
+      out[key] = true; // bare --flag
     }
   }
   return out;
