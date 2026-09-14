@@ -30,7 +30,7 @@ script and uploads the screenshots as an artifact.
 | `shared/.../UiProbe.kt` + `web/.../Main.kt` | The app's side of the driver: `Modifier.probe(tag)` records widget bounds, `window.lineflowProbe.bounds(tag)` exposes them (Compose paints to a canvas, so there is no DOM to query). |
 | `.github/actions/web-smoke/action.yml` | Composite action: build web, run the driver, upload `shots/`. Used by the `smoke` job in `ci.yml`. |
 | `.github/workflows/pages.yml` | Deploys the browser build to the root of the `gh-pages` branch on every push to `main` (GitHub Pages serves that branch). |
-| `.github/workflows/pr-preview.yml` | Deploys each PR's browser build to `pr-preview/pr-<n>/` on `gh-pages` and comments the link; `ci.yml` adds a sticky comment with the debug APK artifact. |
+| `.github/workflows/pr-preview.yml` | Deploys each PR's browser build to `pr-preview/pr-<n>/` on `gh-pages` (JamesIves deploy action with `target-folder`), comments the link, and removes the folder when the PR closes; `ci.yml` adds a sticky comment with the debug APK artifact. |
 | `.github/workflows/pr-review.yml` | Short caller of the account-wide reusable PR-Agent review in `abhiabhi94/.github`. Identical in every repo. |
 | `build.gradle.kts` (root) | Pins the Kotlin/Wasm tooling's `karma` to the npm registry release: the default is a GitHub tarball, which the cloud egress proxy blocks. |
 | `.editorconfig` | ktlint code style (`android_studio`), Composable naming exemption, and `ktlint = disabled` for the generated `Graph.kt`. |

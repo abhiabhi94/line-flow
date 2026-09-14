@@ -49,7 +49,7 @@ See `AGENTS.md` for the map.
 # Run a specific test class
 ./gradlew :shared:jvmTest --tests "app.curious.lineflow.LevelValidationTest"
 
-# Browser smoke test + screenshots (needs Node 22 and Playwright: npm i -g playwright && npx playwright install chromium)
+# Browser smoke test + screenshots (needs Node 22 or newer and Playwright: npm i -g playwright && npx playwright install chromium)
 ./gradlew :web:wasmJsBrowserDistribution
 node tool/screenshot.mjs --levels 1,20 --settings --hint --stroke 0,1,2,0   # -> shots/
 ```
