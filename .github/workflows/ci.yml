@@ -12,6 +12,7 @@ concurrency:
 
 jobs:
   test:
+    name: Unit tests & debug APK
     runs-on: ubuntu-latest
 
     steps:
@@ -28,11 +29,21 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      # The level validation tests live in :shared and run on the host JVM.
       - name: Run unit tests
-        run: ./gradlew test
+        run: ./gradlew :shared:jvmTest
 
       - name: Build debug APK
         run: ./gradlew assembleDebug
+
+      # Debug = "app.curious.lineflow.debug", every level unlocked, installable
+      # next to the Play build; a testable build of any push or PR.
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: lineflow-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 14
 
       - name: Upload build reports
         uses: actions/upload-artifact@v4
@@ -41,4 +52,19 @@ jobs:
           name: build-reports
           path: |
             app/build/reports/
+            shared/build/reports/
           retention-days: 7
+
+  smoke:
+    name: Web smoke & screenshots
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Builds the browser app, drives tutorial/home/levels/settings in headless
+      # Chromium at a phone viewport, fails on any uncaught exception and
+      # uploads the PNGs as the "screenshots" artifact for visual review.
+      - name: Smoke test + screenshots
+        uses: ./.github/actions/web-smoke

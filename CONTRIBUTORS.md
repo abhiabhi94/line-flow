@@ -22,27 +22,45 @@ Thanks for your interest in contributing! This guide will help you get set up.
 
 3. **Build the project**
    ```bash
-   ./gradlew build
+   ./gradlew assembleDebug                    # Android debug APK
+   ./gradlew :web:wasmJsBrowserDistribution   # browser build -> web/build/dist/wasmJs/productionExecutable
    ```
 
-4. **Run on a connected device or emulator**
+4. **Run it**
    ```bash
-   ./gradlew installDebug
+   ./gradlew installDebug                     # on a connected device or emulator
+   ./gradlew :web:wasmJsBrowserDevelopmentRun # in your browser, with hot reload
    ```
+
+## Project layout
+
+The game is one Kotlin Multiplatform code base built with Compose
+Multiplatform: `shared/` holds the whole game (screens, levels, rules) with
+small `androidMain`/`wasmJsMain` source sets for storage, music and haptics;
+`app/` is the Android application shell; `web/` is the browser entry point.
+See `AGENTS.md` for the map.
 
 ## Running Tests
 
 ```bash
-# Run all unit tests
-./gradlew test
+# Run all unit tests (level validation, on the host JVM)
+./gradlew :shared:jvmTest
 
 # Run a specific test class
-./gradlew testDebugUnitTest --tests "app.curious.lineflow.LevelValidationTest"
+./gradlew :shared:jvmTest --tests "app.curious.lineflow.LevelValidationTest"
+
+# Browser smoke test + screenshots (needs Node 22 and Playwright: npm i -g playwright && npx playwright install chromium)
+./gradlew :web:wasmJsBrowserDistribution
+node tool/screenshot.mjs --levels 1,20 --settings --hint --stroke 0,1,2,0   # -> shots/
 ```
+
+The instrumented smoke test in `app/src/androidTest` runs on an emulator
+(`./gradlew connectedDebugAndroidTest`, and the "Emulator smoke test"
+workflow on every pull request).
 
 ## Designing Levels
 
-`app/src/main/java/app/curious/lineflow/Graph.kt` is generated; do not edit
+`shared/src/commonMain/kotlin/app/curious/lineflow/Graph.kt` is generated; do not edit
 it by hand. The levels live in `.scripts/leveldesign/catalog.py`, and the
 toolkit around it (Python 3.9 or newer) checks every level the way the game
 plays it:
@@ -84,6 +102,10 @@ direction. The same rules are enforced again by `LevelValidationTest`.
 
 - Follow the existing patterns in the codebase
 - Keep changes focused and minimal
+
+Pre-existing findings are recorded in `config/ktlint/baseline-*.xml` and
+`config/detekt/baseline-*.xml`; new code must be clean. ktlint follows the
+`android_studio` code style (`.editorconfig`).
 
 The project uses three linting tools that run automatically via pre-commit hooks:
 

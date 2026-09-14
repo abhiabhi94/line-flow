@@ -1,0 +1,105 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>ComplexCondition:ChampionScreen.kt$alpha &gt; 0f &amp;&amp; y &lt; 1.3f &amp;&amp; y &gt; -0.3f &amp;&amp; x &gt; -0.3f &amp;&amp; x &lt; 1.3f</ID>
+    <ID>ComplexCondition:LevelValidationTest.kt$LevelValidationTest$t &lt;= eps || t &gt;= 1 - eps || u &lt;= eps || u &gt;= 1 - eps</ID>
+    <ID>CyclomaticComplexMethod:ChampionScreen.kt$@Composable private fun ChampionConfettiEffect()</ID>
+    <ID>CyclomaticComplexMethod:LevelSelectScreen.kt$@Composable fun LevelCard( level: Level, isCompleted: Boolean, isUnlocked: Boolean, onClick: () -&gt; Unit )</ID>
+    <ID>CyclomaticComplexMethod:OneLineDrawGame.kt$@Composable private fun Playfield( modifier: Modifier, gameState: GameState, level: Level, currentHintStep: HintStep?, hintAlpha: Float, currentNodeGlow: Float, nodeScale: Float, snapRingProgress: Float, snapRingAlpha: Float, onStrokeStart: (Int) -&gt; Unit, onStrokeMove: (Int) -&gt; Unit, onStrokeEnd: () -&gt; Unit, )</ID>
+    <ID>CyclomaticComplexMethod:OneLineDrawGame.kt$@OptIn(ExperimentalComposeUiApi::class) @Composable fun OneLineDrawGame( modifier: Modifier = Modifier, levelId: Int, progressRepository: GameProgressRepository, onBackToLevelSelect: () -&gt; Unit, onNextLevel: (Int) -&gt; Unit, )</ID>
+    <ID>CyclomaticComplexMethod:TutorialOverlay.kt$@Composable fun TutorialOverlay( onDismiss: () -&gt; Unit )</ID>
+    <ID>DestructuringDeclarationWithTooManyEntries:ChampionScreen.kt$val (startX, startY, vx, vy) = when (startEdge) { 0 -&gt; { // Top center burst listOf( 0.5f + (Random.nextFloat() - 0.5f) * 0.3f, -0.1f, (Random.nextFloat() - 0.5f) * 0.4f, Random.nextFloat() * 0.3f + 0.1f ) } 1 -&gt; { // Top right listOf( 0.9f + Random.nextFloat() * 0.2f, -0.1f - Random.nextFloat() * 0.2f, -Random.nextFloat() * 0.2f - 0.05f, Random.nextFloat() * 0.3f + 0.1f ) } 2 -&gt; { // Top left listOf( -0.1f - Random.nextFloat() * 0.2f, -0.1f - Random.nextFloat() * 0.2f, Random.nextFloat() * 0.2f + 0.05f, Random.nextFloat() * 0.3f + 0.1f ) } else -&gt; { // Spread across top listOf( Random.nextFloat(), -0.15f - Random.nextFloat() * 0.2f, (Random.nextFloat() - 0.5f) * 0.15f, Random.nextFloat() * 0.25f + 0.1f ) } }</ID>
+    <ID>LargeClass:Graph.kt$LevelManager</ID>
+    <ID>LongMethod:Graph.kt$LevelManager$private fun level60(): Level</ID>
+    <ID>LoopWithTooManyJumpStatements:LevelValidationTest.kt$LevelValidationTest$for</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$// One solution: 0-1-2-5-1-6-2-3-7-6-5-4-8-5-9-8-12-13-9-10-6-11-7-10-13-16-12-17-13-14-10-11-15-14-18-15-19-18-17-16-20-21-17-22-18-21-22-23-19-14-9-4-0</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$// One solution: 0-1-5-0-6-1-2-3-7-2-8-3-4-9-8-7-6-5-10-11-6-12-7-11-15-10-16-11-12-13-8-14-9-13-17-12-18-13-14-19-18-17-16-15-20-21-16-22-17-21-22-23-18-24-19-23-24</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$// One solution: 0-1-5-0-6-1-2-3-7-2-8-3-4-9-8-7-6-5-10-11-6-12-7-11-15-10-16-11-12-13-8-14-9-13-17-12-18-13-14-19-18-17-16-15-20-21-16-22-17-21-25-20-26-21-22-23-18-24-19-23-27-22-28-23-24-29-28-27-26-25</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$// One solution: 10-6-3-1-0-2-1-4-2-5-4-3-7-4-8-5-9-8-7-6-11-7-12-8-13-9-14-13-12-11-10-15-11-16-12-17-13-18-14-19-18-17-16-15-20-16-21-17-22-18-23-19-24-23-22-21-20</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$// One solution: 11-6-1-0-5-1-2-6-5-10-6-7-2-3-7-11-10-14-11-15-14-19-20-15-16-12-8-3-4-9-8-7-16-20-21-16-17-12-9-13-17-21-22-17-18-22-23-18-13-12</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$// One solution: 12-6-0-1-2-3-4-5-11-10-4-11-17-16-10-9-3-10-15-9-8-2-9-16-15-14-8-15-21-20-26-27-21-22-23-29-28-22-29-35-34-28-27-33-32-26-21-28-33-34-27-32-31-25-19-13-7-1-6-7-12-13-18-12-19-18-24-30-31-24-25-18</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$// One solution: 12-7-2-1-0-5-1-6-2-3-7-6-5-10-6-11-7-8-3-4-9-8-13-9-14-13-12-11-10-15-11-16-12-17-13-18-14-19-18-17-16-15-20-16-21-17-22-18-23-19-24-23-22-21-20-25-26-22-27-23-28-24-29-28-27-26-21</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$// One solution: 3-2-1-0-4-1-5-2-6-3-7-6-5-4-8-5-9-6-10-7-11-10-9-8-12-9-13-10-14-11-15-14-13-12-16-13-17-14-18-15-19-18-17-16-20-17-21-18-22-19-23-22-21-20</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$// One solution: 3-2-1-0-4-1-5-2-6-3-7-6-5-4-8-5-9-6-10-7-11-10-9-8-15-14-13-12-16-13-17-14-18-15-19-18-17-16-20-17-21-18-22-19-23-22-21-20</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$// One solution: 4-3-2-1-0-5-1-6-2-7-3-8-4-9-8-7-6-5-10-6-11-7-12-8-13-9-14-13-12-11-10-19-18-17-16-15-20-16-21-17-22-18-23-19-24-23-22-21-20-25-21-26-22-27-23-28-24-29-28-27-26-25</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$// One solution: 6-1-0-5-6-7-2-1-5-10-11-6-2-3-4-9-8-3-9-14-13-8-7-12-11-16-15-10-6-12-13-18-17-12-18-19-14-18-23-24-19-23-22-17-16-21-20-15-21-22-18</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$// One solution: 6-2-1-0-4-1-5-2-3-7-6-5-4-8-5-9-6-10-7-11-10-9-8-12-9-13-10-14-11-15-14-13-12-16-17-14-18-15-19-18-17-13</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$// One solution: 6-3-1-0-2-1-4-2-5-4-3-7-4-8-5-9-8-7-6-13-12-11-10-14-11-15-12-16-13-17-16-15-14-18-15-19-16-20-17-21-20-19-18</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$HintStep(text = "Corner braces and a bar through the courtyard. The odd dots sit inside the walls.")</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$HintStep(text = "Corner braces, a diamond in the courtyard. The odd dots are halfway up the walls.")</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$HintStep(text = "Every dot works as a start. Try the top one. From the top dot, head down first.", showValidStarts = true, showFirstEdge = true)</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$HintStep(text = "Every dot works as a start. Try the top one. From the top dot, head down-right first.", showValidStarts = true, showFirstEdge = true)</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$HintStep(text = "Every dot works as a start. Try the top-left one. From the top-left dot, head down first.", showValidStarts = true, showFirstEdge = true)</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$HintStep(text = "Every dot works as a start. Try the top-left one. From the top-left dot, head right first.", showValidStarts = true, showFirstEdge = true)</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$HintStep(text = "Forty-seven lines, two citadels, one bridge. Sweep a whole citadel before you cross.")</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$HintStep(text = "From the bottom-left dot, head up first.", showValidStarts = true, showFirstEdge = true)</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$HintStep(text = "From the bottom-left dot, head up-left first.", showValidStarts = true, showFirstEdge = true)</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$HintStep(text = "From the center dot, head down-left first.", showValidStarts = true, showFirstEdge = true)</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$HintStep(text = "From the center dot, head up first.", showValidStarts = true, showFirstEdge = true)</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$HintStep(text = "From the center dot, head up-left first.", showValidStarts = true, showFirstEdge = true)</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$HintStep(text = "From the left dot, head up-right first.", showValidStarts = true, showFirstEdge = true)</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$HintStep(text = "From the top dot, head down-left first.", showValidStarts = true, showFirstEdge = true)</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$HintStep(text = "From the top dot, head down-right first.", showValidStarts = true, showFirstEdge = true)</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$HintStep(text = "From the top-left dot, head right first.", showValidStarts = true, showFirstEdge = true)</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$HintStep(text = "From the top-left dot, head up first.", showValidStarts = true, showFirstEdge = true)</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$HintStep(text = "From the top-left dot, head up-right first.", showValidStarts = true, showFirstEdge = true)</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$HintStep(text = "From the top-right dot, head left first.", showValidStarts = true, showFirstEdge = true)</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$HintStep(text = "From the top-right dot, head up first.", showValidStarts = true, showFirstEdge = true)</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$HintStep(text = "From the top-right dot, head up-left first.", showValidStarts = true, showFirstEdge = true)</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$HintStep(text = "Start at the bottom-left dot; you will finish at the bottom-right one. From the bottom-left dot, head right first.", showValidStarts = true, showFirstEdge = true)</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$HintStep(text = "Start at the bottom-left dot; you will finish at the bottom-right one.", showValidStarts = true)</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$HintStep(text = "Start at the center dot; you will finish at the bottom-left one.", showValidStarts = true)</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$HintStep(text = "Start at the left dot; you will finish at the bottom-left one.", showValidStarts = true)</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$HintStep(text = "Start at the left dot; you will finish at the bottom-right one.", showValidStarts = true)</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$HintStep(text = "Start at the right dot; you will finish at the bottom-right one. From the right dot, head up-left first.", showValidStarts = true, showFirstEdge = true)</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$HintStep(text = "Start at the top dot; you will finish at the bottom one. From the top dot, head left first.", showValidStarts = true, showFirstEdge = true)</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$HintStep(text = "Start at the top-left dot; you will finish at the bottom-left one.", showValidStarts = true)</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$HintStep(text = "Start at the top-left dot; you will finish at the bottom-right one.", showValidStarts = true)</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$HintStep(text = "Start at the top-left dot; you will finish at the top-right one. From the top-left dot, head up-right first.", showValidStarts = true, showFirstEdge = true)</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$HintStep(text = "Start at the top-left dot; you will finish at the top-right one.", showValidStarts = true)</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$HintStep(text = "Start at the top-right dot; you will finish at the bottom-left one.", showValidStarts = true)</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$HintStep(text = "Start at the top-right dot; you will finish at the bottom-right one.", showValidStarts = true)</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$HintStep(text = "Start at the top-right dot; you will finish at the center one.", showValidStarts = true)</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$HintStep(text = "Start at the top-right dot; you will finish at the left one.", showValidStarts = true)</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$HintStep(text = "Start at the top-right dot; you will finish at the top-left one.", showValidStarts = true)</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$HintStep(text = "Three courts, three doors. A court you pass through must be drawn in one visit, so choose its way out before you step in. Both odd dots are in the left court.")</ID>
+    <ID>MaxLineLength:Graph.kt$LevelManager$validStartNodeIds = listOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23)</ID>
+    <ID>MaxLineLength:LevelValidationTest.kt$LevelValidationTest$"Level ${after.id} (${after.edges.size} lines) is smaller than level ${before.id} (${before.edges.size} lines)"</ID>
+    <ID>MaxLineLength:LevelValidationTest.kt$LevelValidationTest$"Level ${level.id} (${level.name}) cannot be drawn in one stroke starting ${firstEdge.first}-&gt;${firstEdge.second}"</ID>
+    <ID>MaxLineLength:LevelValidationTest.kt$LevelValidationTest$"Level ${level.id} (${level.name}): lines at dot ${node.id} are only ${"%.1f".format(separation)} degrees apart$label"</ID>
+    <ID>MaxLineLength:LevelValidationTest.kt$LevelValidationTest$"Level ${level.id}: hinted first edge ${firstEdge.first}-&gt;${firstEdge.second} must leave one of the valid starts $expected"</ID>
+    <ID>MaxLineLength:LevelValidationTest.kt$LevelValidationTest$.</ID>
+    <ID>MaxLineLength:LevelValidationTest.kt$LevelValidationTest$assertEquals("Levels must be numbered 1..$EXPECTED_LEVELS in order", (1..EXPECTED_LEVELS).toList(), LevelManager.levels.map { it.id })</ID>
+    <ID>MaxLineLength:LevelValidationTest.kt$LevelValidationTest$assertFalse("Level ${level.id}: first hint is text only", steps.first().showValidStarts || steps.first().showFirstEdge)</ID>
+    <ID>MaxLineLength:LevelValidationTest.kt$LevelValidationTest$assertFalse("Level ${level.id}: solution stroke failed at dot $next (${state.gameOverReason})", state.isGameOver)</ID>
+    <ID>MaxLineLength:LevelValidationTest.kt$LevelValidationTest$assertTrue("Level ${level.id}: drawing leaves the play area", minX &gt;= margin - 0.5f &amp;&amp; maxX &lt;= size.width - margin + 0.5f)</ID>
+    <ID>MaxLineLength:LevelValidationTest.kt$LevelValidationTest$assertTrue("Level ${level.id}: drawing leaves the play area", minY &gt;= margin - 0.5f &amp;&amp; maxY &lt;= size.height - margin + 0.5f)</ID>
+    <ID>MaxLineLength:LevelValidationTest.kt$LevelValidationTest$assertTrue("Level ${level.id}: edge ${edge.node1Id}-${edge.node2Id} is a loop", edge.node1Id != edge.node2Id)</ID>
+    <ID>MaxLineLength:LevelValidationTest.kt$LevelValidationTest$assertTrue("Level ${level.id}: node ${node.id} has no lines", level.edges.any { it.containsNode(node.id) })</ID>
+    <ID>MaxLineLength:LevelValidationTest.kt$LevelValidationTest$if (steps[i - 1].showFirstEdge) assertTrue("Level ${level.id}: hints must not hide the first edge again", steps[i].showFirstEdge)</ID>
+    <ID>MaxLineLength:LevelValidationTest.kt$LevelValidationTest$if (steps[i - 1].showValidStarts) assertTrue("Level ${level.id}: hints must not hide starts again", steps[i].showValidStarts)</ID>
+    <ID>MaxLineLength:LevelValidationTest.kt$LevelValidationTest$private fun requireLevel(id: Int): Level</ID>
+    <ID>MaxLineLength:LevelValidationTest.kt$LevelValidationTest$val</ID>
+    <ID>MaxLineLength:LevelValidationTest.kt$LevelValidationTest$val along = checkNotNull(partialLine(pts, edges, 0, Offset(100f, 8f), tolerance = 32f)) { "no line traced along the top" }</ID>
+    <ID>MaxLineLength:LevelValidationTest.kt$LevelValidationTest$val nearLine = mapOf(0 to Offset(0f, 0f), 1 to Offset(200f, 0f), 2 to Offset(200f, 200f), 3 to Offset(100f, 30f))</ID>
+    <ID>MaxLineLength:LevelValidationTest.kt$LevelValidationTest$val past = checkNotNull(partialLine(pts, edges, 0, Offset(220f, 0f), tolerance = 32f)) { "no line traced past the dot" }</ID>
+    <ID>MaxLineLength:OneLineDrawGame.kt$?.</ID>
+    <ID>MaxLineLength:OneLineDrawGame.kt$GameOverReason.LIFTED_FINGER -&gt; "Figure incomplete · $remaining ${if (remaining == 1) "line" else "lines"} left"</ID>
+    <ID>MaxLineLength:OneLineDrawGame.kt$fun</ID>
+    <ID>MaxLineLength:OneLineDrawGame.kt$val</ID>
+    <ID>MaxLineLength:OneLineDrawGame.kt$val hitRadiusPx = remember(pixelNodes, level.edges, maxHitRadiusPx) { touchRadius(pixelNodes, level.edges, maxHitRadiusPx) }</ID>
+    <ID>MaxLineLength:OneLineDrawGame.kt$val strokeWidth = if (edge.isVisited || isFailedEdge || showRemaining) visitedStrokeWidth else defaultStrokeWidth</ID>
+    <ID>MaxLineLength:TutorialOverlay.kt$drawPath(path = tick, color = DarkSurface, style = Stroke(width = r * 0.22f, cap = StrokeCap.Round, join = StrokeJoin.Round))</ID>
+    <ID>MaxLineLength:TutorialOverlay.kt$isRetracedEdge &amp;&amp; (phase == TutorialPhase.RETRACE_FAIL || phase == TutorialPhase.RETRACE_DISPLAY)</ID>
+    <ID>NestedBlockDepth:LevelValidationTest.kt$LevelValidationTest$@Test fun allLevelsAreConnected()</ID>
+    <ID>NestedBlockDepth:LevelValidationTest.kt$LevelValidationTest$@Test fun crossingsNeverHappenNearADot()</ID>
+    <ID>NestedBlockDepth:LevelValidationTest.kt$LevelValidationTest$@Test fun noDotSitsCloseToALineItIsNotPartOf()</ID>
+    <ID>NewLineAtEndOfFile:Type.kt$app.curious.lineflow.ui.theme.Type.kt</ID>
+    <ID>ReturnCount:LevelValidationTest.kt$EulerSolver$private fun isValid(level: Level, trail: List&lt;Int&gt;): Boolean</ID>
+    <ID>ReturnCount:LevelValidationTest.kt$LevelValidationTest$private fun segmentIntersection(p1: Offset, p2: Offset, p3: Offset, p4: Offset): Offset?</ID>
+    <ID>ReturnCount:OneLineDrawGame.kt$GameState$fun moveTo(nodeId: Int): GameState</ID>
+    <ID>TooManyFunctions:GameProgressRepository.kt$GameProgressRepository</ID>
+    <ID>TooManyFunctions:Graph.kt$LevelManager</ID>
+  </CurrentIssues>
+</SmellBaseline>

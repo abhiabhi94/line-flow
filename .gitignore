@@ -189,3 +189,8 @@ tags
 # Signing config (contains passwords)
 keystore.properties
 __pycache__/
+
+# Kotlin/Wasm + screenshot harness
+.kotlin/
+node_modules/
+/shots/

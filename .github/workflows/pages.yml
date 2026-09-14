@@ -1,0 +1,61 @@
+name: Deploy web app to GitHub Pages
+
+# Publishes the browser build of the app to the repo's GitHub Pages site on
+# every push to main. One-time setup in the repo: Settings -> Pages ->
+# Build and deployment -> Source: "GitHub Actions".
+#
+# The site is served at https://<owner>.github.io/<repo>/; the distribution
+# only uses relative URLs, so no base href is needed and the workflow ports
+# to other repos unchanged.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time; don't cancel a deploy that is mid-flight.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build web app
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Build web distribution (production)
+        run: |
+          chmod +x gradlew
+          ./gradlew :web:wasmJsBrowserDistribution --console=plain
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/build/dist/wasmJs/productionExecutable
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Verify all levels, print a difficulty table, render previews and
-optionally regenerate app/src/main/java/app/curious/lineflow/Graph.kt.
+optionally regenerate shared/src/commonMain/kotlin/app/curious/lineflow/Graph.kt.
 
     python3 .scripts/leveldesign/build.py            # check + table
     python3 .scripts/leveldesign/build.py --png out  # also render previews
@@ -18,7 +18,7 @@ from catalog import build  # noqa: E402
 from geometry import check, metrics  # noqa: E402
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-GRAPH_KT = os.path.join(ROOT, "app", "src", "main", "java", "app", "curious", "lineflow", "Graph.kt")
+GRAPH_KT = os.path.join(ROOT, "shared", "src", "commonMain", "kotlin", "app", "curious", "lineflow", "Graph.kt")
 
 
 def difficulty_score(m: dict) -> float:

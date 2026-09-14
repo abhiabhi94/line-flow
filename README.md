@@ -4,6 +4,10 @@ A relaxing puzzle game where you draw a continuous line through all the edges of
 
 [![CI](https://github.com/abhiabhi94/line-flow/actions/workflows/ci.yml/badge.svg)](https://github.com/abhiabhi94/line-flow/actions/workflows/ci.yml)
 
+**Play in the browser:** https://abhiabhi94.github.io/line-flow/ (deployed from
+`main` by GitHub Actions). The Android app is the same code, built with
+Compose Multiplatform.
+
 ## About
 
 LineFlow presents you with geometric puzzles based on Eulerian paths. Your goal is simple: connect all the dots by drawing a single, unbroken line that visits every edge exactly once.
@@ -16,6 +20,7 @@ It's the kind of puzzle you might doodle on a napkin — now on your phone.
 - 60 hand-designed levels, each a little harder than the last
 - Hint system when you need a nudge
 - No ads, no tracking, no nonsense
+- Android app and browser version from one Kotlin code base
 
 ## Contributing
 

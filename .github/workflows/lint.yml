@@ -37,7 +37,9 @@ jobs:
         if: always()
         with:
           name: android-lint-results
-          path: app/build/reports/lint-results-*.html
+          path: |
+            app/build/reports/lint-results-*.html
+            shared/build/reports/lint-results-*.html
           retention-days: 7
 
   ktlint:
@@ -66,7 +68,10 @@ jobs:
         if: failure()
         with:
           name: ktlint-results
-          path: app/build/reports/ktlint/
+          path: |
+            app/build/reports/ktlint/
+            shared/build/reports/ktlint/
+            web/build/reports/ktlint/
           retention-days: 7
 
   detekt:
@@ -95,5 +100,8 @@ jobs:
         if: failure()
         with:
           name: detekt-results
-          path: app/build/reports/detekt/
+          path: |
+            app/build/reports/detekt/
+            shared/build/reports/detekt/
+            web/build/reports/detekt/
           retention-days: 7
