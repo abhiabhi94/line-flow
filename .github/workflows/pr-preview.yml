@@ -1,0 +1,106 @@
+name: PR preview
+
+# Deploys the browser build of every pull request to
+# https://<owner>.github.io/<repo>/pr-preview/pr-<number>/ and posts (and
+# keeps updated) a comment on the PR with the link, so reviewers can play the
+# change without building anything. The preview is removed when the PR is
+# closed. Previews live in the pr-preview/ folder of the gh-pages branch,
+# next to the main site that pages.yml deploys to the branch root.
+#
+# Previews for PRs from forks are not supported (no write token).
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, closed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+# One deploy per PR at a time; pushes to gh-pages from other PRs / main are
+# rebased, not force-pushed, so they do not clobber each other.
+concurrency:
+  group: preview-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  PREVIEW_DIR: pr-preview/pr-${{ github.event.number }}
+  PREVIEW_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-preview/pr-${{ github.event.number }}/
+
+jobs:
+  preview:
+    name: Deploy web preview
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        if: github.event.action != 'closed'
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 17
+        if: github.event.action != 'closed'
+        uses: actions/setup-java@v6
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Build web distribution
+        if: github.event.action != 'closed'
+        run: |
+          chmod +x gradlew
+          ./gradlew :web:wasmJsBrowserDistribution --console=plain
+
+      - name: Deploy the preview to gh-pages
+        if: github.event.action != 'closed'
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: web/build/dist/wasmJs/productionExecutable
+          branch: gh-pages
+          target-folder: ${{ env.PREVIEW_DIR }}
+          commit-message: "Deploy preview for PR #${{ github.event.number }} (${{ github.event.pull_request.head.sha }})"
+          clean: true
+          force: false
+
+      # Nothing to build on close: fetch gh-pages and drop the preview folder.
+      - name: Remove the preview from gh-pages
+        if: github.event.action == 'closed'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          if ! git clone --quiet --depth 1 --branch gh-pages \
+              "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" site; then
+            echo "No gh-pages branch yet; nothing to remove."
+            exit 0
+          fi
+          cd site
+          if [ ! -d "$PREVIEW_DIR" ]; then
+            echo "No preview at $PREVIEW_DIR; nothing to remove."
+            exit 0
+          fi
+          git rm -r --quiet "$PREVIEW_DIR"
+          git -c user.name=github-actions[bot] \
+              -c user.email=41898282+github-actions[bot]@users.noreply.github.com \
+              commit --quiet -m "Remove preview for PR #${{ github.event.number }}"
+          # Other previews / main deploys may land meanwhile: rebase, then push.
+          for attempt in 1 2 3; do
+            git pull --rebase --quiet origin gh-pages && git push --quiet origin gh-pages && exit 0
+            sleep 5
+          done
+          exit 1
+
+      - name: Comment the preview link on the PR
+        if: github.event.action != 'closed'
+        uses: marocchino/sticky-pull-request-comment@v3
+        with:
+          header: pr-preview
+          message: |
+            🚀 **Web preview** for ${{ github.event.pull_request.head.sha }}: ${{ env.PREVIEW_URL }}
+
+            GitHub Pages takes about a minute to serve a fresh deploy.
+
+      - name: Note the removal on the PR
+        if: github.event.action == 'closed'
+        uses: marocchino/sticky-pull-request-comment@v3
+        with:
+          header: pr-preview
+          message: 🧹 The web preview for this PR was removed.

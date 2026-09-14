@@ -1,0 +1,25 @@
+# AI PR review (PR-Agent + OpenRouter). The logic lives in the account-wide
+# reusable workflow in abhiabhi94/.github (see its README for inputs); this
+# file is the same in every repo. Needs the `OPENROUTER_API_KEY` repository
+# secret. PR-Agent reads AGENTS.md (from the default branch) on its own, so
+# repo-specific review rules go there.
+#
+# Runs on open / reopen / ready-for-review. Re-run on demand by commenting
+# `/review`, `/improve`, `/describe`, or `/ask <question>` on the PR.
+name: PR review
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  review:
+    uses: abhiabhi94/.github/.github/workflows/pr-review-reusable.yml@main
+    secrets: inherit

@@ -1,0 +1,66 @@
+name: Deploy web app to GitHub Pages
+
+# Publishes the browser build of the app to the repo's GitHub Pages site on
+# every push to main. The build is committed to the root of the gh-pages
+# branch; pull-request previews (pr-preview.yml) live in pr-preview/ on the
+# same branch and are left alone here.
+#
+# The site also hosts docs/privacy-policy.md (linked from the Play Store
+# listing) at /privacy-policy, as it did when Pages was served from /docs.
+# The file is copied next to the build and Jekyll, which stays enabled on
+# the branch (no .nojekyll), renders it; the build itself has no front
+# matter or underscore-prefixed files, so Jekyll copies it untouched.
+#
+# One-time setup in the repo: Settings -> Pages -> Build and deployment ->
+# Source: "Deploy from a branch", Branch: gh-pages / (root). The branch is
+# created by the first run of this workflow (or of pr-preview.yml).
+#
+# The site is served at https://<owner>.github.io/<repo>/; the distribution
+# only uses relative URLs, so no base href is needed and the workflow ports
+# to other repos unchanged.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# One deployment at a time; don't cancel a deploy that is mid-flight.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build and deploy web app
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v6
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Build web distribution (production)
+        run: |
+          chmod +x gradlew
+          ./gradlew :web:wasmJsBrowserDistribution --console=plain
+
+      - name: Add the privacy policy to the site
+        run: cp docs/privacy-policy.md web/build/dist/wasmJs/productionExecutable/
+
+      - name: Deploy to the gh-pages branch
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: web/build/dist/wasmJs/productionExecutable
+          branch: gh-pages
+          clean: true
+          clean-exclude: pr-preview/
+          # Rebase onto concurrent preview deploys instead of overwriting them.
+          force: false

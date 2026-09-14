@@ -1,0 +1,79 @@
+name: Web smoke & screenshots
+description: >-
+  Builds the browser app (Kotlin/Wasm + Compose Multiplatform), drives it in
+  headless Chromium at phone and desktop viewports with tool/screenshot.mjs,
+  fails on any uncaught exception / JS error, and uploads the screenshots as
+  an artifact.
+  Copy this folder + tool/screenshot.mjs to another Compose Multiplatform
+  game repo and adapt the "app-specific" parts of the script (seeded prefs,
+  probe tags).
+
+inputs:
+  runs:
+    description: >-
+      One screenshot run per line; each line is passed verbatim as arguments to
+      tool/screenshot.mjs (see its header for flags).
+    required: false
+    default: |
+      --tutorial --levels 1,20,40 --settings --hint --stroke 0,1,2,0
+      --levels 60 --viewport 1440x900
+  artifact-name:
+    description: Name of the uploaded screenshots artifact.
+    required: false
+    default: screenshots
+  playwright-version:
+    description: Playwright version (pin it; Chromium is matched to it).
+    required: false
+    default: 1.56.1
+
+runs:
+  using: composite
+  steps:
+    - name: Set up JDK 17
+      uses: actions/setup-java@v6
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+
+    - name: Build web distribution
+      shell: bash
+      run: |
+        chmod +x gradlew
+        ./gradlew :web:wasmJsBrowserDistribution --console=plain
+
+    - name: Set up Node
+      uses: actions/setup-node@v7
+      with:
+        node-version: 24
+        package-manager-cache: false # no package.json here; Playwright is installed globally
+
+    - name: Install Playwright + Chromium
+      shell: bash
+      run: |
+        npm install -g "playwright@${{ inputs.playwright-version }}"
+        npx --yes "playwright@${{ inputs.playwright-version }}" install --with-deps chromium
+
+    - name: Drive the app and capture screenshots
+      shell: bash
+      env:
+        RUNS: ${{ inputs.runs }}
+      run: |
+        export NODE_PATH="$(npm root -g)"
+        status=0
+        while IFS= read -r line; do
+          [ -z "${line// }" ] && continue
+          echo "::group::node tool/screenshot.mjs $line"
+          # shellcheck disable=SC2086
+          node tool/screenshot.mjs $line --out shots || status=1
+          echo "::endgroup::"
+        done <<< "$RUNS"
+        exit $status
+
+    - name: Upload screenshots
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: shots/
+        if-no-files-found: warn

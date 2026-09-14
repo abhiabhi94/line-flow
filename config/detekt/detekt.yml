@@ -1,3 +1,19 @@
+# Project overrides on top of detekt's default config (buildUponDefaultConfig).
+# Pre-existing findings are recorded per module in baseline-<module>.xml;
+# regenerate with `./gradlew detektBaseline` only when deliberately accepting
+# old code, never to hide new findings.
+
 style:
   MagicNumber:
     active: false
+
+naming:
+  FunctionNaming:
+    # Composables are PascalCase by convention.
+    ignoreAnnotated: ['Composable']
+
+complexity:
+  LongMethod:
+    ignoreAnnotated: ['Composable']
+  LongParameterList:
+    ignoreAnnotated: ['Composable']
