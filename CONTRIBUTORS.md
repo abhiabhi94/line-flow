@@ -103,6 +103,13 @@ To run all checks manually:
 ./gradlew lint ktlintCheck detekt
 ```
 
+## Releasing
+
+Every push to `main` and every pull request builds a debug APK (the
+`lineflow-debug-apk` artifact, linked in a PR comment). Pushing a `v*` tag
+builds the signed Play Store bundle and attaches it to a GitHub Release. See
+[docs/release.md](docs/release.md).
+
 ## Submitting Changes
 
 1. Create a new branch for your feature or fix
